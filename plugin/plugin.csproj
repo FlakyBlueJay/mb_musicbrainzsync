@@ -1,0 +1,161 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Version>1.0.0</Version>    <!-- This is the version of the plugin AND DLL -->
+    <AssemblyName>mb_MyPlugin</AssemblyName>    <!-- This is the name of the DLL file -->
+    <AssemblyTitle>MyPlugin</AssemblyTitle>    <!-- This is the title of the plugin AND DLL -->
+    <Company>iSplasher</Company>    <!-- This is the name of the author -->
+<Description>Created from https://github.com/iSplasher/musicbee-plugin</Description><!-- This is the description of the plugin AND DLL -->
+  </PropertyGroup>
+
+  <!-- CUSTOM PROPERTIES (referenced in tasks below) -->
+
+  <PropertyGroup>
+    <ProgramPluginsDir>$(APPDATA)\MusicBee\Plugins</ProgramPluginsDir>    <!-- This is the directory where the plugin will be copied to -->
+    <ProgramExeName>MusicBee.exe</ProgramExeName>    <!-- This is the name of the program executable -->
+    <ProgramExePath>C:/Program Files (x86)/MusicBee/MusicBee.exe</ProgramExePath>    <!-- This is the path to the program executable -->
+    <ArtifactsDir>$(MSBuildProjectDirectory)\build</ArtifactsDir>    <!-- This is the directory where the build artifacts will be placed -->
+    <CopyToProgram>false</CopyToProgram>    <!-- This is whether to copy the plugin to the program directory -->
+  </PropertyGroup>
+
+  <!-- BUILD PROPERTIES (should be left to default) -->
+
+  <PropertyGroup>
+    <PublishRelease>true</PublishRelease>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net4.8-windows</TargetFramework>    <!-- Don't change this unless you know what you're doing! -->
+    <RuntimeFrameworkVersion>4.8</RuntimeFrameworkVersion>    <!-- Don't change this unless you know what you're doing! -->
+    <UseWindowsForms>true</UseWindowsForms>    <!-- Don't change this unless you know what you're doing! -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GenerateRuntimeConfigDevFile>false</GenerateRuntimeConfigDevFile>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <ProduceReferenceAssemblyInOutDir>false</ProduceReferenceAssemblyInOutDir>
+    <PreserveCompilationReferences>true</PreserveCompilationReferences>
+    <PackRelease>true</PackRelease>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RollForward>LatestMinor</RollForward>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>    <!-- Allows developing on non-windows machine -->
+  </PropertyGroup>
+
+
+  <!-- TASKS -->
+
+  <Target Condition="$(ArtifactsDir) != '' AND $(ArtifactsDir) != ' '" Name="RemoveArtifactsDir" AfterTargets="Build">
+    <RemoveDir Directories="$(ArtifactsDir)\out" ContinueOnError="WarnAndContinue"/>
+  </Target>
+
+  <Target Name="CreateArtifactsDir" AfterTargets="RemoveArtifactsDir">
+    <Message Importance="High" Text="(Re)creating out directory $(ArtifactsDir)\out\$(AssemblyTitle)" />
+    <MakeDir Directories="$(ArtifactsDir)\out\$(AssemblyTitle)"/>
+  </Target>
+
+  <Target Name="CopyFiles" AfterTargets="CreateArtifactsDir" DependsOnTargets="CreateArtifactsDir">
+    <ItemGroup>
+      <!-- Because this ItemGroup is inside the target, this will enumerate
+                 all files just before calling Copy. If the ItemGroup were outside
+                 the target , it would enumerate the files during evaluation, before
+                 the build starts, which may miss files created during the build. -->
+      <FilesToCopy Include="$(OutputPath)\**\*.*"/>
+    </ItemGroup>
+    <Message Importance="High" Text="Copying files to $(ArtifactsDir)\out\$(AssemblyTitle)" />
+    <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ArtifactsDir)\out\$(AssemblyTitle)" />
+  </Target>
+
+  <Target Name="MoveOutputFiles" AfterTargets="CopyFiles" DependsOnTargets="CopyFiles">
+    <ItemGroup>
+      <FilesToMove Include="$(ArtifactsDir)\out\$(AssemblyTitle)\$(AssemblyName)*"/>
+    </ItemGroup>
+    <Move SourceFiles="@(FilesToMove)" DestinationFolder="$(ArtifactsDir)\out">
+      <Output TaskParameter="DestinationFiles" ItemName="FilesMoved"/>
+    </Move>
+  </Target>
+
+  <Target Name="ZipBuild" AfterTargets="MoveOutputFiles" DependsOnTargets="MoveOutputFiles">
+    <ZipDirectory Overwrite="true" SourceDirectory="$(ArtifactsDir)\out" DestinationFile="$(ArtifactsDir)\$(AssemblyTitle).zip" />
+  </Target>
+
+  <!-- PROGRAM STUFF -->
+
+  <Target Condition="'$(CopyToProgram)' == 'true'" Name="CopyProgram" AfterTargets="ZipBuild" DependsOnTargets="ZipBuild">
+    <Message Importance="High" Text="Will now copy to program directory $(ProgramPluginsDir)\$(AssemblyTitle)" />
+  </Target>
+
+  <Target Condition="'$(CopyToProgram)' == 'true'" Name="KillProgram" AfterTargets="CopyProgram" DependsOnTargets="ZipBuild">
+    <Message Importance="High" Text="Killing program $(ProgramExeName)" />
+    <Exec ToolExe="cmd.exe" Command='start cmd.exe /c "taskkill /im $(ProgramExeName) 2>nul"'/>
+  </Target>
+
+  <Target Condition="'$(CopyToProgram)' == 'true'" Name="RemoveRemoteDir" AfterTargets="KillProgram" DependsOnTargets="KillProgram">
+    <RemoveDir Directories="$(ProgramPluginsDir)\$(AssemblyTitle)" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Condition="'$(CopyToProgram)' == 'true'" Name="RemoveRemoteFiles" AfterTargets="RemoveRemoteDir">
+    <ItemGroup>
+      <RemoteFilesToRemove Include="$(ProgramPluginsDir)\$(AssemblyName)*" ContinueOnError="WarnAndContinue" />
+    </ItemGroup>
+    <Message Importance="High" Text="Cleaning remote files in $(ProgramPluginsDir)" />
+    <Delete Files="@(RemoteFilesToRemove)" />
+  </Target>
+
+  <Target Condition="'$(CopyToProgram)' == 'true'" Name="UnzipBuild" AfterTargets="RemoveRemoteFiles" DependsOnTargets="ZipBuild">
+    <Message Importance="High" Text="Unzipping to remote directory $(ProgramPluginsDir)\$(AssemblyTitle)" />
+    <Unzip SourceFiles="$(ArtifactsDir)\$(AssemblyTitle).zip" DestinationFolder="$(ProgramPluginsDir)" />
+  </Target>
+
+  <Target Condition="'$(CopyToProgram)' == 'true'" Name="StartProgram" AfterTargets="UnzipBuild" DependsOnTargets="UnzipBuild">
+    <Message Importance="High" Text='Starting program "$(ProgramExePath)" (Ctrl + C to quit)' />
+    <Message Importance="High" Text='----------- Program Output -----------' />
+    <Exec ToolExe="cmd.exe" Command='"$(ProgramExePath)"'/>
+  </Target>
+
+
+
+  <!-- Debug/Release configurations -->
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+
+  <!-- DEPENDENCIES -->
+
+  <ItemGroup>
+  </ItemGroup>
+
+
+</Project>
