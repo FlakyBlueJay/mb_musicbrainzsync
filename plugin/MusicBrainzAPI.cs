@@ -13,6 +13,8 @@ namespace plugin
 
     public class MusicBrainzAPI
     {
+        // I am aware that a MusicBrainz API wrapper already exists, but it requires .NET Core which is not supported for MusicBee plugins AFAIK.
+
         /*
          * TODO:
          * See if Get keeps to JSON or not.

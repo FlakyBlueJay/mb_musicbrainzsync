@@ -113,7 +113,7 @@ namespace MusicBeePlugin
         public TextBox mbzUserInputBox;
         public Label userAuthenticatedLabel;
         public Panel authConfigPanel;
-        public Panel postAuthConfigPanel;
+        public TableLayoutPanel postAuthConfigPanel;
 
         // # MusicBee plugin initialisation functions
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
@@ -163,6 +163,9 @@ namespace MusicBeePlugin
                 // panel for authentication
                 authConfigPanel = new Panel();
                 authConfigPanel.AutoSize = true; authConfigPanel.Hide();
+                TableLayoutPanel authConfigPanel_new = new TableLayoutPanel();
+                authConfigPanel_new.Dock = DockStyle.Fill;
+                authConfigPanel_new.AutoSize = true;
 
                 Label mbzUserInputLabel = new Label();
                 mbzUserInputLabel.AutoSize = true;
@@ -199,24 +202,32 @@ namespace MusicBeePlugin
                 mbzAuthLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(mbzAuthLabel_LinkClicked);
 
                 // post-auth / logged in panel
-                postAuthConfigPanel = new Panel(); postAuthConfigPanel.AutoSize = true; postAuthConfigPanel.Hide();
+                postAuthConfigPanel = new TableLayoutPanel(); postAuthConfigPanel.AutoSize = true; postAuthConfigPanel.Hide();
+                postAuthConfigPanel.Dock = DockStyle.Fill;
+                postAuthConfigPanel.AutoSize = true;
+                postAuthConfigPanel.ColumnCount = 1;
+                postAuthConfigPanel.RowCount = 3;
+                postAuthConfigPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+                postAuthConfigPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // username label
+                postAuthConfigPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // config link
+                postAuthConfigPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // revoke access/logout link
+
                 userAuthenticatedLabel = new Label();
                 userAuthenticatedLabel.AutoSize = true;
-                userAuthenticatedLabel.Location = new Point(0, 20);
                 userAuthenticatedLabel.Text = "Logged in as %USERNAME%";
                 LinkLabel configLinkLabel = new LinkLabel();
                 configLinkLabel.AutoSize = true;
-                configLinkLabel.Location = new Point(0, 70);
                 configLinkLabel.Text = "Configure tag bindings";
                 configLinkLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                     SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
                 LinkLabel revokeAccessLabel = new LinkLabel();
                 revokeAccessLabel.AutoSize = true;
-                revokeAccessLabel.Location = new Point(0, 115);
                 revokeAccessLabel.Text = "Log out from MusicBrainz";
                 revokeAccessLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                     SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
-                postAuthConfigPanel.Controls.AddRange(new Control[] { userAuthenticatedLabel, configLinkLabel, revokeAccessLabel });
+                postAuthConfigPanel.Controls.Add(userAuthenticatedLabel, 0, 0);
+                postAuthConfigPanel.Controls.Add(configLinkLabel, 0, 1);
+                postAuthConfigPanel.Controls.Add(revokeAccessLabel, 0, 2);
                 mainPanel.Controls.Add(postAuthConfigPanel);
 
                 // post-auth panel events
