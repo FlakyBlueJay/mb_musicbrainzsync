@@ -16,7 +16,7 @@ namespace YourNamespace
 
         public static string libraryDir { get; private set; } = "";
 
-        // This static constructor will be called when the DLL is loaded
+        // This static constructor will be called  when the DLL is loaded
         static LibraryEntryPoint()
         {
             // Use a lock to ensure thread safety
@@ -90,10 +90,11 @@ namespace YourNamespace
 
 namespace MusicBeePlugin
 {
-
+    using System.Diagnostics;
     using System.Drawing;
     using System.Windows.Forms;
-
+    using plugin;
+    using plugin.Properties;
     using YourNamespace;
 
     public partial class Plugin
@@ -101,9 +102,20 @@ namespace MusicBeePlugin
         // Required so entrypoint can be called
         static private LibraryEntryPoint entryPoint = new LibraryEntryPoint();
 
+        // MusicBee API initialisation
         private MusicBeeApiInterface mbApiInterface;
         private PluginInfo about = new PluginInfo();
 
+        // new MusicBrainz API instance
+        public MusicBrainzAPI mbz = new MusicBrainzAPI();
+
+        // expose shared controls as public variables, so it can be easily accessed by other functions.
+        public TextBox mbzUserInputBox;
+        public Label userAuthenticatedLabel;
+        public Panel authConfigPanel;
+        public Panel postAuthConfigPanel;
+
+        // # MusicBee plugin initialisation functions
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
             Assembly thisAssem = typeof(Plugin).Assembly;
@@ -113,7 +125,6 @@ namespace MusicBeePlugin
             Version ver = thisAssem.GetName().Version;
             string author = thisAssem.GetCustomAttribute<AssemblyCompanyAttribute>().Company;
             string description = thisAssem.GetCustomAttribute<AssemblyDescriptionAttribute>().Description;
-
 
             mbApiInterface = new MusicBeeApiInterface();
             mbApiInterface.Initialise(apiInterfacePtr);
@@ -128,8 +139,8 @@ namespace MusicBeePlugin
             about.Revision = (short)ver.Revision;
             about.MinInterfaceVersion = MinInterfaceVersion;
             about.MinApiRevision = MinApiRevision;
-            about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
-            about.ConfigurationPanelHeight = 0;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
+            about.ReceiveNotifications = (ReceiveNotificationFlags.TagEvents);
+            about.ConfigurationPanelHeight = 145;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
 
             return about;
         }
@@ -137,30 +148,156 @@ namespace MusicBeePlugin
         public bool Configure(IntPtr panelHandle)
         {
             // save any persistent settings in a sub-folder of this path
-            string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+            // string dataPath = mbApiInterface.Setting_GetPersistentStoragePath() + "\\mb_MusicBrainzSync";
+            // saving in case there are plans to store settings outside of Properties.Settings in the future.
+
             // panelHandle will only be set if you set about.ConfigurationPanelHeight to a non-zero value
             // keep in mind the panel width is scaled according to the font the user has selected
             // if about.ConfigurationPanelHeight is set to 0, you can display your own popup window
             if (panelHandle != IntPtr.Zero)
             {
-                Panel configPanel = (Panel)Panel.FromHandle(panelHandle);
-                Label prompt = new Label();
-                prompt.AutoSize = true;
-                prompt.Location = new Point(0, 0);
-                prompt.Text = "prompt:";
-                TextBox textBox = new TextBox();
-                textBox.Bounds = new Rectangle(60, 0, 100, textBox.Height);
-                configPanel.Controls.AddRange(new Control[] { prompt, textBox });
+
+                Panel mainPanel = (Panel)Panel.FromHandle(panelHandle);
+                mainPanel.AutoSize = true;
+
+                // panel for authentication
+                authConfigPanel = new Panel();
+                authConfigPanel.AutoSize = true; authConfigPanel.Hide();
+
+                Label mbzUserInputLabel = new Label();
+                mbzUserInputLabel.AutoSize = true;
+                mbzUserInputLabel.Location = new Point(0, 20);
+                mbzUserInputLabel.Text = "Access token from MusicBrainz:";
+
+                mbzUserInputBox = new TextBox();
+                mbzUserInputBox.Bounds = new Rectangle(355, 20, 500, mbzUserInputBox.Height);
+                mbzUserInputBox.ForeColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
+                   SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
+                mbzUserInputBox.BackColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
+                   SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentBackground));
+                mbzUserInputBox.BorderStyle = BorderStyle.FixedSingle;
+
+                LinkLabel mbzVerifyLabel = new LinkLabel();
+                mbzVerifyLabel.AutoSize = true;
+                mbzVerifyLabel.Location = new Point(0, 70);
+                mbzVerifyLabel.Text = "Log in to MusicBrainz";
+                mbzVerifyLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
+                    SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
+
+                LinkLabel mbzAuthLabel = new LinkLabel();
+                mbzAuthLabel.AutoSize = true;
+                mbzAuthLabel.Location = new Point(0, 115);
+                mbzAuthLabel.Text = "Get an access token from MusicBrainz";
+                mbzAuthLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
+                    SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
+
+                authConfigPanel.Controls.AddRange(new Control[] { mbzUserInputLabel, mbzUserInputBox, mbzVerifyLabel, mbzAuthLabel });
+                mainPanel.Controls.Add(authConfigPanel);
+
+                // authentication panel events
+                mbzVerifyLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(mbzVerifyLabel_LinkClicked);
+                mbzAuthLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(mbzAuthLabel_LinkClicked);
+
+                // post-auth / logged in panel
+                postAuthConfigPanel = new Panel(); postAuthConfigPanel.AutoSize = true; postAuthConfigPanel.Hide();
+                userAuthenticatedLabel = new Label();
+                userAuthenticatedLabel.AutoSize = true;
+                userAuthenticatedLabel.Location = new Point(0, 20);
+                userAuthenticatedLabel.Text = "Logged in as %USERNAME%";
+                LinkLabel configLinkLabel = new LinkLabel();
+                configLinkLabel.AutoSize = true;
+                configLinkLabel.Location = new Point(0, 70);
+                configLinkLabel.Text = "Configure tag bindings";
+                configLinkLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
+                    SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
+                LinkLabel revokeAccessLabel = new LinkLabel();
+                revokeAccessLabel.AutoSize = true;
+                revokeAccessLabel.Location = new Point(0, 115);
+                revokeAccessLabel.Text = "Log out from MusicBrainz";
+                revokeAccessLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
+                    SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
+                postAuthConfigPanel.Controls.AddRange(new Control[] { userAuthenticatedLabel, configLinkLabel, revokeAccessLabel });
+                mainPanel.Controls.Add(postAuthConfigPanel);
+
+                // post-auth panel events
+                revokeAccessLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(revokeAccessLabel_Clicked);
+
+                // Hide the authentication panel if the user is already authenticated to MusicBrainz, or vice versa if not logged in.
+                if (string.IsNullOrEmpty(Settings.Default.refreshToken))
+                {
+                    authConfigPanel.Show(); postAuthConfigPanel.Hide();
+                }
+                else
+                {
+                    string username = mbz.GetUserName().Result;
+                    System.Diagnostics.Debug.WriteLine(username);
+                    userAuthenticatedLabel.Text = $"Logged in as {username}";
+                    authConfigPanel.Hide(); postAuthConfigPanel.Show();
+                }
+
             }
+
             return false;
+
         }
-       
+
+        // # Plugin config panel events
+        private void mbzAuthLabel_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        {
+            // Test this functionality in WINE, too. This should just load the default web browser but, idk.
+
+            string mbzAuthUrl = mbz.GetAuthenticationURL();
+
+            try
+            {
+                Process.Start(mbzAuthUrl);
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                // if there is no default web browser or the URL is invalid.
+                Clipboard.SetText(mbzAuthUrl);
+                MessageBox.Show("Could not open the default web browser. The authentication URL has been copied to your clipboard.\n\n" +
+                    "Please copy and paste the URL into your browser.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception)
+            {
+                // any other errors we haven't caught.
+                Clipboard.SetText(mbzAuthUrl);
+                MessageBox.Show("An unexpected error occurred. The authentication URL has been copied to your clipboard.\n\n" +
+                    "Please copy and paste the URL into your browser.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+        private void mbzVerifyLabel_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("verifyWithMusicBrainz called");
+            if (!string.IsNullOrEmpty(mbzUserInputBox.Text))
+            {
+                bool userAuthenticated = mbz.AuthenticateUser(mbzUserInputBox.Text).Result;
+                if (userAuthenticated)
+                {
+                    string username = mbz.GetUserName().Result;
+                    userAuthenticatedLabel.Text = $"Logged in as {username}";
+                    authConfigPanel.Hide(); postAuthConfigPanel.Show();
+                }
+            }
+        }
+
+        private void revokeAccessLabel_Clicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        {
+            mbz.RevokeAccess();
+            mbzUserInputBox.Clear();
+            userAuthenticatedLabel.Text = "Logged in as %USERNAME%";
+            postAuthConfigPanel.Hide(); authConfigPanel.Show();
+        }
+
+
         // called by MusicBee when the user clicks Apply or Save in the MusicBee Preferences screen.
-        // its up to you to figure out whether anything has changed and needs updating
+        // Auth process automatically saves the access and refresh tokens, and tag bindings will be handled via another GUI so no need for this at the moment.
         public void SaveSettings()
         {
-            // save any persistent settings in a sub-folder of this path
-            string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
@@ -171,6 +308,9 @@ namespace MusicBeePlugin
         // uninstall this plugin - clean up any persisted files
         public void Uninstall()
         {
+            // todo: ask to delete settings
+            Settings.Default.Reset();
+            // todo: ask to delete tag binding data
         }
 
         // receive event notifications from MusicBee
@@ -182,79 +322,41 @@ namespace MusicBeePlugin
             {
                 case NotificationType.PluginStartup:
                     // perform startup initialisation
-                    switch (mbApiInterface.Player_GetPlayState())
+                    System.Diagnostics.Debug.WriteLine("mb_musicbrainzsync has initialised and debug worfks!!!");
+
+                    // add context menu items
+                    // context.Main is the right-click menu for tracks and albums
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings", "", DoNothing);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", DoNothing);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", DoNothing);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings", "", DoNothing);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recording", "", DoNothing);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", DoNothing);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", DoNothing);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Artist", "", DoNothing);
+
+                    // add hotkey entries
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", DoNothing);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings", DoNothing);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", DoNothing);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", DoNothing);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", DoNothing);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Artist", DoNothing);
+
+                    // output username to status bar if logged in
+                    if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
                     {
-                        case PlayState.Playing:
-                        case PlayState.Paused:
-                            // ...
-                            break;
+                        string username = mbz.GetUserName().Result;
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_musicbrainzsync: Logged in as {username}");
                     }
-                    break;
-                case NotificationType.TrackChanged:
-                    string artist = mbApiInterface.NowPlaying_GetFileTag(MetaDataType.Artist);
-                    // ...
                     break;
             }
         }
 
-        // return an array of lyric or artwork provider names this plugin supports
-        // the providers will be iterated through one by one and passed to the RetrieveLyrics/ RetrieveArtwork function in order set by the user in the MusicBee Tags(2) preferences screen until a match is found
-        //public string[] GetProviders()
-        //{
-        //    return null;
-        //}
-
-        // return lyrics for the requested artist/title from the requested provider
-        // only required if PluginType = LyricsRetrieval
-        // return null if no lyrics are found
-        //public string RetrieveLyrics(string sourceFileUrl, string artist, string trackTitle, string album, bool synchronisedPreferred, string provider)
-        //{
-        //    return null;
-        //}
-
-        // return Base64 string representation of the artwork binary data from the requested provider
-        // only required if PluginType = ArtworkRetrieval
-        // return null if no artwork is found
-        //public string RetrieveArtwork(string sourceFileUrl, string albumArtist, string album, string provider)
-        //{
-        //    //Return Convert.ToBase64String(artworkBinaryData)
-        //    return null;
-        //}
-
-        //  presence of this function indicates to MusicBee that this plugin has a dockable panel. MusicBee will create the control and pass it as the panel parameter
-        //  you can add your own controls to the panel if needed
-        //  you can control the scrollable area of the panel using the mbApiInterface.MB_SetPanelScrollableArea function
-        //  to set a MusicBee header for the panel, set about.TargetApplication in the Initialise function above to the panel header text
-        //public int OnDockablePanelCreated(Control panel)
-        //{
-        //  //    return the height of the panel and perform any initialisation here
-        //  //    MusicBee will call panel.Dispose() when the user removes this panel from the layout configuration
-        //  //    < 0 indicates to MusicBee this control is resizable and should be sized to fill the panel it is docked to in MusicBee
-        //  //    = 0 indicates to MusicBee this control resizeable
-        //  //    > 0 indicates to MusicBee the fixed height for the control.Note it is recommended you scale the height for high DPI screens(create a graphics object and get the DpiY value)
-        //    float dpiScaling = 0;
-        //    using (Graphics g = panel.CreateGraphics())
-        //    {
-        //        dpiScaling = g.DpiY / 96f;
-        //    }
-        //    panel.Paint += panel_Paint;
-        //    return Convert.ToInt32(100 * dpiScaling);
-        //}
-
-        // presence of this function indicates to MusicBee that the dockable panel created above will show menu items when the panel header is clicked
-        // return the list of ToolStripMenuItems that will be displayed
-        //public List<ToolStripItem> GetHeaderMenuItems()
-        //{
-        //    List<ToolStripItem> list = new List<ToolStripItem>();
-        //    list.Add(new ToolStripMenuItem("A menu item"));
-        //    return list;
-        //}
-
-        //private void panel_Paint(object sender, PaintEventArgs e)
-        //{
-        //    e.Graphics.Clear(Color.Red);
-        //    TextRenderer.DrawText(e.Graphics, "hello", SystemFonts.CaptionFont, new Point(10, 10), Color.Blue);
-        //}
+        public void DoNothing(object sender, EventArgs args)
+        {
+            // just a filler function that does literally nothing, for anything that hasn't been implemented yet.
+        }
 
     }
 }
