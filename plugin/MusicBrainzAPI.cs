@@ -10,6 +10,7 @@ namespace plugin
 {
     using System.Diagnostics;
     using plugin.Properties;
+    using static MusicBeePlugin.Plugin;
 
     public class MusicBrainzAPI
     {
@@ -30,7 +31,7 @@ namespace plugin
         public string MusicBrainzServer = "musicbrainz.org"; // Change this if you want to use a different server.
         public HttpClient MBzHttpClient;
         System.Threading.Tasks.Task<HttpResponseMessage> mbApiResponse;
-        public string mbzAccessToken;
+        public string mbzAccessToken; public DateTime mbzAccessTokenExpiry;
 
         internal class MusicBrainzOAuthData
         {
@@ -130,6 +131,21 @@ namespace plugin
                 }
                 return null;
             }
+            else if (DateTime.Now >= mbzAccessTokenExpiry)
+            {
+                // if the access token is expired, try to refresh it.
+                bool reauth = await AuthenticateUser();
+                if (reauth)
+                {
+                    // try again.
+                    return await GetFromMusicBrainz(endpoint, data);
+                }
+                else
+                {
+                    DisplayHTTPErrorMessage(mbApiResponse.Result.StatusCode);
+                    return null;
+                }
+            }
             else
             {
                 try
@@ -141,6 +157,21 @@ namespace plugin
                         Debug.WriteLine("JSON Response: " + result);
                         // todo: does this output to XML as well? POST requires XML for certain.
                         return result;
+                    }
+                    else if (mbApiResponse.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+
+                        bool reauth = await AuthenticateUser();
+                        if (reauth)
+                        {
+                            // try again.
+                            return await GetFromMusicBrainz(endpoint, data);
+                        }
+                        else
+                        {
+                            DisplayHTTPErrorMessage(mbApiResponse.Result.StatusCode);
+                            return null;
+                        }
                     }
                     else
                     {
@@ -170,6 +201,21 @@ namespace plugin
                 }
                 return null;
             }
+            else if (DateTime.Now >= mbzAccessTokenExpiry && (endpoint != "token"))
+            {
+                // if the access token is expired, try to refresh it.
+                bool reauth = await AuthenticateUser();
+                if (reauth)
+                {
+                    // try again.
+                    return await PostToMusicBrainz(endpoint, data, data_type);
+                }
+                else
+                {
+                    DisplayHTTPErrorMessage(mbApiResponse.Result.StatusCode);
+                    return null;
+                }
+            }
             else
             {
                 try
@@ -182,6 +228,23 @@ namespace plugin
                         Debug.WriteLine("JSON Response: " + result);
                         // todo: does this output to XML as well? POST requires XML for certain.
                         return result;
+                    }
+                    else if (mbApiResponse.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        // if we get a 401 error, try to reauthenticate.
+                        bool userAuthenticated = await AuthenticateUser();
+                        if (userAuthenticated)
+                        {
+                            // try again.
+                            return await PostToMusicBrainz(endpoint, data, data_type);
+                        }
+                        else
+                        {
+                            MessageBox.Show(
+                                "An error has occurred attempting to authenticate with MusicBrainz.",
+                                "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return null;
+                        }
                     }
                     else
                     {
@@ -207,7 +270,6 @@ namespace plugin
         // # User authentication functions
         public async Task<bool> AuthenticateUser(string userApiKey = null)
         {
-            Debug.WriteLine($"AuthenticateUser {userApiKey}");
             string parameters;
 
             // if user is sending an access token, assume they haven't logged in yet, otherwise assume refresh token.
@@ -242,6 +304,8 @@ namespace plugin
                 }
                 // access token should be changed regardless.
                 mbzAccessToken = mbOAuthData.access_token;
+                mbzAccessTokenExpiry = DateTime.Now.AddSeconds(mbOAuthData.expires_in);
+                System.Diagnostics.Debug.WriteLine(mbzAccessTokenExpiry);
                 Settings.Default.Save();
                 MBzHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", mbzAccessToken);
                 return true;
