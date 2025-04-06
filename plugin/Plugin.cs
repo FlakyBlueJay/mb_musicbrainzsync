@@ -112,7 +112,7 @@ namespace MusicBeePlugin
         // expose shared controls as public variables, so it can be easily accessed by other functions.
         public TextBox mbzUserInputBox;
         public Label userAuthenticatedLabel;
-        public Panel authConfigPanel;
+        public TableLayoutPanel authConfigPanel_new;
         public TableLayoutPanel postAuthConfigPanel;
 
         // # MusicBee plugin initialisation functions
@@ -160,33 +160,39 @@ namespace MusicBeePlugin
                 Panel mainPanel = (Panel)Panel.FromHandle(panelHandle);
                 mainPanel.AutoSize = true;
 
-                // panel for authentication
-                authConfigPanel = new Panel();
-                authConfigPanel.AutoSize = true; authConfigPanel.Hide();
-                TableLayoutPanel authConfigPanel_new = new TableLayoutPanel();
-                authConfigPanel_new.Dock = DockStyle.Fill;
-                authConfigPanel_new.AutoSize = true;
+                // ## panel for authentication - table layouts are used to fix issues with positioning and hiDPI
+                authConfigPanel_new = GenerateTableLayoutPanel(1, 2);
 
+                TableLayoutPanel userInputPanel = GenerateTableLayoutPanel(2, 1);
+                TableLayoutPanel linkPanel = GenerateTableLayoutPanel(1, 2);
+
+                // ### sub-panel for user input
                 Label mbzUserInputLabel = new Label();
                 mbzUserInputLabel.AutoSize = true;
                 mbzUserInputLabel.Location = new Point(0, 20);
                 mbzUserInputLabel.Text = "Access token from MusicBrainz:";
+                mbzUserInputLabel.TextAlign = ContentAlignment.MiddleLeft;
+                mbzUserInputLabel.Anchor = AnchorStyles.Left; // align the label so it doesn't look misplaced
 
                 mbzUserInputBox = new TextBox();
-                mbzUserInputBox.Bounds = new Rectangle(355, 20, 500, mbzUserInputBox.Height);
+                mbzUserInputBox.Dock = DockStyle.Fill;
                 mbzUserInputBox.ForeColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                    SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
                 mbzUserInputBox.BackColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                    SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentBackground));
                 mbzUserInputBox.BorderStyle = BorderStyle.FixedSingle;
 
+                userInputPanel.Controls.Add(mbzUserInputLabel, 0, 0);
+                userInputPanel.Controls.Add(mbzUserInputBox, 1, 0);
+
+                // ### sub-panel for links
                 LinkLabel mbzVerifyLabel = new LinkLabel();
                 mbzVerifyLabel.AutoSize = true;
                 mbzVerifyLabel.Location = new Point(0, 70);
                 mbzVerifyLabel.Text = "Log in to MusicBrainz";
                 mbzVerifyLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                     SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
-
+                
                 LinkLabel mbzAuthLabel = new LinkLabel();
                 mbzAuthLabel.AutoSize = true;
                 mbzAuthLabel.Location = new Point(0, 115);
@@ -194,23 +200,19 @@ namespace MusicBeePlugin
                 mbzAuthLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                     SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
 
-                authConfigPanel.Controls.AddRange(new Control[] { mbzUserInputLabel, mbzUserInputBox, mbzVerifyLabel, mbzAuthLabel });
-                mainPanel.Controls.Add(authConfigPanel);
+                linkPanel.Controls.Add(mbzVerifyLabel, 0, 0);
+                linkPanel.Controls.Add(mbzAuthLabel, 0, 1);
 
-                // authentication panel events
+                authConfigPanel_new.Controls.Add(userInputPanel, 0, 0);
+                authConfigPanel_new.Controls.Add(linkPanel, 0, 1);
+                mainPanel.Controls.Add(authConfigPanel_new);
+
+                // ### authentication panel events
                 mbzVerifyLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(mbzVerifyLabel_LinkClicked);
                 mbzAuthLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(mbzAuthLabel_LinkClicked);
 
-                // post-auth / logged in panel
-                postAuthConfigPanel = new TableLayoutPanel(); postAuthConfigPanel.AutoSize = true; postAuthConfigPanel.Hide();
-                postAuthConfigPanel.Dock = DockStyle.Fill;
-                postAuthConfigPanel.AutoSize = true;
-                postAuthConfigPanel.ColumnCount = 1;
-                postAuthConfigPanel.RowCount = 3;
-                postAuthConfigPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-                postAuthConfigPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // username label
-                postAuthConfigPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // config link
-                postAuthConfigPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // revoke access/logout link
+                // ## post-auth / logged in panel
+                postAuthConfigPanel = GenerateTableLayoutPanel(1, 3); postAuthConfigPanel.Hide();
 
                 userAuthenticatedLabel = new Label();
                 userAuthenticatedLabel.AutoSize = true;
@@ -230,26 +232,53 @@ namespace MusicBeePlugin
                 postAuthConfigPanel.Controls.Add(revokeAccessLabel, 0, 2);
                 mainPanel.Controls.Add(postAuthConfigPanel);
 
-                // post-auth panel events
+                // ## post-auth panel events
                 revokeAccessLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(revokeAccessLabel_Clicked);
 
                 // Hide the authentication panel if the user is already authenticated to MusicBrainz, or vice versa if not logged in.
-                if (string.IsNullOrEmpty(Settings.Default.refreshToken))
-                {
-                    authConfigPanel.Show(); postAuthConfigPanel.Hide();
-                }
-                else
-                {
-                    string username = mbz.GetUserName().Result;
-                    System.Diagnostics.Debug.WriteLine(username);
-                    userAuthenticatedLabel.Text = $"Logged in as {username}";
-                    authConfigPanel.Hide(); postAuthConfigPanel.Show();
-                }
+                ToggleAuthPanelsVisibility();
 
             }
 
             return false;
 
+        }
+
+        // # configure panel UI functions
+        private TableLayoutPanel GenerateTableLayoutPanel(int columns, int rows)
+        {
+            TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+            tableLayoutPanel.ColumnCount = columns;
+            tableLayoutPanel.RowCount = rows;
+            tableLayoutPanel.Dock = DockStyle.Fill;
+            tableLayoutPanel.AutoSize = true;
+
+            for (int i = 0; i < columns; i++)
+            {
+                tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            }
+
+            for (int i = 0; i < rows; i++)
+            {
+                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            }
+
+            return tableLayoutPanel;
+        }
+
+        private void ToggleAuthPanelsVisibility()
+        {
+            if (string.IsNullOrEmpty(Settings.Default.refreshToken))
+            {
+                authConfigPanel_new.Show(); postAuthConfigPanel.Hide();
+            }
+            else
+            {
+                string username = mbz.GetUserName().Result;
+                System.Diagnostics.Debug.WriteLine(username);
+                userAuthenticatedLabel.Text = $"Logged in as {username}";
+                authConfigPanel_new.Hide(); postAuthConfigPanel.Show();
+            }
         }
 
         // # Plugin config panel events
@@ -290,7 +319,7 @@ namespace MusicBeePlugin
                 {
                     string username = mbz.GetUserName().Result;
                     userAuthenticatedLabel.Text = $"Logged in as {username}";
-                    authConfigPanel.Hide(); postAuthConfigPanel.Show();
+                    ToggleAuthPanelsVisibility();
                 }
             }
         }
@@ -300,9 +329,10 @@ namespace MusicBeePlugin
             mbz.RevokeAccess();
             mbzUserInputBox.Clear();
             userAuthenticatedLabel.Text = "Logged in as %USERNAME%";
-            postAuthConfigPanel.Hide(); authConfigPanel.Show();
+            ToggleAuthPanelsVisibility();
         }
 
+        // # MusicBee standard plugin functions
 
         // called by MusicBee when the user clicks Apply or Save in the MusicBee Preferences screen.
         // Auth process automatically saves the access and refresh tokens, and tag bindings will be handled via another GUI so no need for this at the moment.

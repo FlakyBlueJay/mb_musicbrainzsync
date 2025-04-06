@@ -17,6 +17,7 @@ namespace plugin
 
         /*
          * TODO:
+         * Handle access tokens ephemerally.
          * See if Get keeps to JSON or not.
          * **/
 
@@ -29,6 +30,7 @@ namespace plugin
         public string MusicBrainzServer = "musicbrainz.org"; // Change this if you want to use a different server.
         public HttpClient MBzHttpClient;
         System.Threading.Tasks.Task<HttpResponseMessage> mbApiResponse;
+        public string mbzAccessToken;
 
         internal class MusicBrainzOAuthData
         {
@@ -239,9 +241,9 @@ namespace plugin
                     Settings.Default.refreshToken = mbOAuthData.refresh_token;
                 }
                 // access token should be changed regardless.
-                Settings.Default.accessToken = mbOAuthData.access_token;
+                mbzAccessToken = mbOAuthData.access_token;
                 Settings.Default.Save();
-                MBzHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Settings.Default.accessToken);
+                MBzHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", mbzAccessToken);
                 return true;
             }
 
@@ -253,7 +255,6 @@ namespace plugin
                 $"client_id={OAuthClientId}&" +
                 $"client_secret={OAuthClientSecret}&";
             string revokeRequest = await PostToMusicBrainz("revoke", parameters, "application/x-www-form-urlencoded");
-            Settings.Default.accessToken = null;
             Settings.Default.refreshToken = null;
             Settings.Default.Save();
         }

@@ -34,17 +34,5 @@ namespace plugin.Properties {
                 this["refreshToken"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string accessToken {
-            get {
-                return ((string)(this["accessToken"]));
-            }
-            set {
-                this["accessToken"] = value;
-            }
-        }
     }
 }
