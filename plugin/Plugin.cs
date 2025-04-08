@@ -96,6 +96,8 @@ namespace MusicBeePlugin
     using plugin;
     using plugin.Properties;
     using YourNamespace;
+    using static plugin.MusicBeeTrack;
+    using static plugin.MusicBrainzAPI;
 
     public partial class Plugin
     {
@@ -103,7 +105,7 @@ namespace MusicBeePlugin
         static private LibraryEntryPoint entryPoint = new LibraryEntryPoint();
 
         // MusicBee API initialisation
-        private MusicBeeApiInterface mbApiInterface;
+        public static MusicBeeApiInterface mbApiInterface;
         private PluginInfo about = new PluginInfo();
 
         // new MusicBrainz API instance
@@ -300,14 +302,14 @@ namespace MusicBeePlugin
                 // if there is no default web browser or the URL is invalid.
                 Clipboard.SetText(mbzAuthUrl);
                 MessageBox.Show("Could not open the default web browser. The authentication URL has been copied to your clipboard.\n\n" +
-                    "Please copy and paste the URL into your browser.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    "Please copy and paste the URL into your browser.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception)
             {
                 // any other errors we haven't caught.
                 Clipboard.SetText(mbzAuthUrl);
                 MessageBox.Show("An unexpected error occurred. The authentication URL has been copied to your clipboard.\n\n" +
-                    "Please copy and paste the URL into your browser.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    "Please copy and paste the URL into your browser.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
         }
@@ -327,9 +329,9 @@ namespace MusicBeePlugin
             }
         }
 
-        private void revokeAccessLabel_Clicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        private async void revokeAccessLabel_Clicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
-            mbz.RevokeAccess();
+            await mbz.RevokeAccess();
             mbzUserInputBox.Clear();
             userAuthenticatedLabel.Text = "Logged in as %USERNAME%";
             ToggleAuthPanelsVisibility();
@@ -370,22 +372,21 @@ namespace MusicBeePlugin
 
                     // add context menu items
                     // context.Main is the right-click menu for tracks and albums
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings", "", DoNothing);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", DoNothing);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", DoNothing);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings", "", DoNothing);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recording", "", DoNothing);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", DoNothing);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", DoNothing);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Artist", "", DoNothing);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", SendTrackRatings);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recording", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", null);
 
                     // add hotkey entries
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", DoNothing);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings", DoNothing);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", DoNothing);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", DoNothing);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", DoNothing);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Artist", DoNothing);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", SendTrackRatings);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings", null);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", null);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", null);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", null);
 
                     // output username to status bar if logged in
                     if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
@@ -397,10 +398,40 @@ namespace MusicBeePlugin
             }
         }
 
-        public void DoNothing(object sender, EventArgs args)
+        public async void SendTrackRatings(object sender, EventArgs args)
         {
-            // just a filler function that does literally nothing, for anything that hasn't been implemented yet.
+            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
+            if (files == null)
+            {
+                return;
+            }
+            else
+            {
+                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
+                try {
+                    List<(string, string)> trackRatings = new List<(string, string)>();
+                    List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
+                    foreach (MusicBeeTrack track in tracks)
+                    {
+                            trackRatings.Add((track.MusicBrainzTrackId, track.Rating));
+                        
+                    }
+                    await mbz.SetTrackRatings(trackRatings);
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted ratings to MusicBrainz.");
+
+                }
+                catch (UnsupportedFormatException e)
+                {
+                    MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (EmptyXMLException)
+                {
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Ratings not submitted due to empty data.");
+                }
+            }
+
         }
 
     }
 }
+

@@ -8,20 +8,15 @@ using System.Windows.Forms;
 
 namespace plugin
 {
+    using System.Collections.Generic;
     using System.Diagnostics;
     using plugin.Properties;
-    using static MusicBeePlugin.Plugin;
 
     public class MusicBrainzAPI
     {
         // I am aware that a MusicBrainz API wrapper already exists, but it requires .NET Core which is not supported for MusicBee plugins AFAIK.
 
-        /*
-         * TODO:
-         * See if Get keeps to JSON or not.
-         * **/
-
-        // # Initialisation stuff
+        // # Web initialisation stuff
         public string OAuthClientId = "7_dLhLIHweJ-vefrHOc-MKLHuNnBEl93";
         public string OAuthClientSecret = "oE1duN7a8eYrkIov6JBriFnzpXpoVN-J";
         // Desktop applications like this plugin don't need to hide their client secret.
@@ -32,6 +27,12 @@ namespace plugin
         System.Threading.Tasks.Task<HttpResponseMessage> mbApiResponse;
         public string mbzAccessToken; public DateTime mbzAccessTokenExpiry;
 
+        // exception to be called when the XML comes up empty so the plugin can tell the user on the status bar.
+        public class EmptyXMLException : Exception {
+            public EmptyXMLException() { }
+        }
+
+        // object version of the MusicBrainz OAuth JSON data.
         internal class MusicBrainzOAuthData
         {
             public string access_token { get; set; }
@@ -40,6 +41,7 @@ namespace plugin
             public string refresh_token { get; set; }
         }
 
+        // object version of the MusicBrainz user JSON data.
         public class MusicBrainzUser
         {
             // MusicBrainz reports the user name in the "sub" field, but we want to represent it as "username".
@@ -47,6 +49,7 @@ namespace plugin
             public string username { get; set; }
         }
 
+        // object version of the MusicBRainz error JSON data.
         public class MusicBrainzAPIError
         {
             // Class for handling errors from MusicBrainz that use JSON.
@@ -60,8 +63,12 @@ namespace plugin
             // initialise the HTTP client.
             MBzHttpClient = new HttpClient
             {
-                BaseAddress = new Uri($"https://{MusicBrainzServer}/oauth2/")
+                BaseAddress = new Uri($"https://{MusicBrainzServer}")
+                
             };
+
+            // MusicBrainz will reject requests that don't come from valid user agents.
+            MBzHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"mb_MusicBrainzSync/1.0 (https://github.com/FlakyBlueJay/mb_musicbrainzsync)");
 
             // check if the user is logged in or not.
             if (string.IsNullOrEmpty(Settings.Default.refreshToken))
@@ -112,7 +119,7 @@ namespace plugin
                     break;
             }
             MessageBox.Show(
-                $"Error: {errorMessage}", "",
+                $"Error: {errorMessage}", "MusicBrainz Sync",
                 MessageBoxButtons.OK, MessageBoxIcon.Error
                 );
         }
@@ -126,7 +133,7 @@ namespace plugin
                 { 
                 MessageBox.Show(
                     "You need to authenticate with MusicBrainz first. Please do so in the plugin settings.",
-                    "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 return null;
             }
@@ -180,7 +187,7 @@ namespace plugin
                 }
                 catch (HttpRequestException e) // catch all other HTTP exceptions here.
                 {
-                    MessageBox.Show(e.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(e.ToString(), "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return null;
                 }
 
@@ -190,17 +197,17 @@ namespace plugin
         private async Task<string> PostToMusicBrainz(string endpoint, string data, string data_type = "application/json", bool silent = false)
         {
             string refreshToken = Settings.Default.refreshToken;
-            if (string.IsNullOrEmpty(refreshToken) && (endpoint != "token")) // do not trigger on authentication requests
+            if (string.IsNullOrEmpty(refreshToken) && (endpoint != "/oauth2/token")) // do not trigger on authentication requests
             {
                 if (!silent)
                 {
                     MessageBox.Show(
                         "You need to authenticate with MusicBrainz first. Please do so in the plugin settings.",
-                        "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 return null;
             }
-            else if (DateTime.Now >= mbzAccessTokenExpiry && (endpoint != "token"))
+            else if (DateTime.Now >= mbzAccessTokenExpiry && (endpoint != "/oauth2/token"))
             {
                 // if the access token is expired, try to refresh it.
                 bool reauth = await AuthenticateUser();
@@ -241,7 +248,7 @@ namespace plugin
                         {
                             MessageBox.Show(
                                 "An error has occurred attempting to authenticate with MusicBrainz.",
-                                "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return null;
                         }
                     }
@@ -253,7 +260,7 @@ namespace plugin
                 }
                 catch (HttpRequestException e) // catch all other HTTP exceptions here.
                 {
-                    MessageBox.Show(e.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(e.ToString(), "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return null;
                 }
             }
@@ -262,7 +269,7 @@ namespace plugin
         public string GetAuthenticationURL()
         {
             // since MusicBrainzServer is declared here and not in Plugin.cs, best to have a function to generate the URL here.
-            string authURL = $"{MBzHttpClient.BaseAddress}authorize?response_type=code&client_id={OAuthClientId}&scope=tag%20rating%20profile&redirect_uri=urn:ietf:wg:oauth:2.0:oob";
+            string authURL = $"{MBzHttpClient.BaseAddress}/oauth2/authorize?response_type=code&client_id={OAuthClientId}&scope=tag%20rating%20profile&redirect_uri=urn:ietf:wg:oauth:2.0:oob";
             return authURL;
         }
 
@@ -288,7 +295,7 @@ namespace plugin
                    $"redirect_uri=http://localhost"; // We don't need a redirect URI for this plugin, but it's required by the API.
             }
 
-            string userauth = await PostToMusicBrainz("token", parameters, "application/x-www-form-urlencoded");
+            string userauth = await PostToMusicBrainz("/oauth2/token", parameters, "application/x-www-form-urlencoded");
             if (string.IsNullOrEmpty(userauth))
             {
                 return false;
@@ -317,7 +324,7 @@ namespace plugin
             string parameters = $"token={Settings.Default.refreshToken}&" +
                 $"client_id={OAuthClientId}&" +
                 $"client_secret={OAuthClientSecret}&";
-            string revokeRequest = await PostToMusicBrainz("revoke", parameters, "application/x-www-form-urlencoded");
+            string revokeRequest = await PostToMusicBrainz("/oauth2/revoke", parameters, "application/x-www-form-urlencoded");
             Settings.Default.refreshToken = null;
             Settings.Default.Save();
         }
@@ -326,13 +333,43 @@ namespace plugin
         // Generally should only have GetUserName to display it in the plugin settings.
         public async Task<string> GetUserName()
         {
-            string userinfo = await GetFromMusicBrainz("userinfo");
+            string userinfo = await GetFromMusicBrainz("/oauth2/userinfo");
             if (!string.IsNullOrEmpty(userinfo))
             {
                 MusicBrainzUser user = JsonConvert.DeserializeObject<MusicBrainzUser>(userinfo);
                 return user.username;
             }
             else return null;
+        }
+
+        // # Rating functions
+        public async Task SetTrackRatings(List<(string, string)> trackRatings)
+        {
+            // TODO: Use an XML library.
+            string xmlData = "";
+            foreach ((string,string) trackRatingPair in trackRatings)
+            {
+                string recordingMbid = trackRatingPair.Item1;
+                string trackRatingString = trackRatingPair.Item2;
+                
+                //only activate if both the recording MBID and track rating are full
+                if (!string.IsNullOrEmpty(recordingMbid) && !string.IsNullOrEmpty(trackRatingString))
+                {
+                    // MusicBrainz uses a 0-100 scale for ratings, so we need to convert the 1-5 scale to 0-100.
+                    float rating = (float.Parse(trackRatingString)) * 20;
+                    xmlData += $"<recording id=\"{recordingMbid}\">" +
+                        $"<user-rating>{rating}</user-rating>" +
+                        "</recording>";
+                }
+            }
+
+            xmlData = "<metadata xmlns=\"http://musicbrainz.org/ns/mmd-2.0#\"><recording-list>" +
+                    xmlData + "</recording-list></metadata>";
+            
+            if (xmlData == "<metadata xmlns=\"http://musicbrainz.org/ns/mmd-2.0#\"><recording-list></recording-list></metadata>")
+            {
+                throw new EmptyXMLException();
+            } else await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
         }
 
     }
