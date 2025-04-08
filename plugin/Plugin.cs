@@ -169,7 +169,6 @@ namespace MusicBeePlugin
                 // ### sub-panel for user input
                 Label mbzUserInputLabel = new Label();
                 mbzUserInputLabel.AutoSize = true;
-                mbzUserInputLabel.Location = new Point(0, 20);
                 mbzUserInputLabel.Text = "Access token from MusicBrainz:";
                 mbzUserInputLabel.TextAlign = ContentAlignment.MiddleLeft;
                 mbzUserInputLabel.Anchor = AnchorStyles.Left; // align the label so it doesn't look misplaced
@@ -181,6 +180,7 @@ namespace MusicBeePlugin
                 mbzUserInputBox.BackColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                    SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentBackground));
                 mbzUserInputBox.BorderStyle = BorderStyle.FixedSingle;
+                mbzUserInputBox.Padding = new Padding(0, 0, 0, 5);
 
                 userInputPanel.Controls.Add(mbzUserInputLabel, 0, 0);
                 userInputPanel.Controls.Add(mbzUserInputBox, 1, 0);
@@ -188,14 +188,13 @@ namespace MusicBeePlugin
                 // ### sub-panel for links
                 LinkLabel mbzVerifyLabel = new LinkLabel();
                 mbzVerifyLabel.AutoSize = true;
-                mbzVerifyLabel.Location = new Point(0, 70);
                 mbzVerifyLabel.Text = "Log in to MusicBrainz";
                 mbzVerifyLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                     SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
-                
+                mbzVerifyLabel.Padding = new Padding(0, 0, 0, 5);
+
                 LinkLabel mbzAuthLabel = new LinkLabel();
                 mbzAuthLabel.AutoSize = true;
-                mbzAuthLabel.Location = new Point(0, 115);
                 mbzAuthLabel.Text = "Get an access token from MusicBrainz";
                 mbzAuthLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                     SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
@@ -217,11 +216,15 @@ namespace MusicBeePlugin
                 userAuthenticatedLabel = new Label();
                 userAuthenticatedLabel.AutoSize = true;
                 userAuthenticatedLabel.Text = "Logged in as %USERNAME%";
+                userAuthenticatedLabel.Padding = new Padding(0, 0, 0, 5);
+
                 LinkLabel configLinkLabel = new LinkLabel();
                 configLinkLabel.AutoSize = true;
                 configLinkLabel.Text = "Configure tag bindings";
                 configLinkLabel.LinkColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(
                     SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentForeground));
+                configLinkLabel.Padding = new Padding(0, 0, 0, 5);
+
                 LinkLabel revokeAccessLabel = new LinkLabel();
                 revokeAccessLabel.AutoSize = true;
                 revokeAccessLabel.Text = "Log out from MusicBrainz";

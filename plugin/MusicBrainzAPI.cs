@@ -18,7 +18,6 @@ namespace plugin
 
         /*
          * TODO:
-         * Handle access tokens ephemerally.
          * See if Get keeps to JSON or not.
          * **/
 
