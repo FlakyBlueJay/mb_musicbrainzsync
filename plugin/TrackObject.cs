@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 using static MusicBeePlugin.Plugin;
 
 namespace plugin
@@ -27,14 +28,18 @@ namespace plugin
             public UnsupportedFormatException(string message) : base(message) { }
         }
 
+
+        private static readonly HashSet<String> bannedExtensions = new HashSet<String> { ".tak", ".midi", ".mid", ".xm", ".uxm", ".mod" };
+
         public MusicBeeTrack(string path)
         {
             System.Diagnostics.Debug.WriteLine(path);
             System.Diagnostics.Debug.WriteLine(Path.GetExtension(path));
-            
-            if (Path.GetExtension(path) == ".tak")
+
+            string fileExt = Path.GetExtension(path);
+            if (bannedExtensions.Contains(fileExt))
             {
-                throw new UnsupportedFormatException("TAK files are not currently supported by this plugin.");
+                throw new UnsupportedFormatException($"{fileExt} files are not currently supported by this plugin.");
             }
             else
             {

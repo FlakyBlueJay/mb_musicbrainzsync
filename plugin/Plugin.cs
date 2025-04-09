@@ -423,6 +423,7 @@ namespace MusicBeePlugin
                 catch (UnsupportedFormatException e)
                 {
                     MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Rating submission failed due to unsupported format.");
                 }
                 catch (EmptyXMLException)
                 {
