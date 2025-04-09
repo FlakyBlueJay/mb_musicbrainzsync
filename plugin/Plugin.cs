@@ -375,15 +375,14 @@ namespace MusicBeePlugin
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings", "", null);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", null);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", SendTrackRatings);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release", "", null);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", SendAlbumGroupRatings);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recording", "", null);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", null);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", null);
 
                     // add hotkey entries
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", SendTrackRatings);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings", null);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings to Release Group", SendAlbumGroupRatings);
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", null);
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", null);
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", null);
@@ -413,24 +412,82 @@ namespace MusicBeePlugin
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
                     foreach (MusicBeeTrack track in tracks)
                     {
+                        if (!string.IsNullOrEmpty(track.MusicBrainzTrackId) && !string.IsNullOrEmpty(track.Rating))
+                        {
                             trackRatings.Add((track.MusicBrainzTrackId, track.Rating));
-                        
+                        }
                     }
-                    await mbz.SetTrackRatings(trackRatings);
-                    mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted ratings to MusicBrainz.");
-
+                    if (trackRatings.Count == 0)
+                    {
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Ratings not submitted due to empty data.");
+                    }
+                    else
+                    {
+                        await mbz.SetTrackRatings(trackRatings);
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted ratings to MusicBrainz.");
+                    }
                 }
                 catch (UnsupportedFormatException e)
                 {
                     MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     mbApiInterface.MB_SetBackgroundTaskMessage("Rating submission failed due to unsupported format.");
                 }
-                catch (EmptyDataException)
-                {
-                    mbApiInterface.MB_SetBackgroundTaskMessage("Ratings not submitted due to empty data.");
-                }
             }
 
+        }
+
+        public async void SendAlbumGroupRatings(object sender, EventArgs args)
+        {
+            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
+            if (files == null)
+            {
+                return;
+            }
+            else
+            {
+                try {
+                    Dictionary<string, string> albumRatings = new Dictionary<string, string>();
+                    List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
+                    foreach (MusicBeeTrack track in tracks)
+                    {
+                        if (!string.IsNullOrEmpty(track.MusicBrainzReleaseGroupId))
+                        {
+                            if (albumRatings.ContainsKey(track.MusicBrainzReleaseGroupId))
+                            {
+                                // check if the rating is different to what is already logged, and error out if it is.
+                                if (albumRatings[track.MusicBrainzReleaseGroupId] != track.AlbumRating)
+                                {
+                                    MessageBox.Show($"Error: {track.Album} has inconsistent album ratings.\n\nGive every track on that album the exact same album rating and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                // if track actually has an album rating
+                                if (!string.IsNullOrEmpty(track.AlbumRating))
+                                {
+                                    albumRatings.Add(track.MusicBrainzReleaseGroupId, track.AlbumRating);
+                                } 
+                            }
+                        }
+                    }
+                    if (albumRatings.Count == 0)
+                    {
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Album ratings not submitted due to empty data.");
+                        return;
+                    }
+                    else
+                    {
+                        await mbz.SetReleaseGroupRatings(albumRatings);
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted album ratings to MusicBrainz.");
+                    }
+                }
+                catch (UnsupportedFormatException e)
+                {
+                    MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Rating submission failed due to unsupported format.");
+                }
+            }
         }
 
     }

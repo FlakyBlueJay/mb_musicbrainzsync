@@ -349,38 +349,55 @@ namespace plugin
         {
             StringWriter stringWriter = new StringWriter();
             XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
-
             xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
             xmlWriter.WriteStartElement("recording-list");
 
-            // counter for successfully created recordings
-            int elementCount = 0;
             foreach ((string,string) trackRatingPair in trackRatings)
             {
                 string recordingMbid = trackRatingPair.Item1;
                 string trackRatingString = trackRatingPair.Item2;
                 
-                //only activate if both the recording MBID and track rating are full
-                if (!string.IsNullOrEmpty(recordingMbid) && !string.IsNullOrEmpty(trackRatingString))
-                {
-                    // MusicBrainz uses a 0-100 scale for ratings, so we need to convert the 1-5 scale used by MusicBee to 0-100.
                     float rating = (float.Parse(trackRatingString)) * 20;
                     xmlWriter.WriteStartElement("recording"); xmlWriter.WriteAttributeString("id", recordingMbid);
                     xmlWriter.WriteElementString("user-rating", rating.ToString());
                     xmlWriter.WriteEndElement(); // ends individual recording XML
-                    elementCount += 1; // iterate the counter
-                }
             }
             xmlWriter.WriteEndElement(); // ends recording-list XML
             xmlWriter.WriteEndElement(); // ends metadata XML
             xmlWriter.Flush();
             string xmlData = stringWriter.ToString();
             Debug.WriteLine("XML Data: " + xmlData);
+            await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
+        }
 
-            if (elementCount == 0)
+        public async Task SetReleaseGroupRatings(Dictionary<string, string> releaseRatings)
+        {
+            StringWriter stringWriter = new StringWriter();
+            XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
+            xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
+            xmlWriter.WriteStartElement("release-group-list");
+
+            foreach (KeyValuePair<string, string> releaseRatingPair in releaseRatings)
             {
-                throw new EmptyDataException();
-            } else await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
+                string releaseMbid = releaseRatingPair.Key;
+                string releaseRatingString = releaseRatingPair.Value;
+
+                // Oddly enough, MusicBee actually just outputs 0-100 for the album rating, not 0-5.
+                int rating = int.Parse(releaseRatingString);
+
+                if (!(rating == 0)) {
+                    xmlWriter.WriteStartElement("release-group"); xmlWriter.WriteAttributeString("id", releaseMbid);
+                    xmlWriter.WriteElementString("user-rating", rating.ToString());
+                    xmlWriter.WriteEndElement(); // ends individual release XML
+                }
+            }
+
+            xmlWriter.WriteEndElement(); // ends release-group-list XML
+            xmlWriter.WriteEndElement(); // ends metadata XML
+            xmlWriter.Flush();
+            string xmlData = stringWriter.ToString();
+            Debug.WriteLine("XML Data: " + xmlData);
+            await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
         }
 
     }
