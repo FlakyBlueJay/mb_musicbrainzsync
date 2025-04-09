@@ -425,7 +425,7 @@ namespace MusicBeePlugin
                     MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     mbApiInterface.MB_SetBackgroundTaskMessage("Rating submission failed due to unsupported format.");
                 }
-                catch (EmptyXMLException)
+                catch (EmptyDataException)
                 {
                     mbApiInterface.MB_SetBackgroundTaskMessage("Ratings not submitted due to empty data.");
                 }

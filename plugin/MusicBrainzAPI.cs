@@ -3,6 +3,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.IO;
+using System.Xml;
 using Newtonsoft.Json;
 using System.Windows.Forms;
 
@@ -28,8 +30,8 @@ namespace plugin
         public string mbzAccessToken; public DateTime mbzAccessTokenExpiry;
 
         // exception to be called when the XML comes up empty so the plugin can tell the user on the status bar.
-        public class EmptyXMLException : Exception {
-            public EmptyXMLException() { }
+        public class EmptyDataException : Exception {
+            public EmptyDataException() { }
         }
 
         // object version of the MusicBrainz OAuth JSON data.
@@ -345,8 +347,13 @@ namespace plugin
         // # Rating functions
         public async Task SetTrackRatings(List<(string, string)> trackRatings)
         {
-            // TODO: Use an XML library.
-            string xmlData = "";
+            StringWriter stringWriter = new StringWriter();
+            XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
+
+            xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
+            xmlWriter.WriteStartElement("recording-list");
+
+            int elementCount = 0;
             foreach ((string,string) trackRatingPair in trackRatings)
             {
                 string recordingMbid = trackRatingPair.Item1;
@@ -355,20 +362,23 @@ namespace plugin
                 //only activate if both the recording MBID and track rating are full
                 if (!string.IsNullOrEmpty(recordingMbid) && !string.IsNullOrEmpty(trackRatingString))
                 {
-                    // MusicBrainz uses a 0-100 scale for ratings, so we need to convert the 1-5 scale to 0-100.
+                    // MusicBrainz uses a 0-100 scale for ratings, so we need to convert the 1-5 scale used by MusicBee to 0-100.
                     float rating = (float.Parse(trackRatingString)) * 20;
-                    xmlData += $"<recording id=\"{recordingMbid}\">" +
-                        $"<user-rating>{rating}</user-rating>" +
-                        "</recording>";
+                    xmlWriter.WriteStartElement("recording"); xmlWriter.WriteAttributeString("id", recordingMbid);
+                    xmlWriter.WriteElementString("user-rating", rating.ToString());
+                    xmlWriter.WriteEndElement(); // ends individual recording XML
+                    elementCount += 1; // iterate the counter
                 }
             }
+            xmlWriter.WriteEndElement(); // ends recording-list XML
+            xmlWriter.WriteEndElement(); // ends metadata XML
+            xmlWriter.Flush();
+            string xmlData = stringWriter.ToString();
+            Debug.WriteLine("XML Data: " + xmlData);
 
-            xmlData = "<metadata xmlns=\"http://musicbrainz.org/ns/mmd-2.0#\"><recording-list>" +
-                    xmlData + "</recording-list></metadata>";
-            
-            if (xmlData == "<metadata xmlns=\"http://musicbrainz.org/ns/mmd-2.0#\"><recording-list></recording-list></metadata>")
+            if (elementCount == 0)
             {
-                throw new EmptyXMLException();
+                throw new EmptyDataException();
             } else await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
         }
 

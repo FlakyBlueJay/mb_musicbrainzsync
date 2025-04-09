@@ -33,9 +33,6 @@ namespace plugin
 
         public MusicBeeTrack(string path)
         {
-            System.Diagnostics.Debug.WriteLine(path);
-            System.Diagnostics.Debug.WriteLine(Path.GetExtension(path));
-
             string fileExt = Path.GetExtension(path);
             if (bannedExtensions.Contains(fileExt))
             {
