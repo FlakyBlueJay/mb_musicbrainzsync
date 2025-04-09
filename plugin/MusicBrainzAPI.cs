@@ -353,6 +353,7 @@ namespace plugin
             xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
             xmlWriter.WriteStartElement("recording-list");
 
+            // counter for successfully created recordings
             int elementCount = 0;
             foreach ((string,string) trackRatingPair in trackRatings)
             {
