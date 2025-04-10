@@ -238,7 +238,10 @@ namespace MusicBeePlugin
                 mainPanel.Controls.Add(postAuthConfigPanel);
 
                 // ## post-auth panel events
+                configLinkLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(tagBindingConfigLabel_LinkClicked);
                 revokeAccessLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(revokeAccessLabel_Clicked);
+
+
 
                 // Hide the authentication panel if the user is already authenticated to MusicBrainz, or vice versa if not logged in.
                 ToggleAuthPanelsVisibility();
@@ -329,6 +332,12 @@ namespace MusicBeePlugin
             }
         }
 
+        private void tagBindingConfigLabel_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        {
+            // open the tag binding config window
+            TagBindingConfig tagBindingConfig = new TagBindingConfig();
+            tagBindingConfig.ShowDialog();
+        }
         private async void revokeAccessLabel_Clicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
             await mbz.RevokeAccess();
@@ -407,7 +416,8 @@ namespace MusicBeePlugin
             else
             {
                 mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
-                try {
+                try
+                {
                     List<(string, string)> trackRatings = new List<(string, string)>();
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
                     foreach (MusicBeeTrack track in tracks)
@@ -445,7 +455,8 @@ namespace MusicBeePlugin
             }
             else
             {
-                try {
+                try
+                {
                     Dictionary<string, string> albumRatings = new Dictionary<string, string>();
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
                     foreach (MusicBeeTrack track in tracks)
@@ -467,7 +478,7 @@ namespace MusicBeePlugin
                                 if (!string.IsNullOrEmpty(track.AlbumRating))
                                 {
                                     albumRatings.Add(track.MusicBrainzReleaseGroupId, track.AlbumRating);
-                                } 
+                                }
                             }
                         }
                     }
@@ -490,6 +501,52 @@ namespace MusicBeePlugin
             }
         }
 
+        // # Tag functions
+        public string GetTrackTagsFromFile(string filePath)
+        {
+            string[] tags = mbApiInterface.Library_GetFileTag(filePath, MetaDataType.Genres).Split(';');
+            return tags[0];
+        }
+
+        public async void SendTrackTags(object sender, EventArgs args)
+        {
+            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
+            if (files == null)
+            {
+                return;
+            }
+            else
+            {
+                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to MusicBrainz...");
+                try
+                {
+                    List<(string, string)> tracksAndTags = new List<(string, string)>();
+                    List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
+                    foreach (MusicBeeTrack track in tracks)
+                    {
+                        if (!string.IsNullOrEmpty(track.MusicBrainzTrackId))
+                        {
+                            tracksAndTags.Add((track.MusicBrainzTrackId, track.Rating));
+                        }
+                    }
+                    if (tracksAndTags.Count == 0)
+                    {
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Tags not submitted due to empty data.");
+                    }
+                    else
+                    {
+                        // await mbz.SetRecordingTags(tracksAndTags);
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted tags to MusicBrainz.");
+                    }
+                }
+                catch (UnsupportedFormatException e)
+                {
+                    MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Tag submission failed due to unsupported format.");
+                }
+            }
+
+        }
     }
 }
 

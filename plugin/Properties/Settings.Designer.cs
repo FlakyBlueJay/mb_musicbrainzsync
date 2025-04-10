@@ -34,5 +34,53 @@ namespace plugin.Properties {
                 this["refreshToken"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool separateTagBindings {
+            get {
+                return ((bool)(this["separateTagBindings"]));
+            }
+            set {
+                this["separateTagBindings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("genres;mood")]
+        public string recordingTagBindings {
+            get {
+                return ((string)(this["recordingTagBindings"]));
+            }
+            set {
+                this["recordingTagBindings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string releaseTagBindings {
+            get {
+                return ((string)(this["releaseTagBindings"]));
+            }
+            set {
+                this["releaseTagBindings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string releaseGroupTagBindings {
+            get {
+                return ((string)(this["releaseGroupTagBindings"]));
+            }
+            set {
+                this["releaseGroupTagBindings"] = value;
+            }
+        }
     }
 }

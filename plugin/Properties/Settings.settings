@@ -5,5 +5,17 @@
     <Setting Name="refreshToken" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="separateTagBindings" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="recordingTagBindings" Type="System.String" Scope="User">
+      <Value Profile="(Default)">genres;mood</Value>
+    </Setting>
+    <Setting Name="releaseTagBindings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="releaseGroupTagBindings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>
