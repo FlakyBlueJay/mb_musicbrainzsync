@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using static MusicBeePlugin.Plugin;
 using System.Diagnostics;
 using System.Linq;
+using plugin.Properties;
 
 namespace plugin
 {
-    internal class MusicBeeTrack
+    public class MusicBeeTrack
     {
-
 
         public string MusicBrainzTrackId { get; private set; }
         public string MusicBrainzReleaseId { get; private set; }
@@ -20,30 +20,6 @@ namespace plugin
         // ratings
         public string Rating { get; private set; }
         public string AlbumRating { get; private set; }
-
-        // standard tags musicbrainz may be looking for
-        public List<string> Genres { get; private set; }
-        public List<string> Mood { get; private set; }
-        public List<string> Occasion { get; private set; }
-        public List<string> Keywords { get; private set; }
-       
-        // custom tags
-        public List<string> Custom1 { get; private set; }
-        public List<string> Custom2 { get; private set; }
-        public List<string> Custom3 { get; private set; }
-        public List<string> Custom4 { get; private set; }
-        public List<string> Custom5 { get; private set; }
-        public List<string> Custom6 { get; private set; }
-        public List<string> Custom7 { get; private set; }
-        public List<string> Custom8 { get; private set; }
-        public List<string> Custom9 { get; private set; }
-        public List<string> Custom10 { get; private set; }
-        public List<string> Custom11 { get; private set; }
-        public List<string> Custom12 { get; private set; }
-        public List<string> Custom13 { get; private set; }
-        public List<string> Custom14 { get; private set; }
-        public List<string> Custom15 { get; private set; }
-        public List<string> Custom16 { get; private set; }
 
 
         // for debug and troubleshooting purposes
@@ -57,7 +33,6 @@ namespace plugin
         {
             public UnsupportedFormatException(string message) : base(message) { }
         }
-
 
         private static readonly HashSet<String> bannedExtensions = new HashSet<String> { ".tak", ".midi", ".mid", ".xm", ".uxm", ".mod" };
 
@@ -92,28 +67,7 @@ namespace plugin
                 // Rating data - MusicBee seems to output them as strings.
                 Rating = mbApiInterface.Library_GetFileTag(path, MetaDataType.Rating);
                 AlbumRating = mbApiInterface.Library_GetFileTag(path, MetaDataType.RatingAlbum);
-                // Standard tags
-                Genres = GetTagsToList(path, MetaDataType.Genre);
-                Mood = GetTagsToList(path, MetaDataType.Mood);
-                Occasion = GetTagsToList(path, MetaDataType.Occasion);
-                Keywords = GetTagsToList(path, MetaDataType.Keywords);
-                // Custom tags
-                Custom1 = GetTagsToList(path, MetaDataType.Custom1);
-                Custom2 = GetTagsToList(path, MetaDataType.Custom2);
-                Custom3 = GetTagsToList(path, MetaDataType.Custom3);
-                Custom4 = GetTagsToList(path, MetaDataType.Custom4);
-                Custom5 = GetTagsToList(path, MetaDataType.Custom5);
-                Custom6 = GetTagsToList(path, MetaDataType.Custom6);
-                Custom7 = GetTagsToList(path, MetaDataType.Custom7);
-                Custom8 = GetTagsToList(path, MetaDataType.Custom8);
-                Custom9 = GetTagsToList(path, MetaDataType.Custom9);
-                Custom10 = GetTagsToList(path, MetaDataType.Custom10);
-                Custom11 = GetTagsToList(path, MetaDataType.Custom11);
-                Custom12 = GetTagsToList(path, MetaDataType.Custom12);
-                Custom13 = GetTagsToList(path, MetaDataType.Custom13);
-                Custom14 = GetTagsToList(path, MetaDataType.Custom14);
-                Custom15 = GetTagsToList(path, MetaDataType.Custom15);
-                Custom16 = GetTagsToList(path, MetaDataType.Custom16);
+                FilePath = path;
 
                 // MusicBrainz tags: single
                 MusicBrainzTrackId = TagLib_TrackData.Tag.MusicBrainzTrackId;
@@ -132,8 +86,58 @@ namespace plugin
                 }
 
             }
-                
 
+        }
+
+        // for the tag functions, we want to get a collection of tags, as defined in the tag binding settings.
+        // it doesn't make as much sense to have these as properties at the moment.
+        public List<string> GetAllTagsFromFile(string type = "recording")
+        {
+            // get the tags the user has chosen to submit
+            List<string> tagsToSearch = new List<string>();
+            List<string> tagList = new List<string>();
+
+            if (type == "recording" || !Settings.Default.separateTagBindings)
+            {
+                tagsToSearch = Settings.Default.recordingTagBindings.Split(';').ToList();
+            }
+            else
+            {
+                switch (type)
+                {
+                    case "release":
+                        tagsToSearch = Settings.Default.releaseTagBindings.Split(';').ToList();
+                        break;
+                    case "release-group":
+                        tagsToSearch = Settings.Default.releaseGroupTagBindings.Split(';').ToList();
+                        break;
+                }
+            }
+                
+            Debug.WriteLine("tagsToSearch: " + string.Join(", ", tagsToSearch));
+
+            foreach (string tag in tagsToSearch)
+            {
+                // get tag from finding its key in the dictionary then add to get track tags.
+                MetaDataType tagType = listTagBindings[tag];
+                Debug.Write("got tag binding!");
+                // clean up tags
+                List<string> tagValue = mbApiInterface.Library_GetFileTag(FilePath, tagType).Split(';').ToList();
+                foreach (string tagString in tagValue)
+                {
+                    // do not try to add tags if tagString is empty, otherwise it will add empty strings.
+                    if (!string.IsNullOrEmpty(tagString))
+                    {
+                        string trimmedTag = tagString.Trim();
+                        if (!tagList.Contains(trimmedTag))
+                        {
+                            tagList.Add(trimmedTag);
+                        }
+                    }
+                }
+
+            }
+            return tagList;
         }
 
     }

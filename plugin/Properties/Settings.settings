@@ -17,5 +17,10 @@
     <Setting Name="releaseGroupTagBindings" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="findReplace" Type="System.String" Scope="User">
+      <Value Profile="(Default)">synthpop;synth-pop
+uplifting trance;melodic trance
+alt-pop;alternative pop</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

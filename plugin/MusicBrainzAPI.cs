@@ -400,5 +400,71 @@ namespace plugin
             await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
         }
 
+        private string FindReplaceTag(string tag)
+        {
+            tag = tag.ToLower();
+            Debug.WriteLine("Tag being processed:"+tag);
+            if (string.IsNullOrEmpty(Settings.Default.findReplace))
+            {
+                return tag;
+            }
+            else
+            {
+                Dictionary<string, string> findReplace = new Dictionary<string, string>();
+                // convert the findReplace setting into a dictionary for easier.
+                foreach (string line in Settings.Default.findReplace.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                {
+                    Debug.WriteLine(line);
+                    // split by the first semicolon to get the find and replace values
+                    string[] row = line.Split(new[] { ';' }, 2);
+                    if (row.Length == 2)
+                    {
+                        string findTag = row[0];
+                        string replaceTag = row[1];
+                        findReplace.Add(findTag, replaceTag);
+                    }
+                }
+                if (findReplace.ContainsKey(tag))
+                {
+                    return findReplace[tag];
+                }
+                else
+                {
+                    return tag;
+                }
+            }
+                     
+        }
+
+        public async Task SetTags(Dictionary<string, string> trackMbid_TagPairing, string entityType = "recording")
+        {
+            StringWriter stringWriter = new StringWriter();
+            XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
+            xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
+            xmlWriter.WriteStartElement($"{entityType}-list");
+            foreach (KeyValuePair<string, string> trackTagPair in trackMbid_TagPairing)
+            {
+                string recordingMbid = trackTagPair.Key;
+                string tag = trackTagPair.Value;
+                xmlWriter.WriteStartElement(entityType); xmlWriter.WriteAttributeString("id", recordingMbid);
+                xmlWriter.WriteStartElement("user-tag-list");
+                
+                foreach (string tagString in tag.Split(';'))
+                {
+                    xmlWriter.WriteStartElement("user-tag");
+                    xmlWriter.WriteElementString("name", FindReplaceTag(tagString));
+                    xmlWriter.WriteEndElement(); 
+                }
+                xmlWriter.WriteEndElement(); // ends user-tag-list XML
+                xmlWriter.WriteEndElement(); // ends individual recording XML
+            }
+            xmlWriter.WriteEndElement(); // ends recording-list XML
+            xmlWriter.WriteEndElement(); // ends metadata XML
+            xmlWriter.Flush();
+            string xmlData = stringWriter.ToString();
+            Debug.WriteLine("XML Data: " + xmlData);
+            await PostToMusicBrainz("/ws/2/tag?client=mb_MusicBrainzSync", xmlData, "application/xml");
+        }
+
     }
 }

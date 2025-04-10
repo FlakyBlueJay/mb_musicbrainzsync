@@ -82,5 +82,17 @@ namespace plugin.Properties {
                 this["releaseGroupTagBindings"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("synthpop;synth-pop\r\nuplifting trance;melodic trance\r\nalt-pop;alternative pop")]
+        public string findReplace {
+            get {
+                return ((string)(this["findReplace"]));
+            }
+            set {
+                this["findReplace"] = value;
+            }
+        }
     }
 }

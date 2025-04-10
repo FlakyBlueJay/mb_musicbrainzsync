@@ -117,6 +117,32 @@ namespace MusicBeePlugin
         public TableLayoutPanel authConfigPanel_new;
         public TableLayoutPanel postAuthConfigPanel;
 
+        // This is the list of tag bindings that are used in the plugin.
+
+        public static Dictionary<string, MetaDataType> listTagBindings = new Dictionary<string, MetaDataType>
+        {
+            {"genres", MetaDataType.Genre },
+            {"mood", MetaDataType.Mood },
+            {"occasion", MetaDataType.Occasion },
+            {"keywords", MetaDataType.Keywords },
+            {"custom1", MetaDataType.Custom1 },
+            {"custom2", MetaDataType.Custom2 },
+            {"custom3", MetaDataType.Custom3},
+            {"custom4", MetaDataType.Custom4},
+            {"custom5", MetaDataType.Custom5},
+            {"custom6", MetaDataType.Custom6},
+            {"custom7", MetaDataType.Custom7},
+            {"custom8", MetaDataType.Custom8},
+            {"custom9", MetaDataType.Custom9},
+            {"custom10", MetaDataType.Custom10},
+            {"custom11", MetaDataType.Custom11},
+            {"custom12", MetaDataType.Custom12},
+            {"custom13", MetaDataType.Custom13},
+            {"custom14", MetaDataType.Custom14},
+            {"custom15", MetaDataType.Custom15},
+            {"custom16", MetaDataType.Custom16}
+        };
+
         // # MusicBee plugin initialisation functions
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
@@ -252,6 +278,7 @@ namespace MusicBeePlugin
 
         }
 
+
         // # configure panel UI functions
         private TableLayoutPanel GenerateTableLayoutPanel(int columns, int rows)
         {
@@ -385,16 +412,16 @@ namespace MusicBeePlugin
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", null);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", SendTrackRatings);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", SendAlbumGroupRatings);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recording", "", null);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", null);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recordings", "", SendTrackTags);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", SendReleaseTags);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", SendReleaseGroupTags);
 
                     // add hotkey entries
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", SendTrackRatings);
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings to Release Group", SendAlbumGroupRatings);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", null);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", null);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", null);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", SendTrackTags);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", SendReleaseTags);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", SendReleaseGroupTags);
 
                     // output username to status bar if logged in
                     if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
@@ -415,7 +442,7 @@ namespace MusicBeePlugin
             }
             else
             {
-                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
+                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting track ratings to MusicBrainz...");
                 try
                 {
                     List<(string, string)> trackRatings = new List<(string, string)>();
@@ -429,12 +456,12 @@ namespace MusicBeePlugin
                     }
                     if (trackRatings.Count == 0)
                     {
-                        mbApiInterface.MB_SetBackgroundTaskMessage("Ratings not submitted due to empty data.");
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Track ratings not submitted due to empty data.");
                     }
                     else
                     {
                         await mbz.SetTrackRatings(trackRatings);
-                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted ratings to MusicBrainz.");
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted track ratings to MusicBrainz.");
                     }
                 }
                 catch (UnsupportedFormatException e)
@@ -455,6 +482,7 @@ namespace MusicBeePlugin
             }
             else
             {
+                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting album ratings to MusicBrainz...");
                 try
                 {
                     Dictionary<string, string> albumRatings = new Dictionary<string, string>();
@@ -502,13 +530,8 @@ namespace MusicBeePlugin
         }
 
         // # Tag functions
-        public string GetTrackTagsFromFile(string filePath)
-        {
-            string[] tags = mbApiInterface.Library_GetFileTag(filePath, MetaDataType.Genres).Split(';');
-            return tags[0];
-        }
-
-        public async void SendTrackTags(object sender, EventArgs args)
+        
+        public async void SendTagData(string entity_type)
         {
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
@@ -517,17 +540,68 @@ namespace MusicBeePlugin
             }
             else
             {
-                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to MusicBrainz...");
+                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to tracks on MusicBrainz...");
                 try
                 {
-                    List<(string, string)> tracksAndTags = new List<(string, string)>();
+                    Debug.WriteLine("Start process");
+                    Dictionary<string, string> tracksAndTags = new Dictionary<string, string>();
+                    Debug.WriteLine("Empty tracks and tags created.");
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
+                    Debug.WriteLine("Tracks processed to list");
                     foreach (MusicBeeTrack track in tracks)
                     {
-                        if (!string.IsNullOrEmpty(track.MusicBrainzTrackId))
+                        Debug.WriteLine(track.Title);
+                        string currentMbid = "";
+                        Debug.WriteLine($"Getting MBID {entity_type}");
+                        switch (entity_type)
                         {
-                            tracksAndTags.Add((track.MusicBrainzTrackId, track.Rating));
+                            case "release":
+                                currentMbid = track.MusicBrainzReleaseId;
+                                Debug.WriteLine("Current mbid:"+currentMbid);
+                                break;
+                            case "release-group":
+                                currentMbid = track.MusicBrainzReleaseGroupId;
+                                Debug.WriteLine("Current mbid:" + currentMbid);
+                                break;
+                            default:
+                                currentMbid = track.MusicBrainzTrackId;
+                                break;
                         }
+                        Debug.WriteLine($"MusicBrainz {entity_type} ID: {currentMbid}, Null/Empty: {string.IsNullOrEmpty(currentMbid)}");
+                        if (!string.IsNullOrEmpty(currentMbid))
+                        {
+                            List<string> tags = track.GetAllTagsFromFile(entity_type); //problematic line
+                            Debug.WriteLine("Got all tags from track.");
+                            Debug.WriteLine(String.Join(";", tags));
+                            if (entity_type == "recording")
+                            {
+                                Debug.WriteLine("Handling recording logic...");
+                                tracksAndTags.Add(currentMbid, String.Join(";", tags));
+                            }
+                            else
+                            {
+                                if (tracksAndTags.ContainsKey(currentMbid))
+                                {
+                                    Debug.WriteLine("Handling release(-group) logic...");
+                                    if (tracksAndTags[currentMbid] != String.Join(";", tags))
+                                    {
+                                        Debug.WriteLine("ERROR: inconsistent tagging.");
+                                        MessageBox.Show($"Error: {track.Album} has inconsistent tags.\n\nGive every track on that album the exact same tags and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        return;
+                                    }
+                                } 
+                                else
+                                {
+                                    tracksAndTags.Add(currentMbid, String.Join(";", tags));
+
+                                }
+                            }
+                            
+                        }
+                    }
+                    foreach (var key in tracksAndTags.Keys)
+                    {
+                        Debug.WriteLine($"Key: {key}, Value: {tracksAndTags[key]}");
                     }
                     if (tracksAndTags.Count == 0)
                     {
@@ -535,7 +609,7 @@ namespace MusicBeePlugin
                     }
                     else
                     {
-                        // await mbz.SetRecordingTags(tracksAndTags);
+                        await mbz.SetTags(tracksAndTags, entity_type);
                         mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted tags to MusicBrainz.");
                     }
                 }
@@ -545,8 +619,23 @@ namespace MusicBeePlugin
                     mbApiInterface.MB_SetBackgroundTaskMessage("Tag submission failed due to unsupported format.");
                 }
             }
-
         }
+
+        public void SendTrackTags(object sender, EventArgs args)
+        {
+            SendTagData("recording");
+        }
+
+        public void SendReleaseTags(object sender, EventArgs args)
+        {
+            SendTagData("release");
+        }
+
+        public void SendReleaseGroupTags(object sender, EventArgs args)
+        {
+            SendTagData("release-group");
+        }
+
     }
 }
 
