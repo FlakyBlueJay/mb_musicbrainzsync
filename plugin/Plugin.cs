@@ -416,6 +416,8 @@ namespace MusicBeePlugin
                 {
                     Dictionary<string, float> tracksAndRatings = new Dictionary<string, float>();
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
+                    // required to check album ratings for consistency.
+                    float albumRating = 0;
                     foreach (MusicBeeTrack track in tracks)
                     {
                         string currentMbid = "";
@@ -431,17 +433,25 @@ namespace MusicBeePlugin
                         }
                         if (!string.IsNullOrEmpty(currentMbid))
                         {
-                            if (entity_type == "recording")
+                            if (entity_type == "recording") 
                             {
                                 // Track ratings are out of 5, so we need to multiply by 20 to get a percentage that MusicBrainz is happy to use.
-                                float onlineRating = float.Parse(track.Rating) * 20;
-                                tracksAndRatings.Add(currentMbid, onlineRating);
+                                if (!string.IsNullOrEmpty(track.Rating))
+                                {
+                                    float onlineRating = float.Parse(track.Rating) * 20;
+                                    tracksAndRatings.Add(currentMbid, onlineRating);
+                                }
+                                
                             }
                             else
                             {
+                                if (!string.IsNullOrEmpty(track.AlbumRating))
+                                {
+                                    albumRating = float.Parse(track.AlbumRating);
+                                }
                                 if (tracksAndRatings.ContainsKey(currentMbid))
                                 {
-                                    if (tracksAndRatings[currentMbid] != float.Parse(track.AlbumRating))
+                                    if (tracksAndRatings[currentMbid] != albumRating)
                                     {
                                         MessageBox.Show($"Error: {track.Album} has inconsistent album ratings.\n\nGive every track on that album the exact same album rating and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         return;
@@ -449,7 +459,7 @@ namespace MusicBeePlugin
                                 }
                                 else
                                 {
-                                    tracksAndRatings.Add(currentMbid, float.Parse(track.AlbumRating));
+                                    tracksAndRatings.Add(currentMbid, albumRating);
                                 }
                             }
 

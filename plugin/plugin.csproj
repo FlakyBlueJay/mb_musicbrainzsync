@@ -63,16 +63,7 @@
     <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ArtifactsDir)\out\$(AssemblyTitle)" />
   </Target>
 
-  <Target Name="MoveOutputFiles" AfterTargets="CopyFiles" DependsOnTargets="CopyFiles">
-    <ItemGroup>
-      <FilesToMove Include="$(ArtifactsDir)\out\$(AssemblyTitle)\$(AssemblyName)*" />
-    </ItemGroup>
-    <Move SourceFiles="@(FilesToMove)" DestinationFolder="$(ArtifactsDir)\out">
-      <Output TaskParameter="DestinationFiles" ItemName="FilesMoved" />
-    </Move>
-  </Target>
-
-  <Target Name="ZipBuild" AfterTargets="MoveOutputFiles" DependsOnTargets="MoveOutputFiles">
+  <Target Name="ZipBuild" AfterTargets="CopyFiles" DependsOnTargets="CopyFiles">
     <ZipDirectory Overwrite="true" SourceDirectory="$(ArtifactsDir)\out" DestinationFile="$(ArtifactsDir)\$(AssemblyTitle).zip" />
   </Target>
 
