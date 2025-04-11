@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TagBindingConfig));
             this.separateCheckBox = new System.Windows.Forms.CheckBox();
             this.separateHelperLabel = new System.Windows.Forms.Label();
             this.tagGroupBox = new System.Windows.Forms.GroupBox();
@@ -48,9 +49,15 @@
             this.tagBindingLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.findReplacePage = new System.Windows.Forms.TabPage();
             this.findReplaceTable = new System.Windows.Forms.DataGridView();
-            this.mainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.findColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.replaceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.otherSettingsPage = new System.Windows.Forms.TabPage();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.tagSubmitModeLabel = new System.Windows.Forms.Label();
+            this.appendRadioButton = new System.Windows.Forms.RadioButton();
+            this.replaceRadioButton = new System.Windows.Forms.RadioButton();
+            this.mainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.tagSubmitNote = new System.Windows.Forms.Label();
             this.tagGroupBox.SuspendLayout();
             this.tagTabControl.SuspendLayout();
             this.trackTab.SuspendLayout();
@@ -62,6 +69,8 @@
             this.tagBindingLayoutPanel.SuspendLayout();
             this.findReplacePage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.findReplaceTable)).BeginInit();
+            this.otherSettingsPage.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
             this.mainLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -230,6 +239,7 @@
             // 
             this.mainTabControl.Controls.Add(this.tagBindingPage);
             this.mainTabControl.Controls.Add(this.findReplacePage);
+            this.mainTabControl.Controls.Add(this.otherSettingsPage);
             this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTabControl.Location = new System.Drawing.Point(3, 3);
             this.mainTabControl.Name = "mainTabControl";
@@ -289,8 +299,79 @@
             this.findReplaceTable.Dock = System.Windows.Forms.DockStyle.Fill;
             this.findReplaceTable.Location = new System.Drawing.Point(3, 3);
             this.findReplaceTable.Name = "findReplaceTable";
+            this.findReplaceTable.RowHeadersWidth = 82;
             this.findReplaceTable.Size = new System.Drawing.Size(285, 378);
             this.findReplaceTable.TabIndex = 0;
+            // 
+            // findColumn
+            // 
+            this.findColumn.HeaderText = "Find (in tags)";
+            this.findColumn.MinimumWidth = 10;
+            this.findColumn.Name = "findColumn";
+            // 
+            // replaceColumn
+            // 
+            this.replaceColumn.HeaderText = "Replace (for MusicBrainz)";
+            this.replaceColumn.MinimumWidth = 10;
+            this.replaceColumn.Name = "replaceColumn";
+            // 
+            // otherSettingsPage
+            // 
+            this.otherSettingsPage.Controls.Add(this.flowLayoutPanel1);
+            this.otherSettingsPage.Location = new System.Drawing.Point(4, 22);
+            this.otherSettingsPage.Margin = new System.Windows.Forms.Padding(2);
+            this.otherSettingsPage.Name = "otherSettingsPage";
+            this.otherSettingsPage.Size = new System.Drawing.Size(291, 384);
+            this.otherSettingsPage.TabIndex = 2;
+            this.otherSettingsPage.Text = "Other Settings";
+            this.otherSettingsPage.UseVisualStyleBackColor = true;
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.AutoSize = true;
+            this.flowLayoutPanel1.Controls.Add(this.tagSubmitModeLabel);
+            this.flowLayoutPanel1.Controls.Add(this.appendRadioButton);
+            this.flowLayoutPanel1.Controls.Add(this.replaceRadioButton);
+            this.flowLayoutPanel1.Controls.Add(this.tagSubmitNote);
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(5);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(291, 384);
+            this.flowLayoutPanel1.TabIndex = 0;
+            // 
+            // tagSubmitModeLabel
+            // 
+            this.tagSubmitModeLabel.AutoSize = true;
+            this.tagSubmitModeLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tagSubmitModeLabel.Location = new System.Drawing.Point(8, 5);
+            this.tagSubmitModeLabel.Name = "tagSubmitModeLabel";
+            this.tagSubmitModeLabel.Size = new System.Drawing.Size(128, 13);
+            this.tagSubmitModeLabel.TabIndex = 0;
+            this.tagSubmitModeLabel.Text = "Tag submission mode";
+            // 
+            // appendRadioButton
+            // 
+            this.appendRadioButton.AutoSize = true;
+            this.appendRadioButton.Location = new System.Drawing.Point(8, 21);
+            this.appendRadioButton.Name = "appendRadioButton";
+            this.appendRadioButton.Size = new System.Drawing.Size(233, 17);
+            this.appendRadioButton.TabIndex = 1;
+            this.appendRadioButton.TabStop = true;
+            this.appendRadioButton.Text = "Append tags to existing tags on MusicBrainz";
+            this.appendRadioButton.UseVisualStyleBackColor = true;
+            // 
+            // replaceRadioButton
+            // 
+            this.replaceRadioButton.AutoSize = true;
+            this.replaceRadioButton.Location = new System.Drawing.Point(8, 44);
+            this.replaceRadioButton.Name = "replaceRadioButton";
+            this.replaceRadioButton.Size = new System.Drawing.Size(287, 17);
+            this.replaceRadioButton.TabIndex = 2;
+            this.replaceRadioButton.TabStop = true;
+            this.replaceRadioButton.Text = "Clear existing tags when submitting tags to MusicBrainz.";
+            this.replaceRadioButton.UseVisualStyleBackColor = true;
             // 
             // mainLayoutPanel
             // 
@@ -307,15 +388,16 @@
             this.mainLayoutPanel.Size = new System.Drawing.Size(305, 477);
             this.mainLayoutPanel.TabIndex = 6;
             // 
-            // findColumn
+            // tagSubmitNote
             // 
-            this.findColumn.HeaderText = "Find (in tags)";
-            this.findColumn.Name = "findColumn";
-            // 
-            // replaceColumn
-            // 
-            this.replaceColumn.HeaderText = "Replace (for MusicBrainz)";
-            this.replaceColumn.Name = "replaceColumn";
+            this.tagSubmitNote.AutoSize = true;
+            this.tagSubmitNote.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tagSubmitNote.Location = new System.Drawing.Point(8, 64);
+            this.tagSubmitNote.Name = "tagSubmitNote";
+            this.tagSubmitNote.Padding = new System.Windows.Forms.Padding(0, 5, 0, 0);
+            this.tagSubmitNote.Size = new System.Drawing.Size(284, 109);
+            this.tagSubmitNote.TabIndex = 3;
+            this.tagSubmitNote.Text = resources.GetString("tagSubmitNote.Text");
             // 
             // TagBindingConfig
             // 
@@ -346,6 +428,10 @@
             this.tagBindingLayoutPanel.PerformLayout();
             this.findReplacePage.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.findReplaceTable)).EndInit();
+            this.otherSettingsPage.ResumeLayout(false);
+            this.otherSettingsPage.PerformLayout();
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
             this.mainLayoutPanel.ResumeLayout(false);
             this.mainLayoutPanel.PerformLayout();
             this.ResumeLayout(false);
@@ -376,5 +462,11 @@
         private System.Windows.Forms.DataGridView findReplaceTable;
         private System.Windows.Forms.DataGridViewTextBoxColumn findColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn replaceColumn;
+        private System.Windows.Forms.TabPage otherSettingsPage;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.Label tagSubmitModeLabel;
+        private System.Windows.Forms.RadioButton appendRadioButton;
+        private System.Windows.Forms.RadioButton replaceRadioButton;
+        private System.Windows.Forms.Label tagSubmitNote;
     }
 }

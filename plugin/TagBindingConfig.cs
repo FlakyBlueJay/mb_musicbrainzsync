@@ -62,7 +62,7 @@ namespace plugin
         {
             this.separateCheckBox.Checked = Settings.Default.separateTagBindings;
             ToggleSeparateBindUI(sender, e, Settings.Default.separateTagBindings);
-            UpdateFindReplaceTable();
+            UpdateFindReplaceTable(); UpdateTagModeRadioButtons();
         }
 
         private void ToggleSeparateBindUI(object sender, EventArgs e, bool separate = false)
@@ -107,6 +107,18 @@ namespace plugin
             }
         }
 
+        private void UpdateTagModeRadioButtons()
+        {
+            if (Settings.Default.tagSubmitIsDestructive)
+            {
+                replaceRadioButton.Select();
+            }
+            else
+            {
+                appendRadioButton.Select();
+            }
+        }
+
         private void separateCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             ToggleSeparateBindUI(sender, e, separateCheckBox.Checked);
@@ -128,9 +140,10 @@ namespace plugin
                 Settings.Default.releaseTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
                 Settings.Default.releaseGroupTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
                 Settings.Default.findReplace = (string)Settings.Default.Properties["findReplace"].DefaultValue;
+                Settings.Default.tagSubmitIsDestructive = Convert.ToBoolean(Settings.Default.Properties["tagSubmitIsDestructive"].DefaultValue);
                 Settings.Default.Save();
                 separateCheckBox.Checked = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
-                UpdateFindReplaceTable();
+                UpdateFindReplaceTable(); UpdateTagModeRadioButtons();
             }
         }
 
@@ -181,6 +194,15 @@ namespace plugin
             }
             Settings.Default.findReplace = newFindReplaceString;
             
+            if (appendRadioButton.Checked)
+            {
+                Settings.Default.tagSubmitIsDestructive = false;
+            }
+            else
+            {
+                Settings.Default.tagSubmitIsDestructive = true;
+            }
+
             Settings.Default.Save();
             this.Close();
 

@@ -22,5 +22,8 @@
 uplifting trance;melodic trance
 alt-pop;alternative pop</Value>
     </Setting>
+    <Setting Name="tagSubmitIsDestructive" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

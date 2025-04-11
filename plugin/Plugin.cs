@@ -97,7 +97,6 @@ namespace MusicBeePlugin
     using plugin.Properties;
     using YourNamespace;
     using static plugin.MusicBeeTrack;
-    using static plugin.MusicBrainzAPI;
 
     public partial class Plugin
     {
@@ -114,26 +113,26 @@ namespace MusicBeePlugin
         // expose shared controls as public variables, so it can be easily accessed by other functions.
         public TextBox mbzUserInputBox;
         public Label userAuthenticatedLabel;
-        public TableLayoutPanel authConfigPanel_new;
+        public TableLayoutPanel authConfigPanel;
         public TableLayoutPanel postAuthConfigPanel;
 
         // This is the list of tag bindings that are used in the plugin.
 
         public static Dictionary<string, MetaDataType> listTagBindings = new Dictionary<string, MetaDataType>
         {
-            {"genres", MetaDataType.Genre },
-            {"mood", MetaDataType.Mood },
+            {"genres",   MetaDataType.Genre },
+            {"mood",     MetaDataType.Mood },
             {"occasion", MetaDataType.Occasion },
             {"keywords", MetaDataType.Keywords },
-            {"custom1", MetaDataType.Custom1 },
-            {"custom2", MetaDataType.Custom2 },
-            {"custom3", MetaDataType.Custom3},
-            {"custom4", MetaDataType.Custom4},
-            {"custom5", MetaDataType.Custom5},
-            {"custom6", MetaDataType.Custom6},
-            {"custom7", MetaDataType.Custom7},
-            {"custom8", MetaDataType.Custom8},
-            {"custom9", MetaDataType.Custom9},
+            {"custom1",  MetaDataType.Custom1 },
+            {"custom2",  MetaDataType.Custom2 },
+            {"custom3",  MetaDataType.Custom3},
+            {"custom4",  MetaDataType.Custom4},
+            {"custom5",  MetaDataType.Custom5},
+            {"custom6",  MetaDataType.Custom6},
+            {"custom7",  MetaDataType.Custom7},
+            {"custom8",  MetaDataType.Custom8},
+            {"custom9",  MetaDataType.Custom9},
             {"custom10", MetaDataType.Custom10},
             {"custom11", MetaDataType.Custom11},
             {"custom12", MetaDataType.Custom12},
@@ -189,7 +188,7 @@ namespace MusicBeePlugin
                 mainPanel.AutoSize = true;
 
                 // ## panel for authentication - table layouts are used to fix issues with positioning and hiDPI
-                authConfigPanel_new = GenerateTableLayoutPanel(1, 2);
+                authConfigPanel = GenerateTableLayoutPanel(1, 2);
 
                 TableLayoutPanel userInputPanel = GenerateTableLayoutPanel(2, 1);
                 TableLayoutPanel linkPanel = GenerateTableLayoutPanel(1, 2);
@@ -230,9 +229,9 @@ namespace MusicBeePlugin
                 linkPanel.Controls.Add(mbzVerifyLabel, 0, 0);
                 linkPanel.Controls.Add(mbzAuthLabel, 0, 1);
 
-                authConfigPanel_new.Controls.Add(userInputPanel, 0, 0);
-                authConfigPanel_new.Controls.Add(linkPanel, 0, 1);
-                mainPanel.Controls.Add(authConfigPanel_new);
+                authConfigPanel.Controls.Add(userInputPanel, 0, 0);
+                authConfigPanel.Controls.Add(linkPanel, 0, 1);
+                mainPanel.Controls.Add(authConfigPanel);
 
                 // ### authentication panel events
                 mbzVerifyLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(mbzVerifyLabel_LinkClicked);
@@ -267,8 +266,6 @@ namespace MusicBeePlugin
                 configLinkLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(tagBindingConfigLabel_LinkClicked);
                 revokeAccessLabel.LinkClicked += new LinkLabelLinkClickedEventHandler(revokeAccessLabel_Clicked);
 
-
-
                 // Hide the authentication panel if the user is already authenticated to MusicBrainz, or vice versa if not logged in.
                 ToggleAuthPanelsVisibility();
 
@@ -277,7 +274,6 @@ namespace MusicBeePlugin
             return false;
 
         }
-
 
         // # configure panel UI functions
         private TableLayoutPanel GenerateTableLayoutPanel(int columns, int rows)
@@ -305,14 +301,12 @@ namespace MusicBeePlugin
         {
             if (string.IsNullOrEmpty(Settings.Default.refreshToken))
             {
-                authConfigPanel_new.Show(); postAuthConfigPanel.Hide();
+                authConfigPanel.Show(); postAuthConfigPanel.Hide();
             }
             else
             {
-                string username = mbz.GetUserName().Result;
-                System.Diagnostics.Debug.WriteLine(username);
-                userAuthenticatedLabel.Text = $"Logged in as {username}";
-                authConfigPanel_new.Hide(); postAuthConfigPanel.Show();
+                userAuthenticatedLabel.Text = $"Logged in as {mbz.user}";
+                authConfigPanel.Hide(); postAuthConfigPanel.Show();
             }
         }
 
@@ -352,8 +346,7 @@ namespace MusicBeePlugin
                 bool userAuthenticated = mbz.AuthenticateUser(mbzUserInputBox.Text).Result;
                 if (userAuthenticated)
                 {
-                    string username = mbz.GetUserName().Result;
-                    userAuthenticatedLabel.Text = $"Logged in as {username}";
+                    userAuthenticatedLabel.Text = $"Logged in as {mbz.user}";
                     ToggleAuthPanelsVisibility();
                 }
             }
@@ -404,7 +397,6 @@ namespace MusicBeePlugin
             {
                 case NotificationType.PluginStartup:
                     // perform startup initialisation
-                    System.Diagnostics.Debug.WriteLine("mb_musicbrainzsync has initialised and debug worfks!!!");
 
                     // add context menu items
                     // context.Main is the right-click menu for tracks and albums
@@ -426,8 +418,7 @@ namespace MusicBeePlugin
                     // output username to status bar if logged in
                     if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
                     {
-                        string username = mbz.GetUserName().Result;
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_musicbrainzsync: Logged in as {username}");
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user}");
                     }
                     break;
             }
@@ -543,11 +534,8 @@ namespace MusicBeePlugin
                 mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to tracks on MusicBrainz...");
                 try
                 {
-                    Debug.WriteLine("Start process");
                     Dictionary<string, string> tracksAndTags = new Dictionary<string, string>();
-                    Debug.WriteLine("Empty tracks and tags created.");
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
-                    Debug.WriteLine("Tracks processed to list");
                     foreach (MusicBeeTrack track in tracks)
                     {
                         Debug.WriteLine(track.Title);
@@ -567,25 +555,19 @@ namespace MusicBeePlugin
                                 currentMbid = track.MusicBrainzTrackId;
                                 break;
                         }
-                        Debug.WriteLine($"MusicBrainz {entity_type} ID: {currentMbid}, Null/Empty: {string.IsNullOrEmpty(currentMbid)}");
                         if (!string.IsNullOrEmpty(currentMbid))
                         {
-                            List<string> tags = track.GetAllTagsFromFile(entity_type); //problematic line
-                            Debug.WriteLine("Got all tags from track.");
-                            Debug.WriteLine(String.Join(";", tags));
+                            List<string> tags = track.GetAllTagsFromFile(entity_type);
                             if (entity_type == "recording")
                             {
-                                Debug.WriteLine("Handling recording logic...");
                                 tracksAndTags.Add(currentMbid, String.Join(";", tags));
                             }
                             else
                             {
                                 if (tracksAndTags.ContainsKey(currentMbid))
                                 {
-                                    Debug.WriteLine("Handling release(-group) logic...");
                                     if (tracksAndTags[currentMbid] != String.Join(";", tags))
                                     {
-                                        Debug.WriteLine("ERROR: inconsistent tagging.");
                                         MessageBox.Show($"Error: {track.Album} has inconsistent tags.\n\nGive every track on that album the exact same tags and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         return;
                                     }
@@ -593,15 +575,10 @@ namespace MusicBeePlugin
                                 else
                                 {
                                     tracksAndTags.Add(currentMbid, String.Join(";", tags));
-
                                 }
                             }
                             
                         }
-                    }
-                    foreach (var key in tracksAndTags.Keys)
-                    {
-                        Debug.WriteLine($"Key: {key}, Value: {tracksAndTags[key]}");
                     }
                     if (tracksAndTags.Count == 0)
                     {

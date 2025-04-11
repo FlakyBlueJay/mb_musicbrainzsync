@@ -28,6 +28,7 @@ namespace plugin
         public HttpClient MBzHttpClient;
         System.Threading.Tasks.Task<HttpResponseMessage> mbApiResponse;
         public string mbzAccessToken; public DateTime mbzAccessTokenExpiry;
+        public string user = null;
 
         // exception to be called when the XML comes up empty so the plugin can tell the user on the status bar.
         public class EmptyDataException : Exception {
@@ -79,7 +80,7 @@ namespace plugin
             }
             else
             {
-                bool userAuthenticated = AuthenticateUser().Result;
+                user = GetUserName().Result;
             }
         }
 
@@ -452,6 +453,10 @@ namespace plugin
                 foreach (string tagString in tag.Split(';'))
                 {
                     xmlWriter.WriteStartElement("user-tag");
+                    if (!Settings.Default.tagSubmitIsDestructive) {
+                        // This ensures that MusicBrainz won't remove the other ratings when submitting from the plugin.
+                        xmlWriter.WriteAttributeString("vote", "upvote");
+                    }
                     xmlWriter.WriteElementString("name", FindReplaceTag(tagString));
                     xmlWriter.WriteEndElement(); 
                 }

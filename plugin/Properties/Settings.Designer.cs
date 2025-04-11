@@ -94,5 +94,17 @@ namespace plugin.Properties {
                 this["findReplace"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool tagSubmitIsDestructive {
+            get {
+                return ((bool)(this["tagSubmitIsDestructive"]));
+            }
+            set {
+                this["tagSubmitIsDestructive"] = value;
+            }
+        }
     }
 }
