@@ -157,8 +157,8 @@ namespace plugin
             }
             Debug.WriteLine(string.Join(";", trackSavedTags));
 
-            Properties.Settings.Default.separateTagBindings = separateCheckBox.Checked;
             Properties.Settings.Default.recordingTagBindings = string.Join(";", trackSavedTags);
+            Properties.Settings.Default.separateTagBindings = separateCheckBox.Checked;
 
             // this setting could have been changed so trust the check box over the setting. Either way we'll save the check box state afterwards.
             if (separateCheckBox.Checked)
@@ -206,6 +206,41 @@ namespace plugin
             Settings.Default.Save();
             this.Close();
 
+        }
+
+        private void HandleListBoxCheck(object sender, ItemCheckEventArgs listBoxItem)
+        {
+            CheckedListBox listBox = (CheckedListBox)sender;
+
+            int checkedItemCount = listBox.CheckedItems.Count;
+            if (listBoxItem.NewValue == CheckState.Checked)
+            {
+                checkedItemCount++;
+            }
+            else
+            {
+                checkedItemCount--;
+            }
+
+            if (checkedItemCount == 0)
+            {
+                listBoxItem.NewValue = CheckState.Checked;
+            }
+        }
+
+        private void trackListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            HandleListBoxCheck(sender, e);
+        }
+
+        private void releaseListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            HandleListBoxCheck(sender, e);
+        }
+
+        private void releaseGroupListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            HandleListBoxCheck(sender, e);
         }
     }
 }

@@ -163,8 +163,7 @@ namespace plugin
                     if (mbApiResponse.Result.IsSuccessStatusCode)
                     {
                         string result = await mbApiResponse.Result.Content.ReadAsStringAsync();
-                        Debug.WriteLine("JSON Response: " + result);
-                        // todo: does this output to XML as well? POST requires XML for certain.
+                        Debug.WriteLine("Response from MusicBrainz: " + result);
                         return result;
                     }
                     else if (mbApiResponse.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized)
@@ -314,7 +313,6 @@ namespace plugin
                 // access token should be changed regardless.
                 mbzAccessToken = mbOAuthData.access_token;
                 mbzAccessTokenExpiry = DateTime.Now.AddSeconds(mbOAuthData.expires_in);
-                System.Diagnostics.Debug.WriteLine(mbzAccessTokenExpiry);
                 Settings.Default.Save();
                 MBzHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", mbzAccessToken);
                 return true;
@@ -346,22 +344,20 @@ namespace plugin
         }
 
         // # Rating functions
-        public async Task SetTrackRatings(List<(string, string)> trackRatings)
+        public async Task SetRatings(Dictionary<string, float> mbidRatings, string entity_type)
         {
             StringWriter stringWriter = new StringWriter();
             XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
             xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
-            xmlWriter.WriteStartElement("recording-list");
+            xmlWriter.WriteStartElement($"{entity_type}-list");
 
-            foreach ((string,string) trackRatingPair in trackRatings)
+            foreach (KeyValuePair<string, float> trackTagPair in mbidRatings)
             {
-                string recordingMbid = trackRatingPair.Item1;
-                string trackRatingString = trackRatingPair.Item2;
-                
-                    float rating = (float.Parse(trackRatingString)) * 20;
-                    xmlWriter.WriteStartElement("recording"); xmlWriter.WriteAttributeString("id", recordingMbid);
-                    xmlWriter.WriteElementString("user-rating", rating.ToString());
-                    xmlWriter.WriteEndElement(); // ends individual recording XML
+                string mbid = trackTagPair.Key;
+                string rating = trackTagPair.Value.ToString();
+                xmlWriter.WriteStartElement(entity_type); xmlWriter.WriteAttributeString("id", mbid);
+                xmlWriter.WriteElementString("user-rating", rating);
+                xmlWriter.WriteEndElement(); // ends individual recording XML
             }
             xmlWriter.WriteEndElement(); // ends recording-list XML
             xmlWriter.WriteEndElement(); // ends metadata XML
@@ -371,40 +367,11 @@ namespace plugin
             await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
         }
 
-        public async Task SetReleaseGroupRatings(Dictionary<string, string> releaseRatings)
-        {
-            StringWriter stringWriter = new StringWriter();
-            XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
-            xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
-            xmlWriter.WriteStartElement("release-group-list");
-
-            foreach (KeyValuePair<string, string> releaseRatingPair in releaseRatings)
-            {
-                string releaseMbid = releaseRatingPair.Key;
-                string releaseRatingString = releaseRatingPair.Value;
-
-                // Oddly enough, MusicBee actually just outputs 0-100 for the album rating, not 0-5.
-                int rating = int.Parse(releaseRatingString);
-
-                if (!(rating == 0)) {
-                    xmlWriter.WriteStartElement("release-group"); xmlWriter.WriteAttributeString("id", releaseMbid);
-                    xmlWriter.WriteElementString("user-rating", rating.ToString());
-                    xmlWriter.WriteEndElement(); // ends individual release XML
-                }
-            }
-
-            xmlWriter.WriteEndElement(); // ends release-group-list XML
-            xmlWriter.WriteEndElement(); // ends metadata XML
-            xmlWriter.Flush();
-            string xmlData = stringWriter.ToString();
-            Debug.WriteLine("XML Data: " + xmlData);
-            await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
-        }
+        // # Tag functions
 
         private string FindReplaceTag(string tag)
         {
             tag = tag.ToLower();
-            Debug.WriteLine("Tag being processed:"+tag);
             if (string.IsNullOrEmpty(Settings.Default.findReplace))
             {
                 return tag;
@@ -415,7 +382,6 @@ namespace plugin
                 // convert the findReplace setting into a dictionary for easier.
                 foreach (string line in Settings.Default.findReplace.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
                 {
-                    Debug.WriteLine(line);
                     // split by the first semicolon to get the find and replace values
                     string[] row = line.Split(new[] { ';' }, 2);
                     if (row.Length == 2)

@@ -340,7 +340,6 @@ namespace MusicBeePlugin
 
         private void mbzVerifyLabel_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("verifyWithMusicBrainz called");
             if (!string.IsNullOrEmpty(mbzUserInputBox.Text))
             {
                 bool userAuthenticated = mbz.AuthenticateUser(mbzUserInputBox.Text).Result;
@@ -364,28 +363,6 @@ namespace MusicBeePlugin
             mbzUserInputBox.Clear();
             userAuthenticatedLabel.Text = "Logged in as %USERNAME%";
             ToggleAuthPanelsVisibility();
-        }
-
-        // # MusicBee standard plugin functions
-
-        // called by MusicBee when the user clicks Apply or Save in the MusicBee Preferences screen.
-        // Auth process automatically saves the access and refresh tokens, and tag bindings will be handled via another GUI so no need for this at the moment.
-        public void SaveSettings()
-        {
-
-        }
-
-        // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
-        public void Close(PluginCloseReason reason)
-        {
-        }
-
-        // uninstall this plugin - clean up any persisted files
-        public void Uninstall()
-        {
-            // todo: ask to delete settings
-            Settings.Default.Reset();
-            // todo: ask to delete tag binding data
         }
 
         // receive event notifications from MusicBee
@@ -424,7 +401,8 @@ namespace MusicBeePlugin
             }
         }
 
-        public async void SendTrackRatings(object sender, EventArgs args)
+        // # Data submission functions
+        public async void SendRatingData(string entity_type)
         {
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
@@ -433,83 +411,58 @@ namespace MusicBeePlugin
             }
             else
             {
-                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting track ratings to MusicBrainz...");
+                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
                 try
                 {
-                    List<(string, string)> trackRatings = new List<(string, string)>();
+                    Dictionary<string, float> tracksAndRatings = new Dictionary<string, float>();
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
                     foreach (MusicBeeTrack track in tracks)
                     {
-                        if (!string.IsNullOrEmpty(track.MusicBrainzTrackId) && !string.IsNullOrEmpty(track.Rating))
+                        string currentMbid = "";
+                        switch (entity_type)
                         {
-                            trackRatings.Add((track.MusicBrainzTrackId, track.Rating));
+                            // no need to handle releases, MusicBrainz doesn't allow rating of releases at the moment.
+                            case "release-group":
+                                currentMbid = track.MusicBrainzReleaseGroupId;
+                                break;
+                            default:
+                                currentMbid = track.MusicBrainzTrackId;
+                                break;
                         }
-                    }
-                    if (trackRatings.Count == 0)
-                    {
-                        mbApiInterface.MB_SetBackgroundTaskMessage("Track ratings not submitted due to empty data.");
-                    }
-                    else
-                    {
-                        await mbz.SetTrackRatings(trackRatings);
-                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted track ratings to MusicBrainz.");
-                    }
-                }
-                catch (UnsupportedFormatException e)
-                {
-                    MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    mbApiInterface.MB_SetBackgroundTaskMessage("Rating submission failed due to unsupported format.");
-                }
-            }
-
-        }
-
-        public async void SendAlbumGroupRatings(object sender, EventArgs args)
-        {
-            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
-            if (files == null)
-            {
-                return;
-            }
-            else
-            {
-                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting album ratings to MusicBrainz...");
-                try
-                {
-                    Dictionary<string, string> albumRatings = new Dictionary<string, string>();
-                    List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
-                    foreach (MusicBeeTrack track in tracks)
-                    {
-                        if (!string.IsNullOrEmpty(track.MusicBrainzReleaseGroupId))
+                        if (!string.IsNullOrEmpty(currentMbid))
                         {
-                            if (albumRatings.ContainsKey(track.MusicBrainzReleaseGroupId))
+                            if (entity_type == "recording")
                             {
-                                // check if the rating is different to what is already logged, and error out if it is.
-                                if (albumRatings[track.MusicBrainzReleaseGroupId] != track.AlbumRating)
-                                {
-                                    MessageBox.Show($"Error: {track.Album} has inconsistent album ratings.\n\nGive every track on that album the exact same album rating and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    return;
-                                }
+                                // Track ratings are out of 5, so we need to multiply by 20 to get a percentage that MusicBrainz is happy to use.
+                                float onlineRating = float.Parse(track.Rating) * 20;
+                                tracksAndRatings.Add(currentMbid, onlineRating);
                             }
                             else
                             {
-                                // if track actually has an album rating
-                                if (!string.IsNullOrEmpty(track.AlbumRating))
+                                if (tracksAndRatings.ContainsKey(currentMbid))
                                 {
-                                    albumRatings.Add(track.MusicBrainzReleaseGroupId, track.AlbumRating);
+                                    if (tracksAndRatings[currentMbid] != float.Parse(track.AlbumRating))
+                                    {
+                                        MessageBox.Show($"Error: {track.Album} has inconsistent album ratings.\n\nGive every track on that album the exact same album rating and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    tracksAndRatings.Add(currentMbid, float.Parse(track.AlbumRating));
                                 }
                             }
+
                         }
                     }
-                    if (albumRatings.Count == 0)
+                    if (tracksAndRatings.Count == 0)
                     {
-                        mbApiInterface.MB_SetBackgroundTaskMessage("Album ratings not submitted due to empty data.");
-                        return;
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Ratings not submitted due to empty data.");
                     }
                     else
                     {
-                        await mbz.SetReleaseGroupRatings(albumRatings);
-                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted album ratings to MusicBrainz.");
+                        await mbz.SetRatings(tracksAndRatings, entity_type);
+                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted ratings to MusicBrainz.");
                     }
                 }
                 catch (UnsupportedFormatException e)
@@ -520,8 +473,6 @@ namespace MusicBeePlugin
             }
         }
 
-        // # Tag functions
-        
         public async void SendTagData(string entity_type)
         {
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
@@ -531,25 +482,21 @@ namespace MusicBeePlugin
             }
             else
             {
-                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to tracks on MusicBrainz...");
+                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to MusicBrainz...");
                 try
                 {
                     Dictionary<string, string> tracksAndTags = new Dictionary<string, string>();
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
                     foreach (MusicBeeTrack track in tracks)
                     {
-                        Debug.WriteLine(track.Title);
                         string currentMbid = "";
-                        Debug.WriteLine($"Getting MBID {entity_type}");
                         switch (entity_type)
                         {
                             case "release":
                                 currentMbid = track.MusicBrainzReleaseId;
-                                Debug.WriteLine("Current mbid:"+currentMbid);
                                 break;
                             case "release-group":
                                 currentMbid = track.MusicBrainzReleaseGroupId;
-                                Debug.WriteLine("Current mbid:" + currentMbid);
                                 break;
                             default:
                                 currentMbid = track.MusicBrainzTrackId;
@@ -560,7 +507,11 @@ namespace MusicBeePlugin
                             List<string> tags = track.GetAllTagsFromFile(entity_type);
                             if (entity_type == "recording")
                             {
-                                tracksAndTags.Add(currentMbid, String.Join(";", tags));
+                                if (tags != null)
+                                {
+                                    tracksAndTags.Add(currentMbid, String.Join(";", tags));
+                                }
+                                    
                             }
                             else
                             {
@@ -571,13 +522,17 @@ namespace MusicBeePlugin
                                         MessageBox.Show($"Error: {track.Album} has inconsistent tags.\n\nGive every track on that album the exact same tags and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         return;
                                     }
-                                } 
+                                }
                                 else
                                 {
-                                    tracksAndTags.Add(currentMbid, String.Join(";", tags));
+                                    if (tags != null)
+                                    {
+                                        // if it's empty, we don't want to add it to the dictionary.
+                                        tracksAndTags.Add(currentMbid, String.Join(";", tags));
+                                    }
                                 }
                             }
-                            
+
                         }
                     }
                     if (tracksAndTags.Count == 0)
@@ -598,11 +553,21 @@ namespace MusicBeePlugin
             }
         }
 
+        public void SendTrackRatings(object sender, EventArgs args)
+        {
+            SendRatingData("recording");
+        }
+
+        public void SendAlbumGroupRatings(object sender, EventArgs args)
+        {
+           SendRatingData("release-group");
+        }
+
         public void SendTrackTags(object sender, EventArgs args)
         {
             SendTagData("recording");
         }
-
+        
         public void SendReleaseTags(object sender, EventArgs args)
         {
             SendTagData("release");

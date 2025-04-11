@@ -36,19 +36,6 @@ namespace plugin
 
         private static readonly HashSet<String> bannedExtensions = new HashSet<String> { ".tak", ".midi", ".mid", ".xm", ".uxm", ".mod" };
 
-        private List<string> GetTagsToList(string path, MetaDataType tag)
-        {
-            List<string> tags = new List<string>();
-            // MusicBee splits multi-value tags with a semicolon, so we need to split them and trim them.
-            // Todo: see if this works with AAC. AAC can be really funky across the board.
-            foreach (string tagString in mbApiInterface.Library_GetFileTag(path, tag).Split(';').ToList())
-            {
-                string trimmedTag = tagString.Trim();
-                tags.Add(trimmedTag);
-            }
-            return tags;
-        }
-
         public MusicBeeTrack(string path)
         {
             string fileExt = Path.GetExtension(path);
@@ -95,49 +82,75 @@ namespace plugin
         {
             // get the tags the user has chosen to submit
             List<string> tagsToSearch = new List<string>();
+            Debug.WriteLine(tagsToSearch.Count);
             List<string> tagList = new List<string>();
 
             if (type == "recording" || !Settings.Default.separateTagBindings)
             {
-                tagsToSearch = Settings.Default.recordingTagBindings.Split(';').ToList();
+                if (!string.IsNullOrEmpty(Settings.Default.recordingTagBindings))
+                {
+                    tagsToSearch = Settings.Default.recordingTagBindings.Split(';').ToList();
+                }
             }
             else
             {
                 switch (type)
                 {
                     case "release":
-                        tagsToSearch = Settings.Default.releaseTagBindings.Split(';').ToList();
+                        if (!string.IsNullOrEmpty(Settings.Default.releaseTagBindings))
+                        {
+                            tagsToSearch = Settings.Default.releaseTagBindings.Split(';').ToList();
+                        }
                         break;
                     case "release-group":
-                        tagsToSearch = Settings.Default.releaseGroupTagBindings.Split(';').ToList();
+                        if (!string.IsNullOrEmpty(Settings.Default.releaseGroupTagBindings))
+                        {
+                            tagsToSearch = Settings.Default.releaseGroupTagBindings.Split(';').ToList();
+                        }   
                         break;
                 }
             }
                 
             Debug.WriteLine("tagsToSearch: " + string.Join(", ", tagsToSearch));
 
-            foreach (string tag in tagsToSearch)
+            Debug.WriteLine(tagsToSearch.Count);
+            if (tagsToSearch.Count > 0)
             {
-                // get tag from finding its key in the dictionary then add to get track tags.
-                MetaDataType tagType = listTagBindings[tag];
-                Debug.Write("got tag binding!");
-                // clean up tags
-                List<string> tagValue = mbApiInterface.Library_GetFileTag(FilePath, tagType).Split(';').ToList();
-                foreach (string tagString in tagValue)
+                foreach (string tag in tagsToSearch)
                 {
-                    // do not try to add tags if tagString is empty, otherwise it will add empty strings.
-                    if (!string.IsNullOrEmpty(tagString))
+                    // get tag from finding its key in the dictionary then add to get track tags.
+                    MetaDataType tagType = listTagBindings[tag];
+                    // clean up tags
+                    List<string> tagValue = mbApiInterface.Library_GetFileTag(FilePath, tagType).Split(';').ToList();
+                    foreach (string tagString in tagValue)
                     {
-                        string trimmedTag = tagString.Trim();
-                        if (!tagList.Contains(trimmedTag))
+                        // do not try to add tags if tagString is empty, otherwise it will add empty strings.
+                        if (!string.IsNullOrEmpty(tagString))
                         {
-                            tagList.Add(trimmedTag);
+                            string trimmedTag = tagString.Trim();
+                            if (!tagList.Contains(trimmedTag))
+                            {
+                                tagList.Add(trimmedTag);
+                            }
                         }
                     }
-                }
 
+                }
+                if (tagList.Count > 0)
+                {
+                    return tagList;
+                }
+                else
+                {
+                    return null;
+                }
+                
             }
-            return tagList;
+            else
+            {
+                return null;
+            }
+                
         }
 
     }

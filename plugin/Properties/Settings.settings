@@ -12,10 +12,10 @@
       <Value Profile="(Default)">genres;mood</Value>
     </Setting>
     <Setting Name="releaseTagBindings" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">genres</Value>
     </Setting>
     <Setting Name="releaseGroupTagBindings" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">genres</Value>
     </Setting>
     <Setting Name="findReplace" Type="System.String" Scope="User">
       <Value Profile="(Default)">synthpop;synth-pop

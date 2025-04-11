@@ -61,7 +61,7 @@ namespace plugin.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("genres")]
         public string releaseTagBindings {
             get {
                 return ((string)(this["releaseTagBindings"]));
@@ -73,7 +73,7 @@ namespace plugin.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("genres")]
         public string releaseGroupTagBindings {
             get {
                 return ((string)(this["releaseGroupTagBindings"]));
