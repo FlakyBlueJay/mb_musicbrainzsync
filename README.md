@@ -43,6 +43,7 @@ Plugins that use older versions may need to be updated.
     - Will be fixed by bumping the MusicBee API up when it's released.
 - Rating feature will malfunction if user saves multiple ratings using the Tag Editor instead of rating each track individually - submitting the previously saved rating instead of the new rating.
     - Likely a bug with MusicBee. Workaround is to change the ratings individually.
+- .TAK files are not supported due to limitations with TagLib#.
 
 ## Building
 Visual Studio 2022 is the recommended IDE for this plugin. Untested on other IDEs with `dotnet`.
