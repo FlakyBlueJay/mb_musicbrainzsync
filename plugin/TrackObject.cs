@@ -112,8 +112,6 @@ namespace plugin
             }
                 
             Debug.WriteLine("tagsToSearch: " + string.Join(", ", tagsToSearch));
-
-            Debug.WriteLine(tagsToSearch.Count);
             if (tagsToSearch.Count > 0)
             {
                 foreach (string tag in tagsToSearch)

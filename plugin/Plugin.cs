@@ -380,17 +380,25 @@ namespace MusicBeePlugin
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings", "", null);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", null);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", SendTrackRatings);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", SendAlbumGroupRatings);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", SendReleaseGroupRatings);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recordings", "", SendTrackTags);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", SendReleaseTags);
                     mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", SendReleaseGroupTags);
 
+#if DEBUG
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug", "", null);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Track Ratings", "", ResetTrackRatings);
+                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Album Ratings", "", ResetReleaseGroupRatings);
+#endif
+
                     // add hotkey entries
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", SendTrackRatings);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings to Release Group", SendAlbumGroupRatings);
+                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings to Release Group", SendReleaseGroupRatings);
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", SendTrackTags);
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", SendReleaseTags);
                     mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", SendReleaseGroupTags);
+
+                    
 
                     // output username to status bar if logged in
                     if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
@@ -402,7 +410,7 @@ namespace MusicBeePlugin
         }
 
         // # Data submission functions
-        public async void SendRatingData(string entity_type)
+        public async void SendRatingData(string entity_type, bool reset = false)
         {
             mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
@@ -428,7 +436,7 @@ namespace MusicBeePlugin
                             // no need to handle releases, MusicBrainz doesn't allow rating of releases at the moment.
                             case "release-group":
                                 currentMbid = track.MusicBrainzReleaseGroupId;
-                                if (!string.IsNullOrEmpty(track.AlbumRating))
+                                if (!string.IsNullOrEmpty(track.AlbumRating) && !reset)
                                 {
                                     onlineRating = float.Parse(track.AlbumRating);
                                 }
@@ -437,7 +445,7 @@ namespace MusicBeePlugin
                                 break;
                             default:
                                 currentMbid = track.MusicBrainzTrackId;
-                                if (!string.IsNullOrEmpty(track.Rating))
+                                if (!string.IsNullOrEmpty(track.Rating) && !reset)
                                 {
                                     onlineRating = float.Parse(track.Rating) * 20;
                                 }
@@ -559,7 +567,7 @@ namespace MusicBeePlugin
             SendRatingData("recording");
         }
 
-        public void SendAlbumGroupRatings(object sender, EventArgs args)
+        public void SendReleaseGroupRatings(object sender, EventArgs args)
         {
            SendRatingData("release-group");
         }
@@ -579,6 +587,17 @@ namespace MusicBeePlugin
             SendTagData("release-group");
         }
 
+#if DEBUG
+        public void ResetTrackRatings(object sender, EventArgs args)
+        {
+            SendRatingData("recording", true);
+        }
+
+        public void ResetReleaseGroupRatings(object sender, EventArgs args)
+        {
+            SendRatingData("release-group", true);
+        }
+#endif
     }
 }
 

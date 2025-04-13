@@ -2,7 +2,9 @@
 MusicBee plugin to sync your tags/ratings to your account on MusicBrainz.
 
 ## Rationale
-I wanted something that would let me send data to MusicBrainz on Linux, but I use MusicBee through WINE and WINE apps don't play well with native apps with stuff like drag-and-drop (which was my workflow on Windows). So I thought, why not do it through MusicBee itself? WINE handles .NET pretty well nowadays.
+I wanted something that would let me send data to MusicBrainz on Linux, but I use MusicBee through WINE and WINE apps don't play well with native apps with stuff like drag-and-drop (which was my workflow on Windows) and no player native to Linux has been able to replace MusicBee for me.
+
+So I thought, why not do it through MusicBee itself? WINE handles .NET pretty well nowadays.
 
 Yeah, it still means I'm dependent on Windows for a bit, but at least my workflow will no longer be broken on Linux and other people can have that flexibility.
 
@@ -17,6 +19,12 @@ It should be compatible with plugins that use:
 - TagLibSharp 2.3.0
 
 Plugins that use older versions may need to be updated.
+
+### Limitations
+- Custom tracks limited up to 16 even on MusicBee 3.6 which bumped the custom tag limit to 20.
+    - Will be fixed by bumping the MusicBee API up when it's released.
+- Rating feature will malfunction if user saves multiple ratings using the Tag Editor instead of rating each track individually - submitting the previously saved rating instead of the new rating.
+    - Likely a bug with MusicBee. Workaround is to change the ratings individually.
 
 ## Features
 - Send track and album ratings from your local library to MusicBrainz (recordings and release groups).
