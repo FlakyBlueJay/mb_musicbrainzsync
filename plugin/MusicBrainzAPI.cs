@@ -71,7 +71,7 @@ namespace plugin
             };
 
             // MusicBrainz will reject requests that don't come from valid user agents.
-            MBzHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"mb_MusicBrainzSync/1.0 (https://github.com/FlakyBlueJay/mb_musicbrainzsync)");
+            MBzHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"mb_MusicBrainzSync/1.0.0 (https://github.com/FlakyBlueJay/mb_musicbrainzsync)");
 
             // check if the user is logged in or not.
             if (string.IsNullOrEmpty(Settings.Default.refreshToken))
