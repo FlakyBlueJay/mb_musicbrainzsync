@@ -404,6 +404,7 @@ namespace MusicBeePlugin
         // # Data submission functions
         public async void SendRatingData(string entity_type)
         {
+            mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
             {
@@ -411,58 +412,58 @@ namespace MusicBeePlugin
             }
             else
             {
-                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
                 try
                 {
                     Dictionary<string, float> tracksAndRatings = new Dictionary<string, float>();
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
                     // required to check album ratings for consistency.
-                    float albumRating = 0;
                     foreach (MusicBeeTrack track in tracks)
                     {
-                        string currentMbid = "";
+                        string currentMbid;
+                        string errorMessage;
+                        string statusBarErrorMessage;
+                        float onlineRating = 0;
                         switch (entity_type)
                         {
                             // no need to handle releases, MusicBrainz doesn't allow rating of releases at the moment.
                             case "release-group":
                                 currentMbid = track.MusicBrainzReleaseGroupId;
+                                if (!string.IsNullOrEmpty(track.AlbumRating))
+                                {
+                                    onlineRating = float.Parse(track.AlbumRating);
+                                }
+                                errorMessage = $"{track.Album} has inconsistent album ratings.\n\nGive every track on that album the exact same album rating and try to submit again.";
+                                statusBarErrorMessage = "Ratings not submitted due to inconsistent data";
                                 break;
                             default:
                                 currentMbid = track.MusicBrainzTrackId;
-                                break;
-                        }
-                        if (!string.IsNullOrEmpty(currentMbid))
-                        {
-                            if (entity_type == "recording") 
-                            {
-                                // Track ratings are out of 5, so we need to multiply by 20 to get a percentage that MusicBrainz is happy to use.
                                 if (!string.IsNullOrEmpty(track.Rating))
                                 {
-                                    float onlineRating = float.Parse(track.Rating) * 20;
-                                    tracksAndRatings.Add(currentMbid, onlineRating);
+                                    onlineRating = float.Parse(track.Rating) * 20;
                                 }
-                                
+                                // Generally, albums on MusicBrainz shouldn't have tracks with the same recording ID.
+                                errorMessage = "The group of tracks you attempted to submit ratings for have two track MBIDs that are the same. This is likely due to a malformed data entry to MusicBrainz.\n\nCheck that the recordings should actually be the same.";
+                                statusBarErrorMessage = "Ratings not submitted due to likely malformed data";
+                                break;
+                        }
+
+                        if (!string.IsNullOrEmpty(currentMbid))
+                        {
+                            Debug.WriteLine($"Title: {track.Title}, {entity_type} MBID: {currentMbid}, Rating: {onlineRating}");
+                            if (tracksAndRatings.ContainsKey(currentMbid))
+                            {
+                                if (tracksAndRatings[currentMbid] != onlineRating)
+                                {
+                                    mbApiInterface.MB_SetBackgroundTaskMessage(statusBarErrorMessage);
+                                    MessageBox.Show($"Error: {errorMessage}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    return;
+                                }
                             }
                             else
                             {
-                                if (!string.IsNullOrEmpty(track.AlbumRating))
-                                {
-                                    albumRating = float.Parse(track.AlbumRating);
-                                }
-                                if (tracksAndRatings.ContainsKey(currentMbid))
-                                {
-                                    if (tracksAndRatings[currentMbid] != albumRating)
-                                    {
-                                        MessageBox.Show($"Error: {track.Album} has inconsistent album ratings.\n\nGive every track on that album the exact same album rating and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                        return;
-                                    }
-                                }
-                                else
-                                {
-                                    tracksAndRatings.Add(currentMbid, albumRating);
-                                }
+                                // setting a track to 0 will just wipe the rating from MusicBrainz, so it won't be a problem.
+                                tracksAndRatings.Add(currentMbid, onlineRating);
                             }
-
                         }
                     }
                     if (tracksAndRatings.Count == 0)
@@ -477,14 +478,15 @@ namespace MusicBeePlugin
                 }
                 catch (UnsupportedFormatException e)
                 {
-                    MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     mbApiInterface.MB_SetBackgroundTaskMessage("Rating submission failed due to unsupported format.");
+                    MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
         public async void SendTagData(string entity_type)
         {
+            mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
             {
@@ -492,14 +494,16 @@ namespace MusicBeePlugin
             }
             else
             {
-                mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to MusicBrainz...");
                 try
                 {
                     Dictionary<string, string> tracksAndTags = new Dictionary<string, string>();
                     List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
                     foreach (MusicBeeTrack track in tracks)
                     {
-                        string currentMbid = "";
+                        List<string> tags = track.GetAllTagsFromFile(entity_type);
+                        string currentMbid;
+                        string errorMessage = $"{track.Album} has inconsistent tags.\n\nGive every track on that album the exact same album rating and try to submit again."; ;
+                        string statusBarErrorMessage = "Ratings not submitted due to inconsistent data";
                         switch (entity_type)
                         {
                             case "release":
@@ -510,39 +514,26 @@ namespace MusicBeePlugin
                                 break;
                             default:
                                 currentMbid = track.MusicBrainzTrackId;
+                                errorMessage = "The group of tracks you attempted to submit tags for have two track MBIDs that are the same. This is likely due to a malformed data entry to MusicBrainz.\n\nCheck that the recordings should actually be the same.";
+                                statusBarErrorMessage = "Tags not submitted due to likely malformed data";
                                 break;
                         }
-                        if (!string.IsNullOrEmpty(currentMbid))
+                        if (!string.IsNullOrEmpty(currentMbid) && tags != null)
                         {
-                            List<string> tags = track.GetAllTagsFromFile(entity_type);
-                            if (entity_type == "recording")
+                            Debug.WriteLine($"Title: {track.Title}, {entity_type} MBID: {currentMbid}, Tags: {string.Join("; ", tags)}");
+                            if (tracksAndTags.ContainsKey(currentMbid))
                             {
-                                if (tags != null)
+                                if (tracksAndTags[currentMbid] != String.Join(";", tags))
                                 {
-                                    tracksAndTags.Add(currentMbid, String.Join(";", tags));
+                                    mbApiInterface.MB_SetBackgroundTaskMessage(statusBarErrorMessage);
+                                    MessageBox.Show($"Error: {errorMessage}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    return;
                                 }
-                                    
                             }
                             else
                             {
-                                if (tracksAndTags.ContainsKey(currentMbid))
-                                {
-                                    if (tracksAndTags[currentMbid] != String.Join(";", tags))
-                                    {
-                                        MessageBox.Show($"Error: {track.Album} has inconsistent tags.\n\nGive every track on that album the exact same tags and try to submit again.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                        return;
-                                    }
-                                }
-                                else
-                                {
-                                    if (tags != null)
-                                    {
-                                        // if it's empty, we don't want to add it to the dictionary.
-                                        tracksAndTags.Add(currentMbid, String.Join(";", tags));
-                                    }
-                                }
+                                tracksAndTags.Add(currentMbid, String.Join(";", tags));
                             }
-
                         }
                     }
                     if (tracksAndTags.Count == 0)
