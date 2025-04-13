@@ -42,7 +42,7 @@ Plugins that use older versions may need to be updated.
 - Custom tracks limited up to 16 even on MusicBee 3.6 which bumped the custom tag limit to 20.
     - Will be fixed by bumping the MusicBee API up when it's released.
 - Rating feature will malfunction if user saves multiple ratings using the Tag Editor instead of rating each track individually - submitting the previously saved rating instead of the new rating.
-    - Likely a bug with MusicBee. Workaround is to change the ratings individually.
+    - Likely a bug with MusicBee. Workaround is to change the ratings individually when MusicBee ingests new files into your library.
 - .TAK files are not supported due to limitations with TagLib#.
 
 ## Building
