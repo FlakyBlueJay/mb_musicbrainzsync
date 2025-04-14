@@ -167,8 +167,8 @@ namespace MusicBeePlugin
             about.MinInterfaceVersion = MinInterfaceVersion;
             about.MinApiRevision = MinApiRevision;
             about.ReceiveNotifications = (ReceiveNotificationFlags.TagEvents);
-            about.ConfigurationPanelHeight = 145;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
-
+            about.ConfigurationPanelHeight = 90;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
+            // DO NOT decrease this height without testing on 100% and 200% DPI scaling!
             return about;
         }
 
