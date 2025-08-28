@@ -318,6 +318,7 @@ namespace plugin
                 mbzAccessTokenExpiry = DateTime.Now.AddSeconds(mbOAuthData.expires_in);
                 Settings.Default.Save();
                 MBzHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", mbzAccessToken);
+                user = await GetUserName();
                 return true;
             }
 

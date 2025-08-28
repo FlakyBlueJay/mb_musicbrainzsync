@@ -329,21 +329,25 @@ namespace MusicBeePlugin
                 MessageBox.Show("Could not open the default web browser. The authentication URL has been copied to your clipboard.\n\n" +
                     "Please copy and paste the URL into your browser.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // any other errors we haven't caught.
+#if DEBUG
+                Debug.WriteLine($"Failed to open URL due to exception: {ex.Message}");
+#endif
                 Clipboard.SetText(mbzAuthUrl);
                 MessageBox.Show("An unexpected error occurred. The authentication URL has been copied to your clipboard.\n\n" +
-                    "Please copy and paste the URL into your browser.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    "Please copy and paste the URL into your browser.\n\n" +
+                    $"Exception message: {ex.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
         }
 
-        private void mbzVerifyLabel_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        private async void mbzVerifyLabel_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
             if (!string.IsNullOrEmpty(mbzUserInputBox.Text))
             {
-                bool userAuthenticated = mbz.AuthenticateUser(mbzUserInputBox.Text).Result;
+                bool userAuthenticated = await mbz.AuthenticateUser(mbzUserInputBox.Text);
                 if (userAuthenticated)
                 {
                     userAuthenticatedLabel.Text = $"Logged in as {mbz.user}";
@@ -395,7 +399,7 @@ namespace MusicBeePlugin
 
         // receive event notifications from MusicBee
         // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
-        async public Task ReceiveNotification(string sourceFileUrl, NotificationType type)
+       public void ReceiveNotification(string sourceFileUrl, NotificationType type)
         {
             // perform some action depending on the notification type
             switch (type)
@@ -405,10 +409,9 @@ namespace MusicBeePlugin
 
                     if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
                     {
-
                         AddMenuItems();
 
-                    // output username to status bar if logged in
+                        // output username to status bar
                         mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user} (version 1.1)");
                     }
                     break;
