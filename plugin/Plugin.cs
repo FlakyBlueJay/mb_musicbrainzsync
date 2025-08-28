@@ -410,9 +410,8 @@ namespace MusicBeePlugin
                     if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
                     {
                         AddMenuItems();
-
                         // output username to status bar
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user} (version 1.1)");
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user}");
                     }
                     break;
             }

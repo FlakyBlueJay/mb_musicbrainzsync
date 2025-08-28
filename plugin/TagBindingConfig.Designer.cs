@@ -43,7 +43,7 @@
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.cancelButton = new System.Windows.Forms.Button();
             this.OKButton = new System.Windows.Forms.Button();
-            this.resetButton = new System.Windows.Forms.Button();
+            this.applyButton = new System.Windows.Forms.Button();
             this.mainTabControl = new System.Windows.Forms.TabControl();
             this.tagBindingPage = new System.Windows.Forms.TabPage();
             this.tagBindingLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
@@ -57,6 +57,12 @@
             this.appendRadioButton = new System.Windows.Forms.RadioButton();
             this.replaceRadioButton = new System.Windows.Forms.RadioButton();
             this.tagSubmitNote = new System.Windows.Forms.Label();
+            this.importExportLabel = new System.Windows.Forms.Label();
+            this.exportLink = new System.Windows.Forms.LinkLabel();
+            this.importLink = new System.Windows.Forms.LinkLabel();
+            this.resetTitle = new System.Windows.Forms.Label();
+            this.resetDescription = new System.Windows.Forms.Label();
+            this.resetLink = new System.Windows.Forms.LinkLabel();
             this.mainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.tagGroupBox.SuspendLayout();
             this.tagTabControl.SuspendLayout();
@@ -78,9 +84,9 @@
             // 
             this.separateCheckBox.AutoSize = true;
             this.separateCheckBox.Location = new System.Drawing.Point(6, 6);
-            this.separateCheckBox.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.separateCheckBox.Margin = new System.Windows.Forms.Padding(6);
             this.separateCheckBox.Name = "separateCheckBox";
-            this.separateCheckBox.Size = new System.Drawing.Size(558, 29);
+            this.separateCheckBox.Size = new System.Drawing.Size(564, 29);
             this.separateCheckBox.TabIndex = 0;
             this.separateCheckBox.Text = "Submit separate tags to releases and release groups.             ";
             this.separateCheckBox.UseVisualStyleBackColor = true;
@@ -94,7 +100,7 @@
             this.separateHelperLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.separateHelperLabel.Name = "separateHelperLabel";
             this.separateHelperLabel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 12);
-            this.separateHelperLabel.Size = new System.Drawing.Size(545, 62);
+            this.separateHelperLabel.Size = new System.Drawing.Size(547, 62);
             this.separateHelperLabel.TabIndex = 1;
             this.separateHelperLabel.Text = "Useful if you use separate tags for whole releases (e.g. album genres)";
             // 
@@ -103,10 +109,10 @@
             this.tagGroupBox.Controls.Add(this.tagTabControl);
             this.tagGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tagGroupBox.Location = new System.Drawing.Point(4, 107);
-            this.tagGroupBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tagGroupBox.Margin = new System.Windows.Forms.Padding(4);
             this.tagGroupBox.Name = "tagGroupBox";
-            this.tagGroupBox.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.tagGroupBox.Size = new System.Drawing.Size(562, 617);
+            this.tagGroupBox.Padding = new System.Windows.Forms.Padding(4);
+            this.tagGroupBox.Size = new System.Drawing.Size(608, 592);
             this.tagGroupBox.TabIndex = 3;
             this.tagGroupBox.TabStop = false;
             this.tagGroupBox.Text = "Tags";
@@ -117,21 +123,21 @@
             this.tagTabControl.Controls.Add(this.releaseTab);
             this.tagTabControl.Controls.Add(this.releaseGroupTab);
             this.tagTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tagTabControl.Location = new System.Drawing.Point(4, 28);
-            this.tagTabControl.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.tagTabControl.Location = new System.Drawing.Point(4, 26);
+            this.tagTabControl.Margin = new System.Windows.Forms.Padding(6);
             this.tagTabControl.Name = "tagTabControl";
             this.tagTabControl.SelectedIndex = 0;
-            this.tagTabControl.Size = new System.Drawing.Size(554, 585);
+            this.tagTabControl.Size = new System.Drawing.Size(600, 562);
             this.tagTabControl.TabIndex = 0;
             // 
             // trackTab
             // 
             this.trackTab.Controls.Add(this.trackListBox);
-            this.trackTab.Location = new System.Drawing.Point(8, 39);
-            this.trackTab.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.trackTab.Location = new System.Drawing.Point(4, 33);
+            this.trackTab.Margin = new System.Windows.Forms.Padding(6);
             this.trackTab.Name = "trackTab";
-            this.trackTab.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
-            this.trackTab.Size = new System.Drawing.Size(538, 538);
+            this.trackTab.Padding = new System.Windows.Forms.Padding(6);
+            this.trackTab.Size = new System.Drawing.Size(592, 525);
             this.trackTab.TabIndex = 0;
             this.trackTab.Text = "Tracks/Recordings";
             this.trackTab.UseVisualStyleBackColor = true;
@@ -141,20 +147,20 @@
             this.trackListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.trackListBox.FormattingEnabled = true;
             this.trackListBox.Location = new System.Drawing.Point(6, 6);
-            this.trackListBox.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.trackListBox.Margin = new System.Windows.Forms.Padding(6);
             this.trackListBox.Name = "trackListBox";
-            this.trackListBox.Size = new System.Drawing.Size(526, 526);
+            this.trackListBox.Size = new System.Drawing.Size(580, 513);
             this.trackListBox.TabIndex = 0;
             this.trackListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.trackListBox_ItemCheck);
             // 
             // releaseTab
             // 
             this.releaseTab.Controls.Add(this.releaseListBox);
-            this.releaseTab.Location = new System.Drawing.Point(8, 39);
-            this.releaseTab.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.releaseTab.Location = new System.Drawing.Point(4, 33);
+            this.releaseTab.Margin = new System.Windows.Forms.Padding(6);
             this.releaseTab.Name = "releaseTab";
-            this.releaseTab.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
-            this.releaseTab.Size = new System.Drawing.Size(538, 538);
+            this.releaseTab.Padding = new System.Windows.Forms.Padding(6);
+            this.releaseTab.Size = new System.Drawing.Size(503, 525);
             this.releaseTab.TabIndex = 1;
             this.releaseTab.Text = "Releases";
             this.releaseTab.UseVisualStyleBackColor = true;
@@ -164,19 +170,19 @@
             this.releaseListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.releaseListBox.FormattingEnabled = true;
             this.releaseListBox.Location = new System.Drawing.Point(6, 6);
-            this.releaseListBox.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.releaseListBox.Margin = new System.Windows.Forms.Padding(6);
             this.releaseListBox.Name = "releaseListBox";
-            this.releaseListBox.Size = new System.Drawing.Size(526, 526);
+            this.releaseListBox.Size = new System.Drawing.Size(491, 513);
             this.releaseListBox.TabIndex = 0;
             this.releaseListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.releaseListBox_ItemCheck);
             // 
             // releaseGroupTab
             // 
             this.releaseGroupTab.Controls.Add(this.releaseGroupListBox);
-            this.releaseGroupTab.Location = new System.Drawing.Point(8, 39);
-            this.releaseGroupTab.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.releaseGroupTab.Location = new System.Drawing.Point(4, 33);
+            this.releaseGroupTab.Margin = new System.Windows.Forms.Padding(6);
             this.releaseGroupTab.Name = "releaseGroupTab";
-            this.releaseGroupTab.Size = new System.Drawing.Size(538, 538);
+            this.releaseGroupTab.Size = new System.Drawing.Size(503, 525);
             this.releaseGroupTab.TabIndex = 2;
             this.releaseGroupTab.Text = "Release Groups";
             this.releaseGroupTab.UseVisualStyleBackColor = true;
@@ -186,9 +192,9 @@
             this.releaseGroupListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.releaseGroupListBox.FormattingEnabled = true;
             this.releaseGroupListBox.Location = new System.Drawing.Point(0, 0);
-            this.releaseGroupListBox.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.releaseGroupListBox.Margin = new System.Windows.Forms.Padding(6);
             this.releaseGroupListBox.Name = "releaseGroupListBox";
-            this.releaseGroupListBox.Size = new System.Drawing.Size(538, 538);
+            this.releaseGroupListBox.Size = new System.Drawing.Size(503, 525);
             this.releaseGroupListBox.TabIndex = 0;
             this.releaseGroupListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.releaseGroupListBox_ItemCheck);
             // 
@@ -196,10 +202,10 @@
             // 
             this.saveNote.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.saveNote.AutoSize = true;
-            this.saveNote.Location = new System.Drawing.Point(95, 56);
+            this.saveNote.Location = new System.Drawing.Point(24, 54);
             this.saveNote.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.saveNote.Name = "saveNote";
-            this.saveNote.Size = new System.Drawing.Size(497, 50);
+            this.saveNote.Size = new System.Drawing.Size(606, 50);
             this.saveNote.TabIndex = 6;
             this.saveNote.Text = "Settings are automatically saved upon clicking OK, independent from MusicBee.";
             this.saveNote.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -209,22 +215,22 @@
             this.buttonPanel.AutoSize = true;
             this.buttonPanel.Controls.Add(this.cancelButton);
             this.buttonPanel.Controls.Add(this.OKButton);
-            this.buttonPanel.Controls.Add(this.resetButton);
+            this.buttonPanel.Controls.Add(this.applyButton);
             this.buttonPanel.Controls.Add(this.saveNote);
             this.buttonPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.buttonPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.buttonPanel.Location = new System.Drawing.Point(6, 805);
-            this.buttonPanel.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.buttonPanel.Location = new System.Drawing.Point(6, 770);
+            this.buttonPanel.Margin = new System.Windows.Forms.Padding(6);
             this.buttonPanel.Name = "buttonPanel";
-            this.buttonPanel.Size = new System.Drawing.Size(598, 106);
+            this.buttonPanel.Size = new System.Drawing.Size(636, 104);
             this.buttonPanel.TabIndex = 5;
             // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(442, 6);
-            this.cancelButton.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.cancelButton.Location = new System.Drawing.Point(492, 6);
+            this.cancelButton.Margin = new System.Windows.Forms.Padding(6);
             this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(150, 44);
+            this.cancelButton.Size = new System.Drawing.Size(138, 42);
             this.cancelButton.TabIndex = 1;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
@@ -232,25 +238,25 @@
             // 
             // OKButton
             // 
-            this.OKButton.Location = new System.Drawing.Point(280, 6);
-            this.OKButton.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.OKButton.Location = new System.Drawing.Point(342, 6);
+            this.OKButton.Margin = new System.Windows.Forms.Padding(6);
             this.OKButton.Name = "OKButton";
-            this.OKButton.Size = new System.Drawing.Size(150, 44);
+            this.OKButton.Size = new System.Drawing.Size(138, 42);
             this.OKButton.TabIndex = 0;
-            this.OKButton.Text = "OK";
+            this.OKButton.Text = "Save";
             this.OKButton.UseVisualStyleBackColor = true;
             this.OKButton.Click += new System.EventHandler(this.OKButton_Click);
             // 
-            // resetButton
+            // applyButton
             // 
-            this.resetButton.Location = new System.Drawing.Point(118, 6);
-            this.resetButton.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
-            this.resetButton.Name = "resetButton";
-            this.resetButton.Size = new System.Drawing.Size(150, 44);
-            this.resetButton.TabIndex = 2;
-            this.resetButton.Text = "Reset";
-            this.resetButton.UseVisualStyleBackColor = true;
-            this.resetButton.Click += new System.EventHandler(this.resetButton_Click);
+            this.applyButton.Location = new System.Drawing.Point(192, 6);
+            this.applyButton.Margin = new System.Windows.Forms.Padding(6);
+            this.applyButton.Name = "applyButton";
+            this.applyButton.Size = new System.Drawing.Size(138, 42);
+            this.applyButton.TabIndex = 7;
+            this.applyButton.Text = "Apply";
+            this.applyButton.UseVisualStyleBackColor = true;
+            this.applyButton.Click += new System.EventHandler(this.applyButton_click);
             // 
             // mainTabControl
             // 
@@ -259,20 +265,20 @@
             this.mainTabControl.Controls.Add(this.otherSettingsPage);
             this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTabControl.Location = new System.Drawing.Point(6, 6);
-            this.mainTabControl.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.mainTabControl.Margin = new System.Windows.Forms.Padding(6);
             this.mainTabControl.Name = "mainTabControl";
             this.mainTabControl.SelectedIndex = 0;
-            this.mainTabControl.Size = new System.Drawing.Size(598, 787);
+            this.mainTabControl.Size = new System.Drawing.Size(636, 752);
             this.mainTabControl.TabIndex = 1;
             // 
             // tagBindingPage
             // 
             this.tagBindingPage.Controls.Add(this.tagBindingLayoutPanel);
-            this.tagBindingPage.Location = new System.Drawing.Point(8, 39);
-            this.tagBindingPage.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.tagBindingPage.Location = new System.Drawing.Point(4, 33);
+            this.tagBindingPage.Margin = new System.Windows.Forms.Padding(6);
             this.tagBindingPage.Name = "tagBindingPage";
-            this.tagBindingPage.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
-            this.tagBindingPage.Size = new System.Drawing.Size(582, 740);
+            this.tagBindingPage.Padding = new System.Windows.Forms.Padding(6);
+            this.tagBindingPage.Size = new System.Drawing.Size(628, 715);
             this.tagBindingPage.TabIndex = 0;
             this.tagBindingPage.Text = "Tag Binding";
             this.tagBindingPage.UseVisualStyleBackColor = true;
@@ -287,7 +293,7 @@
             this.tagBindingLayoutPanel.Controls.Add(this.separateCheckBox, 0, 0);
             this.tagBindingLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tagBindingLayoutPanel.Location = new System.Drawing.Point(6, 6);
-            this.tagBindingLayoutPanel.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.tagBindingLayoutPanel.Margin = new System.Windows.Forms.Padding(6);
             this.tagBindingLayoutPanel.Name = "tagBindingLayoutPanel";
             this.tagBindingLayoutPanel.RowCount = 5;
             this.tagBindingLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -295,17 +301,17 @@
             this.tagBindingLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tagBindingLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tagBindingLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tagBindingLayoutPanel.Size = new System.Drawing.Size(570, 728);
+            this.tagBindingLayoutPanel.Size = new System.Drawing.Size(616, 703);
             this.tagBindingLayoutPanel.TabIndex = 1;
             // 
             // findReplacePage
             // 
             this.findReplacePage.Controls.Add(this.findReplaceTable);
-            this.findReplacePage.Location = new System.Drawing.Point(8, 39);
-            this.findReplacePage.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.findReplacePage.Location = new System.Drawing.Point(4, 33);
+            this.findReplacePage.Margin = new System.Windows.Forms.Padding(6);
             this.findReplacePage.Name = "findReplacePage";
-            this.findReplacePage.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
-            this.findReplacePage.Size = new System.Drawing.Size(582, 647);
+            this.findReplacePage.Padding = new System.Windows.Forms.Padding(6);
+            this.findReplacePage.Size = new System.Drawing.Size(628, 715);
             this.findReplacePage.TabIndex = 1;
             this.findReplacePage.Text = "Find and Replace";
             this.findReplacePage.UseVisualStyleBackColor = true;
@@ -319,10 +325,10 @@
             this.replaceColumn});
             this.findReplaceTable.Dock = System.Windows.Forms.DockStyle.Fill;
             this.findReplaceTable.Location = new System.Drawing.Point(6, 6);
-            this.findReplaceTable.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.findReplaceTable.Margin = new System.Windows.Forms.Padding(6);
             this.findReplaceTable.Name = "findReplaceTable";
             this.findReplaceTable.RowHeadersWidth = 82;
-            this.findReplaceTable.Size = new System.Drawing.Size(570, 635);
+            this.findReplaceTable.Size = new System.Drawing.Size(616, 703);
             this.findReplaceTable.TabIndex = 0;
             // 
             // findColumn
@@ -340,10 +346,10 @@
             // otherSettingsPage
             // 
             this.otherSettingsPage.Controls.Add(this.flowLayoutPanel1);
-            this.otherSettingsPage.Location = new System.Drawing.Point(8, 39);
-            this.otherSettingsPage.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.otherSettingsPage.Location = new System.Drawing.Point(4, 33);
+            this.otherSettingsPage.Margin = new System.Windows.Forms.Padding(4);
             this.otherSettingsPage.Name = "otherSettingsPage";
-            this.otherSettingsPage.Size = new System.Drawing.Size(582, 740);
+            this.otherSettingsPage.Size = new System.Drawing.Size(628, 715);
             this.otherSettingsPage.TabIndex = 2;
             this.otherSettingsPage.Text = "Other Settings";
             this.otherSettingsPage.UseVisualStyleBackColor = true;
@@ -355,33 +361,39 @@
             this.flowLayoutPanel1.Controls.Add(this.appendRadioButton);
             this.flowLayoutPanel1.Controls.Add(this.replaceRadioButton);
             this.flowLayoutPanel1.Controls.Add(this.tagSubmitNote);
+            this.flowLayoutPanel1.Controls.Add(this.importExportLabel);
+            this.flowLayoutPanel1.Controls.Add(this.exportLink);
+            this.flowLayoutPanel1.Controls.Add(this.importLink);
+            this.flowLayoutPanel1.Controls.Add(this.resetTitle);
+            this.flowLayoutPanel1.Controls.Add(this.resetDescription);
+            this.flowLayoutPanel1.Controls.Add(this.resetLink);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(6);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(10, 10, 10, 10);
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(582, 740);
+            this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(9, 10, 9, 10);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(628, 715);
             this.flowLayoutPanel1.TabIndex = 0;
             // 
             // tagSubmitModeLabel
             // 
             this.tagSubmitModeLabel.AutoSize = true;
             this.tagSubmitModeLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tagSubmitModeLabel.Location = new System.Drawing.Point(16, 10);
+            this.tagSubmitModeLabel.Location = new System.Drawing.Point(15, 10);
             this.tagSubmitModeLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.tagSubmitModeLabel.Name = "tagSubmitModeLabel";
-            this.tagSubmitModeLabel.Size = new System.Drawing.Size(244, 26);
+            this.tagSubmitModeLabel.Size = new System.Drawing.Size(223, 25);
             this.tagSubmitModeLabel.TabIndex = 0;
             this.tagSubmitModeLabel.Text = "Tag submission mode";
             // 
             // appendRadioButton
             // 
             this.appendRadioButton.AutoSize = true;
-            this.appendRadioButton.Location = new System.Drawing.Point(16, 42);
-            this.appendRadioButton.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.appendRadioButton.Location = new System.Drawing.Point(15, 41);
+            this.appendRadioButton.Margin = new System.Windows.Forms.Padding(6);
             this.appendRadioButton.Name = "appendRadioButton";
-            this.appendRadioButton.Size = new System.Drawing.Size(469, 29);
+            this.appendRadioButton.Size = new System.Drawing.Size(421, 29);
             this.appendRadioButton.TabIndex = 1;
             this.appendRadioButton.TabStop = true;
             this.appendRadioButton.Text = "Append tags to existing tags on MusicBrainz";
@@ -390,10 +402,10 @@
             // replaceRadioButton
             // 
             this.replaceRadioButton.AutoSize = true;
-            this.replaceRadioButton.Location = new System.Drawing.Point(16, 83);
-            this.replaceRadioButton.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.replaceRadioButton.Location = new System.Drawing.Point(15, 82);
+            this.replaceRadioButton.Margin = new System.Windows.Forms.Padding(6);
             this.replaceRadioButton.Name = "replaceRadioButton";
-            this.replaceRadioButton.Size = new System.Drawing.Size(583, 29);
+            this.replaceRadioButton.Size = new System.Drawing.Size(522, 29);
             this.replaceRadioButton.TabIndex = 2;
             this.replaceRadioButton.TabStop = true;
             this.replaceRadioButton.Text = "Clear existing tags when submitting tags to MusicBrainz.";
@@ -403,13 +415,85 @@
             // 
             this.tagSubmitNote.AutoSize = true;
             this.tagSubmitNote.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tagSubmitNote.Location = new System.Drawing.Point(16, 118);
+            this.tagSubmitNote.Location = new System.Drawing.Point(15, 117);
             this.tagSubmitNote.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.tagSubmitNote.Name = "tagSubmitNote";
-            this.tagSubmitNote.Padding = new System.Windows.Forms.Padding(0, 10, 0, 0);
-            this.tagSubmitNote.Size = new System.Drawing.Size(580, 218);
+            this.tagSubmitNote.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
+            this.tagSubmitNote.Size = new System.Drawing.Size(587, 85);
             this.tagSubmitNote.TabIndex = 3;
-            this.tagSubmitNote.Text = resources.GetString("tagSubmitNote.Text");
+            this.tagSubmitNote.Text = "Append is enabled by default to prevent the accidental wiping of tags you already" +
+    " have saved to MusicBrainz. If you are happy with replacing already existing tag" +
+    "s, choose the second option.";
+            // 
+            // importExportLabel
+            // 
+            this.importExportLabel.AutoSize = true;
+            this.importExportLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.importExportLabel.Location = new System.Drawing.Point(15, 202);
+            this.importExportLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.importExportLabel.Name = "importExportLabel";
+            this.importExportLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.importExportLabel.Size = new System.Drawing.Size(200, 31);
+            this.importExportLabel.TabIndex = 4;
+            this.importExportLabel.Text = "Export / import data";
+            // 
+            // exportLink
+            // 
+            this.exportLink.AutoSize = true;
+            this.exportLink.Location = new System.Drawing.Point(12, 233);
+            this.exportLink.Name = "exportLink";
+            this.exportLink.Size = new System.Drawing.Size(111, 25);
+            this.exportLink.TabIndex = 5;
+            this.exportLink.TabStop = true;
+            this.exportLink.Text = "Export data";
+            this.exportLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.exportLink_LinkClicked);
+            // 
+            // importLink
+            // 
+            this.importLink.AutoSize = true;
+            this.importLink.Location = new System.Drawing.Point(12, 258);
+            this.importLink.Name = "importLink";
+            this.importLink.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
+            this.importLink.Size = new System.Drawing.Size(109, 35);
+            this.importLink.TabIndex = 6;
+            this.importLink.TabStop = true;
+            this.importLink.Text = "Import data";
+            this.importLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.importLink_LinkClicked);
+            // 
+            // resetTitle
+            // 
+            this.resetTitle.AutoSize = true;
+            this.resetTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.resetTitle.Location = new System.Drawing.Point(15, 293);
+            this.resetTitle.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.resetTitle.Name = "resetTitle";
+            this.resetTitle.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.resetTitle.Size = new System.Drawing.Size(162, 31);
+            this.resetTitle.TabIndex = 7;
+            this.resetTitle.Text = "Reset to default";
+            // 
+            // resetDescription
+            // 
+            this.resetDescription.AutoSize = true;
+            this.resetDescription.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.resetDescription.Location = new System.Drawing.Point(15, 324);
+            this.resetDescription.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.resetDescription.Name = "resetDescription";
+            this.resetDescription.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
+            this.resetDescription.Size = new System.Drawing.Size(593, 110);
+            this.resetDescription.TabIndex = 8;
+            this.resetDescription.Text = resources.GetString("resetDescription.Text");
+            // 
+            // resetLink
+            // 
+            this.resetLink.AutoSize = true;
+            this.resetLink.Location = new System.Drawing.Point(12, 434);
+            this.resetLink.Name = "resetLink";
+            this.resetLink.Size = new System.Drawing.Size(134, 25);
+            this.resetLink.TabIndex = 9;
+            this.resetLink.TabStop = true;
+            this.resetLink.Text = "Reset settings";
+            this.resetLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.resetLink_LinkClicked);
             // 
             // mainLayoutPanel
             // 
@@ -419,23 +503,23 @@
             this.mainLayoutPanel.Controls.Add(this.mainTabControl, 0, 0);
             this.mainLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainLayoutPanel.Location = new System.Drawing.Point(0, 0);
-            this.mainLayoutPanel.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.mainLayoutPanel.Margin = new System.Windows.Forms.Padding(6);
             this.mainLayoutPanel.Name = "mainLayoutPanel";
             this.mainLayoutPanel.RowCount = 2;
             this.mainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.mainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.mainLayoutPanel.Size = new System.Drawing.Size(610, 917);
+            this.mainLayoutPanel.Size = new System.Drawing.Size(648, 880);
             this.mainLayoutPanel.TabIndex = 6;
             // 
             // TagBindingConfig
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(610, 917);
+            this.ClientSize = new System.Drawing.Size(648, 880);
             this.Controls.Add(this.mainLayoutPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.Margin = new System.Windows.Forms.Padding(6);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "TagBindingConfig";
@@ -474,7 +558,6 @@
         private System.Windows.Forms.FlowLayoutPanel buttonPanel;
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button OKButton;
-        private System.Windows.Forms.Button resetButton;
         private System.Windows.Forms.Label saveNote;
         private System.Windows.Forms.TabControl tagTabControl;
         private System.Windows.Forms.TabPage trackTab;
@@ -497,5 +580,12 @@
         private System.Windows.Forms.RadioButton appendRadioButton;
         private System.Windows.Forms.RadioButton replaceRadioButton;
         private System.Windows.Forms.Label tagSubmitNote;
+        private System.Windows.Forms.Label importExportLabel;
+        private System.Windows.Forms.LinkLabel exportLink;
+        private System.Windows.Forms.LinkLabel importLink;
+        private System.Windows.Forms.Button applyButton;
+        private System.Windows.Forms.Label resetTitle;
+        private System.Windows.Forms.Label resetDescription;
+        private System.Windows.Forms.LinkLabel resetLink;
     }
 }

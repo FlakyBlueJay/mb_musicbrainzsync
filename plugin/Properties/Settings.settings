@@ -25,5 +25,8 @@ alt-pop;alternative pop</Value>
     <Setting Name="tagSubmitIsDestructive" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="cachedUsername" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

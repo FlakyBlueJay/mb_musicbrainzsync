@@ -55,7 +55,6 @@ namespace plugin
         // object version of the MusicBRainz error JSON data.
         public class MusicBrainzAPIError
         {
-            // Class for handling errors from MusicBrainz that use JSON.
             public string error { get; set; }
             public string error_description { get; set; }
         }
@@ -71,7 +70,7 @@ namespace plugin
             };
 
             // MusicBrainz will reject requests that don't come from valid user agents.
-            MBzHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"mb_MusicBrainzSync/1.0.0 (https://github.com/FlakyBlueJay/mb_musicbrainzsync)");
+            MBzHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"mb_MusicBrainzSync/1.1.0 (https://github.com/FlakyBlueJay/mb_musicbrainzsync)");
 
             // check if the user is logged in or not.
             if (string.IsNullOrEmpty(Settings.Default.refreshToken))
@@ -80,7 +79,7 @@ namespace plugin
             }
             else
             {
-                user = GetUserName().Result;
+                user = Settings.Default.cachedUsername;
             }
         }
 
@@ -318,7 +317,8 @@ namespace plugin
                 mbzAccessTokenExpiry = DateTime.Now.AddSeconds(mbOAuthData.expires_in);
                 Settings.Default.Save();
                 MBzHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", mbzAccessToken);
-                user = await GetUserName();
+                user = await GetUserName(); Settings.Default.cachedUsername = user;
+                Settings.Default.Save();
                 return true;
             }
 

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json.Linq;
 using plugin.Properties;
 using static MusicBeePlugin.Plugin;
 
@@ -31,7 +32,7 @@ namespace plugin
             }
         }
 
-        private void UpdateTagBindingList(CheckedListBox listBox, string entity_type = null) 
+        private void UpdateTagBindingList(CheckedListBox listBox, string entity_type = null)
         {
             listBox.Items.Clear();
             HashSet<string> TagBindingsSetting;
@@ -53,7 +54,7 @@ namespace plugin
                 string tagName = mbApiInterface.Setting_GetFieldName(tagBindingPair.Value);
                 var tagKey = tagBindingPair.Key;
                 bool itemChecked = TagBindingsSetting.Contains(tagKey);
-                listBox.Items.Add(new TagListItem { tagDisplayName = tagName, tagKey = tagKey}, itemChecked);
+                listBox.Items.Add(new TagListItem { tagDisplayName = tagName, tagKey = tagKey }, itemChecked);
 
             }
         }
@@ -65,9 +66,11 @@ namespace plugin
             UpdateFindReplaceTable(); UpdateTagModeRadioButtons();
         }
 
+        // UI functions
         private void ToggleSeparateBindUI(object sender, EventArgs e, bool separate = false)
         {
             UpdateTagBindingList(trackListBox);
+            // god I hate WinForms.
             if (separate)
             {
                 trackTab.Text = "Tracks/Recordings";
@@ -111,11 +114,11 @@ namespace plugin
         {
             if (Settings.Default.tagSubmitIsDestructive)
             {
-                replaceRadioButton.Select();
+                replaceRadioButton.Checked = true;
             }
             else
             {
-                appendRadioButton.Select();
+                appendRadioButton.Checked = true;
             }
         }
 
@@ -129,25 +132,43 @@ namespace plugin
             this.Close();
         }
 
-        private void resetButton_Click(object sender, EventArgs e)
+        private void HandleListBoxCheck(object sender, ItemCheckEventArgs listBoxItem)
         {
-            DialogResult resetMessageResult = MessageBox.Show("Are you sure you want to reset the tag binding settings to default? This will remove all custom tag bindings, set them to the default values and default back to sharing the tag bindings across all entities.", null, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (resetMessageResult == DialogResult.Yes)
+            CheckedListBox listBox = (CheckedListBox)sender;
+
+            int checkedItemCount = listBox.CheckedItems.Count;
+            if (listBoxItem.NewValue == CheckState.Checked)
             {
-                Debug.WriteLine("hhhhh"+Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue));
-                //Settings.Default.separateTagBindings = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
-                Settings.Default.recordingTagBindings = (string)Settings.Default.Properties["recordingTagBindings"].DefaultValue;
-                Settings.Default.releaseTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
-                Settings.Default.releaseGroupTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
-                Settings.Default.findReplace = (string)Settings.Default.Properties["findReplace"].DefaultValue;
-                Settings.Default.tagSubmitIsDestructive = Convert.ToBoolean(Settings.Default.Properties["tagSubmitIsDestructive"].DefaultValue);
-                Settings.Default.Save();
-                separateCheckBox.Checked = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
-                UpdateFindReplaceTable(); UpdateTagModeRadioButtons();
+                checkedItemCount++;
+            }
+            else
+            {
+                checkedItemCount--;
+            }
+
+            if (checkedItemCount == 0)
+            {
+                listBoxItem.NewValue = CheckState.Checked;
             }
         }
 
-        private void OKButton_Click(object sender, EventArgs e)
+        private void trackListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            HandleListBoxCheck(sender, e);
+        }
+
+        private void releaseListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            HandleListBoxCheck(sender, e);
+        }
+
+        private void releaseGroupListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            HandleListBoxCheck(sender, e);
+        }
+
+        // settings save functions
+        private void SaveChanges()
         {
             List<string> trackSavedTags = new List<string>();
             foreach (object tag in trackListBox.CheckedItems)
@@ -190,10 +211,10 @@ namespace plugin
                 {
                     newFindReplaceString += $"{findTag};{replaceTag}{Environment.NewLine}";
                 }
-                
+
             }
             Settings.Default.findReplace = newFindReplaceString;
-            
+
             if (appendRadioButton.Checked)
             {
                 Settings.Default.tagSubmitIsDestructive = false;
@@ -204,43 +225,147 @@ namespace plugin
             }
 
             Settings.Default.Save();
+        }
+
+        private void OKButton_Click(object sender, EventArgs e)
+        {
+            SaveChanges();
             this.Close();
 
         }
 
-        private void HandleListBoxCheck(object sender, ItemCheckEventArgs listBoxItem)
+        private void applyButton_click(object sender, EventArgs e)
         {
-            CheckedListBox listBox = (CheckedListBox)sender;
+            SaveChanges();
+        }
 
-            int checkedItemCount = listBox.CheckedItems.Count;
-            if (listBoxItem.NewValue == CheckState.Checked)
-            {
-                checkedItemCount++;
-            }
-            else
-            {
-                checkedItemCount--;
-            }
+        // Export and import functions
 
-            if (checkedItemCount == 0)
+        // These classes are used to structure the settings for export/import
+        public class TagBindings
+        {
+            public string recording { get; set; }
+            public string release { get; set; }
+            public string release_group { get; set; }
+        }
+
+        public class PluginSettings
+        {
+            public bool separate_tag_bindings { get; set; }
+            public bool tag_submit_destructive { get; set; }
+            public string find_replace { get; set; }
+            public TagBindings tag_bindings { get; set; }
+        }
+
+        private void exportLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Filter = "JavaScript Object Notation file|*.json";
+            saveDialog.Title = "Export MusicBrainz Sync plugin settings";
+            saveDialog.FileName = "MusicBrainzSyncSettings.json";
+            DialogResult result = saveDialog.ShowDialog();
+            if (result == DialogResult.OK)
             {
-                listBoxItem.NewValue = CheckState.Checked;
+                try
+                {
+                    Debug.WriteLine("tagSubmitIsDestructive: " + Settings.Default.tagSubmitIsDestructive);
+                    PluginSettings exportedSettings = new PluginSettings
+                    {
+                        separate_tag_bindings = Settings.Default.separateTagBindings,
+                        tag_submit_destructive = Settings.Default.tagSubmitIsDestructive,
+                        find_replace = Settings.Default.findReplace,
+                        tag_bindings = new TagBindings
+                        {
+                            recording = Settings.Default.recordingTagBindings,
+                            release = Settings.Default.releaseTagBindings,
+                            release_group = Settings.Default.releaseGroupTagBindings
+                        },
+                    };
+                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(exportedSettings, Newtonsoft.Json.Formatting.Indented);
+                    System.IO.File.WriteAllText(saveDialog.FileName, json);
+                    MessageBox.Show($"Settings have been successfully exported to {saveDialog.FileName}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"An error occurred while exporting the settings: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
-        private void trackListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void importLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            HandleListBoxCheck(sender, e);
+            OpenFileDialog openDialog = new OpenFileDialog();
+            openDialog.Filter = "JavaScript Object Notation file|*.json";
+            openDialog.Title = "Import MusicBrainz Sync plugin settings";
+            openDialog.FileName = "MusicBrainzSyncSettings.json";
+            DialogResult result = openDialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                try
+                {
+                    // 1. get data from JSON import
+                    if (new System.IO.FileInfo(openDialog.FileName).Extension != ".json")
+                    {
+                        throw new InvalidOperationException("The selected file does not appear to be a valid JSON file.");
+                    }
+                    else
+                    {
+                        string json = System.IO.File.ReadAllText(openDialog.FileName);
+                        PluginSettings importedSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<PluginSettings>(json);
+                        if (importedSettings == null || importedSettings.tag_bindings == null)
+                        {
+                            throw new InvalidOperationException("The selected file does not appear to be a valid MusicBrainz Sync settings file.");
+                        }
+                        else
+                        {
+                            Settings.Default.separateTagBindings = importedSettings.separate_tag_bindings;
+                            Settings.Default.tagSubmitIsDestructive = importedSettings.tag_submit_destructive;
+                            Settings.Default.findReplace = importedSettings.find_replace ?? "";
+                            Settings.Default.recordingTagBindings = importedSettings.tag_bindings.recording ?? "";
+                            Settings.Default.releaseTagBindings = importedSettings.tag_bindings.release ?? "";
+                            Settings.Default.releaseGroupTagBindings = importedSettings.tag_bindings.release_group ?? "";
+                            Settings.Default.Save();
+                            separateCheckBox.Checked = Settings.Default.separateTagBindings;
+                            UpdateFindReplaceTable();
+                            UpdateTagModeRadioButtons();
+                            MessageBox.Show("Settings have been successfully imported. Please review the settings and click OK to apply them.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        // 2. process the data.
+                        // 3. if all is well, save the data to settings and update the UI.
+                        //MessageBox.Show("Importing settings is not yet implemented.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }  
+                }
+                catch (Newtonsoft.Json.JsonException)
+                {
+                    MessageBox.Show("The selected file does not appear to be a valid JSON file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"An error occurred while importing the settings: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
-        private void releaseListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void resetLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            HandleListBoxCheck(sender, e);
-        }
-
-        private void releaseGroupListBox_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            HandleListBoxCheck(sender, e);
+            DialogResult resetMessageResult = MessageBox.Show("Are you sure you want to reset the tag binding settings to default? This will remove all custom tag bindings, set them to the default values and default back to sharing the tag bindings across all entities.", null, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            if (resetMessageResult == DialogResult.Yes)
+            {
+                //Settings.Default.separateTagBindings = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
+                Settings.Default.recordingTagBindings = (string)Settings.Default.Properties["recordingTagBindings"].DefaultValue;
+                Settings.Default.releaseTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
+                Settings.Default.releaseGroupTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
+                Settings.Default.findReplace = (string)Settings.Default.Properties["findReplace"].DefaultValue;
+                Settings.Default.tagSubmitIsDestructive = Convert.ToBoolean(Settings.Default.Properties["tagSubmitIsDestructive"].DefaultValue);
+                Settings.Default.Save();
+                separateCheckBox.Checked = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
+                UpdateFindReplaceTable(); UpdateTagModeRadioButtons();
+                MessageBox.Show("Your MusicBrainz Sync plugin settings have been reset to default values.", null, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
     }
 }

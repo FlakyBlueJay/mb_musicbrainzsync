@@ -129,10 +129,7 @@
   <metadata name="replaceColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="tagSubmitNote.Text" xml:space="preserve">
-    <value>Append is enabled by default to prevent the accidental wiping of tags you already have saved to MusicBrainz. If you are happy with replacing already existing tags, choose the second option.
-
-A "smart" mode is planned for a future release, which will compare the two and remove only ones that have been removed from your local tags, keeping other tags intact.
-</value>
+  <data name="resetDescription.Text" xml:space="preserve">
+    <value>If you want to reset the settings associated with this plugin, click the link below. This will remove all custom tag bindings, set them to the default values and default back to sharing the tag bindings across all entities.</value>
   </data>
 </root>
