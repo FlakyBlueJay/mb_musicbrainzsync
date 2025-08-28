@@ -91,10 +91,13 @@ namespace plugin
             switch (statusCode)
             {
                 case System.Net.HttpStatusCode.Unauthorized:
-                    errorMessage = "MusicBrainz returned a 401 error. This means you haven't logged in properly.";
+                    errorMessage = "MusicBrainz returned an unauthorised error (code 401). This means you haven't logged in properly. Log in again, or restart the plugin.";
                     break;
                 case System.Net.HttpStatusCode.InternalServerError:
-                    errorMessage = "MusicBrainz returned a 500 error. This is likely a server-side issue. Try again at a later time.";
+                    errorMessage = "MusicBrainz returned an internal server error (code 500). This is likely a server-side issue. Try again at a later time.";
+                    break;
+                case System.Net.HttpStatusCode.BadGateway:
+                    errorMessage = "MusicBrainz returned a bad gateway error (code 502). This is likely a server-side issue. Try again at a later time.";
                     break;
                 case System.Net.HttpStatusCode.BadRequest:
                     string error = mbApiResponse.Result.Content.ReadAsStringAsync().Result;
@@ -111,7 +114,7 @@ namespace plugin
                             break;
                         default:
                             // any that I haven't caught yet.
-                            errorMessage = $"MusicBrainz returned the following error that hasn't been properly caught yet: {mbErrorData.error}\n\n" +
+                            errorMessage = $"MusicBrainz returned the following bad request (code 400) error that hasn't been properly caught yet: {mbErrorData.error}\n\n" +
                                 $"Report this error to https://github.com/FlakyBlueJay/mb_musicbrainzsync";
                             break;
                     }
@@ -346,29 +349,39 @@ namespace plugin
         // # Rating functions
         public async Task SetRatings(Dictionary<string, float> mbidRatings, string entity_type)
         {
-            StringWriter stringWriter = new StringWriter();
-            XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
-            xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
-            xmlWriter.WriteStartElement($"{entity_type}-list");
-
-            foreach (KeyValuePair<string, float> trackTagPair in mbidRatings)
+            if (user != null)
             {
-                string mbid = trackTagPair.Key;
-                string rating = trackTagPair.Value.ToString();
-                xmlWriter.WriteStartElement(entity_type); xmlWriter.WriteAttributeString("id", mbid);
-                xmlWriter.WriteElementString("user-rating", rating);
-                xmlWriter.WriteEndElement(); // ends individual recording XML
+                StringWriter stringWriter = new StringWriter();
+                XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
+                xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
+                xmlWriter.WriteStartElement($"{entity_type}-list");
+
+                foreach (KeyValuePair<string, float> trackTagPair in mbidRatings)
+                {
+                    string mbid = trackTagPair.Key;
+                    string rating = trackTagPair.Value.ToString();
+                    xmlWriter.WriteStartElement(entity_type); xmlWriter.WriteAttributeString("id", mbid);
+                    xmlWriter.WriteElementString("user-rating", rating);
+                    xmlWriter.WriteEndElement(); // ends individual recording XML
+                }
+                xmlWriter.WriteEndElement(); // ends recording-list XML
+                xmlWriter.WriteEndElement(); // ends metadata XML
+                xmlWriter.Flush();
+                string xmlData = stringWriter.ToString();
+                Debug.WriteLine("XML Data: " + xmlData);
+                await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
             }
-            xmlWriter.WriteEndElement(); // ends recording-list XML
-            xmlWriter.WriteEndElement(); // ends metadata XML
-            xmlWriter.Flush();
-            string xmlData = stringWriter.ToString();
-            Debug.WriteLine("XML Data: " + xmlData);
-            await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
+            else
+            {
+                MessageBox.Show(
+                    "You need to authenticate with MusicBrainz first. Please do so in the plugin settings.",
+                    "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         // # Tag functions
 
+        // function to find and replace tags based on user specified settings.
         private string FindReplaceTag(string tag)
         {
             tag = tag.ToLower();
@@ -405,36 +418,45 @@ namespace plugin
 
         public async Task SetTags(Dictionary<string, string> trackMbid_TagPairing, string entityType = "recording")
         {
-            StringWriter stringWriter = new StringWriter();
-            XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
-            xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
-            xmlWriter.WriteStartElement($"{entityType}-list");
-            foreach (KeyValuePair<string, string> trackTagPair in trackMbid_TagPairing)
-            {
-                string recordingMbid = trackTagPair.Key;
-                string tag = trackTagPair.Value;
-                xmlWriter.WriteStartElement(entityType); xmlWriter.WriteAttributeString("id", recordingMbid);
-                xmlWriter.WriteStartElement("user-tag-list");
-                
-                foreach (string tagString in tag.Split(';'))
+            if (user != null) {
+                StringWriter stringWriter = new StringWriter();
+                XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
+                xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
+                xmlWriter.WriteStartElement($"{entityType}-list");
+                foreach (KeyValuePair<string, string> trackTagPair in trackMbid_TagPairing)
                 {
-                    xmlWriter.WriteStartElement("user-tag");
-                    if (!Settings.Default.tagSubmitIsDestructive) {
-                        // This ensures that MusicBrainz won't remove the other ratings when submitting from the plugin.
-                        xmlWriter.WriteAttributeString("vote", "upvote");
+                    string recordingMbid = trackTagPair.Key;
+                    string tag = trackTagPair.Value;
+                    xmlWriter.WriteStartElement(entityType); xmlWriter.WriteAttributeString("id", recordingMbid);
+                    xmlWriter.WriteStartElement("user-tag-list");
+
+                    foreach (string tagString in tag.Split(';'))
+                    {
+                        xmlWriter.WriteStartElement("user-tag");
+                        if (!Settings.Default.tagSubmitIsDestructive)
+                        {
+                            xmlWriter.WriteAttributeString("vote", "upvote");
+                        }
+                        xmlWriter.WriteElementString("name", FindReplaceTag(tagString));
+                        xmlWriter.WriteEndElement();
                     }
-                    xmlWriter.WriteElementString("name", FindReplaceTag(tagString));
-                    xmlWriter.WriteEndElement(); 
+                    xmlWriter.WriteEndElement(); // ends user-tag-list XML
+                    xmlWriter.WriteEndElement(); // ends individual recording XML
                 }
-                xmlWriter.WriteEndElement(); // ends user-tag-list XML
-                xmlWriter.WriteEndElement(); // ends individual recording XML
+                xmlWriter.WriteEndElement(); // ends recording-list XML
+                xmlWriter.WriteEndElement(); // ends metadata XML
+                xmlWriter.Flush();
+                string xmlData = stringWriter.ToString();
+                Debug.WriteLine("XML Data: " + xmlData);
+                await PostToMusicBrainz("/ws/2/tag?client=mb_MusicBrainzSync", xmlData, "application/xml");
             }
-            xmlWriter.WriteEndElement(); // ends recording-list XML
-            xmlWriter.WriteEndElement(); // ends metadata XML
-            xmlWriter.Flush();
-            string xmlData = stringWriter.ToString();
-            Debug.WriteLine("XML Data: " + xmlData);
-            await PostToMusicBrainz("/ws/2/tag?client=mb_MusicBrainzSync", xmlData, "application/xml");
+            else
+            {
+                MessageBox.Show(
+                    "You need to authenticate with MusicBrainz first. Please do so in the plugin settings.",
+                    "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            
         }
 
     }

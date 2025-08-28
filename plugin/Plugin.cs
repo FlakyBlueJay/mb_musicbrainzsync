@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace YourNamespace
 {
@@ -365,9 +366,36 @@ namespace MusicBeePlugin
             ToggleAuthPanelsVisibility();
         }
 
+        public void AddMenuItems()
+        {
+
+            // add context menu items
+            // context.Main is the right-click menu for tracks and albums
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings", "", null);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", null);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", SendTrackRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", SendReleaseGroupRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recordings", "", SendTrackTags);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", SendReleaseTags);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", SendReleaseGroupTags);
+
+#if DEBUG
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug", "", null);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Track Ratings", "", ResetTrackRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Album Ratings", "", ResetReleaseGroupRatings);
+#endif
+
+            // add hotkey entries
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", SendTrackRatings);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings to Release Group", SendReleaseGroupRatings);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", SendTrackTags);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", SendReleaseTags);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", SendReleaseGroupTags);
+        }
+
         // receive event notifications from MusicBee
         // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
-        public void ReceiveNotification(string sourceFileUrl, NotificationType type)
+        async public Task ReceiveNotification(string sourceFileUrl, NotificationType type)
         {
             // perform some action depending on the notification type
             switch (type)
@@ -375,42 +403,21 @@ namespace MusicBeePlugin
                 case NotificationType.PluginStartup:
                     // perform startup initialisation
 
-                    // add context menu items
-                    // context.Main is the right-click menu for tracks and albums
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings", "", null);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", null);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", SendTrackRatings);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", SendReleaseGroupRatings);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recordings", "", SendTrackTags);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", SendReleaseTags);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", SendReleaseGroupTags);
-
-#if DEBUG
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug", "", null);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Track Ratings", "", ResetTrackRatings);
-                    mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Album Ratings", "", ResetReleaseGroupRatings);
-#endif
-
-                    // add hotkey entries
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", SendTrackRatings);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings to Release Group", SendReleaseGroupRatings);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", SendTrackTags);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", SendReleaseTags);
-                    mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", SendReleaseGroupTags);
-
-                    
-
-                    // output username to status bar if logged in
                     if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
                     {
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user}");
+
+                        AddMenuItems();
+
+                    // output username to status bar if logged in
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user} (version 1.1)");
                     }
                     break;
             }
         }
 
         // # Data submission functions
-        public async void SendRatingData(string entity_type, bool reset = false)
+        // 
+        public async Task SendRatingData(string entity_type, bool reset = false)
         {
             mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
@@ -492,9 +499,10 @@ namespace MusicBeePlugin
             }
         }
 
-        public async void SendTagData(string entity_type)
+        public async Task SendTagData(string entity_type)
         {
-            mbApiInterface.MB_SetBackgroundTaskMessage("Submitting tags to MusicBrainz...");
+            string shownEntity = entity_type.Replace('-', ' ');
+            // mbApiInterface.MB_SetBackgroundTaskMessage($"Submitting {shownEntity} tags to MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
             {
@@ -551,7 +559,7 @@ namespace MusicBeePlugin
                     else
                     {
                         await mbz.SetTags(tracksAndTags, entity_type);
-                        mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted tags to MusicBrainz.");
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully submitted {shownEntity} tags to MusicBrainz.");
                     }
                 }
                 catch (UnsupportedFormatException e)
@@ -562,40 +570,40 @@ namespace MusicBeePlugin
             }
         }
 
-        public void SendTrackRatings(object sender, EventArgs args)
+        async public void SendTrackRatings(object sender, EventArgs args)
         {
-            SendRatingData("recording");
+            await SendRatingData("recording");
         }
 
-        public void SendReleaseGroupRatings(object sender, EventArgs args)
+        async public void SendReleaseGroupRatings(object sender, EventArgs args)
         {
-           SendRatingData("release-group");
+           await SendRatingData("release-group");
         }
 
-        public void SendTrackTags(object sender, EventArgs args)
+        async public void SendTrackTags(object sender, EventArgs args)
         {
-            SendTagData("recording");
-        }
-        
-        public void SendReleaseTags(object sender, EventArgs args)
-        {
-            SendTagData("release");
+            await SendTagData("recording");
         }
 
-        public void SendReleaseGroupTags(object sender, EventArgs args)
+        async public void SendReleaseTags(object sender, EventArgs args)
         {
-            SendTagData("release-group");
+            await SendTagData("release");
+        }
+
+        async public void SendReleaseGroupTags(object sender, EventArgs args)
+        {
+            await SendTagData("release-group");
         }
 
 #if DEBUG
-        public void ResetTrackRatings(object sender, EventArgs args)
+        async public void ResetTrackRatings(object sender, EventArgs args)
         {
-            SendRatingData("recording", true);
+            await SendRatingData("recording", true);
         }
 
-        public void ResetReleaseGroupRatings(object sender, EventArgs args)
+        async public void ResetReleaseGroupRatings(object sender, EventArgs args)
         {
-            SendRatingData("release-group", true);
+            await SendRatingData("release-group", true);
         }
 #endif
     }
