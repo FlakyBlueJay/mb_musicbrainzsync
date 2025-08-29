@@ -34,6 +34,7 @@ namespace plugin
             public UnsupportedFormatException(string message) : base(message) { }
         }
 
+        // TagLib# does not support these formats. .tak may be supported but I doubt the others will due to how they store metadata.
         private static readonly HashSet<String> bannedExtensions = new HashSet<String> { ".tak", ".midi", ".mid", ".xm", ".uxm", ".mod" };
 
         public MusicBeeTrack(string path)
@@ -41,7 +42,7 @@ namespace plugin
             string fileExt = Path.GetExtension(path);
             if (bannedExtensions.Contains(fileExt))
             {
-                throw new UnsupportedFormatException($"{fileExt} files are not currently supported by this plugin.");
+                throw new UnsupportedFormatException($"{fileExt} files are not currently supported by this plugin as it is not currently supported in the underlying tag retrieval library.");
             }
             else
             {

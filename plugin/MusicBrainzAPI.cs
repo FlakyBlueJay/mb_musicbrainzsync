@@ -1,21 +1,24 @@
-﻿using System;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
+using System;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.IO;
-using System.Xml;
-using Newtonsoft.Json;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace plugin
 {
+    using MusicBeePlugin;
+    using plugin.Properties;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using plugin.Properties;
 
     public class MusicBrainzAPI
     {
+        Version ver = typeof(Plugin).Assembly.GetName().Version;
+
         // I am aware that a MusicBrainz API wrapper already exists, but it requires .NET Core which is not supported for MusicBee plugins AFAIK.
 
         // # Web initialisation stuff
@@ -35,6 +38,8 @@ namespace plugin
             public EmptyDataException() { }
         }
 
+
+        // # JSON objects needed for Newtonsoft.Json deserialization
         // object version of the MusicBrainz OAuth JSON data.
         internal class MusicBrainzOAuthData
         {
@@ -70,12 +75,13 @@ namespace plugin
             };
 
             // MusicBrainz will reject requests that don't come from valid user agents.
-            MBzHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"mb_MusicBrainzSync/1.1.0 (https://github.com/FlakyBlueJay/mb_musicbrainzsync)");
+            string stringVer = $"{ver.Major}.{ver.Minor}.{ver.Revision}";
+            MBzHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"mb_MusicBrainzSync/{stringVer} (https://github.com/FlakyBlueJay/mb_musicbrainzsync)");
 
             // check if the user is logged in or not.
             if (string.IsNullOrEmpty(Settings.Default.refreshToken))
             {
-                Debug.WriteLine("No refresh token found, assuming user is logged out.");
+                Debug.WriteLine("[MusicBrainzAPI()] No refresh token found, assuming user is logged out.");
             }
             else
             {
@@ -100,7 +106,7 @@ namespace plugin
                     break;
                 case System.Net.HttpStatusCode.BadRequest:
                     string error = mbApiResponse.Result.Content.ReadAsStringAsync().Result;
-                    Debug.WriteLine("Fail Response: " + error);
+                    Debug.WriteLine("[MusicBrainzAPI] Fail Response: " + error);
                     MusicBrainzAPIError mbErrorData = JsonConvert.DeserializeObject<MusicBrainzAPIError>(error);
                     switch (mbErrorData.error)
                     {
@@ -165,7 +171,9 @@ namespace plugin
                     if (mbApiResponse.Result.IsSuccessStatusCode)
                     {
                         string result = await mbApiResponse.Result.Content.ReadAsStringAsync();
-                        Debug.WriteLine("Response from MusicBrainz: " + result);
+#if DEBUG
+                        Debug.WriteLine("[MusicBrainzAPI.GetFromMusicBrainz] Response from MusicBrainz: " + result);
+#endif
                         return result;
                     }
                     else if (mbApiResponse.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized)
@@ -235,7 +243,7 @@ namespace plugin
                     if (mbApiResponse.Result.IsSuccessStatusCode)
                     {
                         string result = await mbApiResponse.Result.Content.ReadAsStringAsync();
-                        Debug.WriteLine("JSON Response: " + result);
+                        Debug.WriteLine("[MusicBrainzAPI.PostToMusicBrainz] JSON Response: " + result);
                         // todo: does this output to XML as well? POST requires XML for certain.
                         return result;
                     }
@@ -330,7 +338,7 @@ namespace plugin
                 $"client_id={OAuthClientId}&" +
                 $"client_secret={OAuthClientSecret}&";
             string revokeRequest = await PostToMusicBrainz("/oauth2/revoke", parameters, "application/x-www-form-urlencoded");
-            Settings.Default.refreshToken = null;
+            Settings.Default.refreshToken = null; Settings.Default.cachedUsername = null;
             Settings.Default.Save();
         }
 
@@ -369,7 +377,7 @@ namespace plugin
                 xmlWriter.WriteEndElement(); // ends metadata XML
                 xmlWriter.Flush();
                 string xmlData = stringWriter.ToString();
-                Debug.WriteLine("XML Data: " + xmlData);
+                Debug.WriteLine("[MusicBrainzAPI.SetRatings] XML Data: " + xmlData);
                 await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
             }
             else
@@ -378,6 +386,33 @@ namespace plugin
                     "You need to authenticate with MusicBrainz first. Please do so in the plugin settings.",
                     "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        public async Task<Dictionary<string, int?>> GetUserRatings(List<string> mbids, string entity_type)
+        {
+            Dictionary<string, int?> mbidRatings = new Dictionary<string, int?>();
+            foreach (string mbid in mbids) {
+                Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] {MBzHttpClient.BaseAddress}/ws/2/{entity_type}/{mbid}?inc=user-ratings&fmt=json");
+                string json = await GetFromMusicBrainz($"/ws/2/{entity_type}/{mbid}?inc=user-ratings&fmt=json");
+                double? rating = null;
+                if (!string.IsNullOrEmpty(json))
+                {
+                    switch (entity_type)
+                    {
+                        case "release-group":
+                            ReleaseGroup rg = JsonConvert.DeserializeObject<ReleaseGroup>(json);
+                            rating = rg.UserRating;
+                            Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] Release Group Title: {rg.Title}, Rating: {rating}");
+                            break;
+                    }
+                    if (rating.HasValue)
+                    {
+                        rating = (rating * 2) * 10; // convert to 0-100 scale
+                        mbidRatings.Add(mbid, (int)Math.Round(rating.Value));
+                    }
+                }
+            }
+            return mbidRatings;
         }
 
         // # Tag functions
@@ -448,7 +483,7 @@ namespace plugin
                 xmlWriter.WriteEndElement(); // ends metadata XML
                 xmlWriter.Flush();
                 string xmlData = stringWriter.ToString();
-                Debug.WriteLine("XML Data: " + xmlData);
+                Debug.WriteLine("[MusicBrainzAPI.SetTags] XML Data: " + xmlData);
                 await PostToMusicBrainz("/ws/2/tag?client=mb_MusicBrainzSync", xmlData, "application/xml");
             }
             else
