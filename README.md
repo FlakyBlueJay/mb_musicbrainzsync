@@ -13,11 +13,11 @@ Yeah, it still means I'm dependent on Windows for a bit, but at least my workflo
 - Send tags to recordings, releases and release groups.
 - Choose to have separate tags to send for recordings, releases and release groups.
 - Find and replace while sending. (e.g. mapping your genre tags to MusicBrainz's default genre tags like "synth-pop" vs. "synthpop")
+- Import/export of plugin settings
 
 ### Planned
-- Import/export of plugin settings
 - The ability to get data from MusicBrainz as well as set.
-- "Smarter" way of handling tags. Right now it's either all or nothing on keeping your tags.
+  - Retrieval of ratings is in development.
 - Automatic submission of tags/ratings when you change them in MusicBee.
 
 ### Not planned
@@ -29,6 +29,8 @@ Yeah, it still means I'm dependent on Windows for a bit, but at least my workflo
 ## Installation
 Move all of the DLLs from the MusicBrainz Sync ZIP into your MusicBee plugins directory.
 
+Note that installing via MusicBee doesn't work, possibly due to the requirement of other libraries.
+
 ## Compatibility
 This plugin is compatible with MusicBee 3.5 and later.
 
@@ -36,7 +38,7 @@ It should be compatible with plugins that use:
 - Newtonsoft.Json 13.0.3
 - TagLibSharp 2.3.0
 
-Plugins that use older versions may need to be updated.
+Plugins that use older versions will need to be updated.
 
 ## Limitations
 - Custom tracks limited up to 16 even on MusicBee 3.6 which bumped the custom tag limit to 20.
