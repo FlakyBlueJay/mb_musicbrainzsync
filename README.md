@@ -18,6 +18,9 @@ Yeah, it still means I'm dependent on Windows for a bit, but at least my workflo
 ### Planned
 - The ability to get data from MusicBrainz as well as set.
   - Retrieval of ratings is in development.
+  
+### Lower priority
+I'll do this whenever... No guarantees though.
 - Automatic submission of tags/ratings when you change them in MusicBee.
 
 ### Not planned
