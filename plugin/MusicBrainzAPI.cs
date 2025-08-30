@@ -33,14 +33,18 @@ namespace plugin
         public string mbzAccessToken; public DateTime mbzAccessTokenExpiry;
         public string user = null;
 
-        // exception to be called when the XML comes up empty so the plugin can tell the user on the status bar.
+        /// <summary>
+        /// Exception to be called when the XML data comes up empty so the plugin can tell the user on the status bar.
+        /// </summary>
         public class EmptyDataException : Exception {
             public EmptyDataException() { }
         }
 
 
         // # JSON objects needed for Newtonsoft.Json deserialization
-        // object version of the MusicBrainz OAuth JSON data.
+        /// <summary>
+        /// Object representation of the authentication JSON data received from MusicBrainz.
+        /// </summary>
         internal class MusicBrainzOAuthData
         {
             public string access_token { get; set; }
@@ -49,7 +53,10 @@ namespace plugin
             public string refresh_token { get; set; }
         }
 
-        // object version of the MusicBrainz user JSON data.
+        /// <summary>
+        /// Object representation of the user JSON data received from MusicBrainz.
+        /// Partially implemented for now.
+        /// </summary>
         public class MusicBrainzUser
         {
             // MusicBrainz reports the user name in the "sub" field, but we want to represent it as "username".
@@ -58,6 +65,9 @@ namespace plugin
         }
 
         // object version of the MusicBRainz error JSON data.
+        /// <summary>
+        /// Object representation of the error JSON data received from MusicBrainz.
+        /// </summary>
         public class MusicBrainzAPIError
         {
             public string error { get; set; }
@@ -65,6 +75,9 @@ namespace plugin
         }
 
         // # Initialisation
+        /// <summary>
+        /// The MusicBrainz API interface.
+        /// </summary>
         public MusicBrainzAPI()
         {
             // initialise the HTTP client.
@@ -90,6 +103,9 @@ namespace plugin
         }
 
         // # HTTP connectivity functions
+        /// <summary>
+        /// Displays an error MessageBox depending on the HttpStatusCode, or the HttpStatusCode.BadRequest type retrieved from MusicBrainz.
+        /// </summary>
         internal void DisplayHTTPErrorMessage(System.Net.HttpStatusCode statusCode)
         {
             string errorMessage = "";
@@ -129,12 +145,16 @@ namespace plugin
                         $"Report this error to https://github.com/FlakyBlueJay/mb_musicbrainzsync";
                     break;
             }
+
             MessageBox.Show(
                 $"Error: {errorMessage}", "MusicBrainz Sync",
                 MessageBoxButtons.OK, MessageBoxIcon.Error
                 );
         }
 
+        /// <summary>
+        /// Generic function for handling GET functions to the MusicBrainz server.
+        /// </summary>
         private async Task<string> GetFromMusicBrainz(string endpoint, string data = null, bool silent = false)
         {
             string refreshToken = Settings.Default.refreshToken;
@@ -206,6 +226,9 @@ namespace plugin
             }
         }
 
+        /// <summary>
+        /// Generic function for handling POST functions to the MusicBrainz server.
+        /// </summary>
         private async Task<string> PostToMusicBrainz(string endpoint, string data, string data_type = "application/json", bool silent = false)
         {
             string refreshToken = Settings.Default.refreshToken;
@@ -278,6 +301,9 @@ namespace plugin
             }
         }
 
+        /// <summary>
+        /// Function to return an authentication URL.
+        /// </summary>
         public string GetAuthenticationURL()
         {
             // since MusicBrainzServer is declared here and not in Plugin.cs, best to have a function to generate the URL here.
@@ -286,6 +312,9 @@ namespace plugin
         }
 
         // # User authentication functions
+        /// <summary>
+        /// Authenticates the user, only refreshing the refresh token if the user has authenticated before.
+        /// </summary>
         public async Task<bool> AuthenticateUser(string userApiKey = null)
         {
             string parameters;
@@ -332,6 +361,9 @@ namespace plugin
 
         }
 
+        /// <summary>
+        /// Revokes access to MusicBrainz and clears any associated data. (i.e. "log out")
+        /// </summary>
         public async Task RevokeAccess()
         {
             string parameters = $"token={Settings.Default.refreshToken}&" +
@@ -344,6 +376,9 @@ namespace plugin
 
         // # User functions
         // Generally should only have GetUserName to display it in the plugin settings.
+        /// <summary>
+        /// Grabs the username of the currently authenticated user.
+        /// </summary>
         public async Task<string> GetUserName()
         {
             string userinfo = await GetFromMusicBrainz("/oauth2/userinfo");
@@ -356,6 +391,9 @@ namespace plugin
         }
 
         // # Rating functions
+        /// <summary>
+        /// Generates XML from user-inputted ratings and MBIDs and sends that XML to MusicBrainz to add/change on the user's behalf.
+        /// </summary>
         public async Task SetRatings(Dictionary<string, float> mbidRatings, string entity_type)
         {
             if (user != null)
@@ -388,29 +426,60 @@ namespace plugin
             }
         }
 
-        public async Task<Dictionary<string, int?>> GetUserRatings(List<string> mbids, string entity_type)
+        /// <summary>
+        /// Retrieves the rating data from the currently authenticated user.
+        /// </summary>
+        public async Task<Dictionary<string, int?>> GetUserRatings(List<string> mbids)
         {
+            string entity_type = "";
             Dictionary<string, int?> mbidRatings = new Dictionary<string, int?>();
-            foreach (string mbid in mbids) {
-                Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] {MBzHttpClient.BaseAddress}/ws/2/{entity_type}/{mbid}?inc=user-ratings&fmt=json");
-                string json = await GetFromMusicBrainz($"/ws/2/{entity_type}/{mbid}?inc=user-ratings&fmt=json");
+            foreach (string mbidUrl in mbids) {
+                string[] mbidData = mbidUrl.Split('/');
+                entity_type = mbidData[0]; string currentMbid = mbidData[1];
                 double? rating = null;
-                if (!string.IsNullOrEmpty(json))
+
+                Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] {MBzHttpClient.BaseAddress}/ws/2/{mbidUrl}?inc=user-ratings&fmt=json");
+                string json = "";
+                
+                switch (entity_type)
                 {
-                    switch (entity_type)
-                    {
-                        case "release-group":
+                    case "release-group":
+                        json = await GetFromMusicBrainz($"/ws/2/{mbidUrl}?inc=user-ratings&fmt=json");
+                        if (!string.IsNullOrEmpty(json))
+                        {
                             ReleaseGroup rg = JsonConvert.DeserializeObject<ReleaseGroup>(json);
-                            rating = rg.UserRating;
+                            rating = rg.CurrentUserRating; string id = rg.MBID;
                             Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] Release Group Title: {rg.Title}, Rating: {rating}");
-                            break;
+                            if (rating.HasValue)
+                            {
+                                rating = (rating * 2) * 10; // convert to 0-100 scale
+                                mbidRatings.Add(currentMbid, (int)Math.Round(rating.Value));
+                            }
+                        }
+                        break;
+                    case "release": // recordings in a release
+                        json = await GetFromMusicBrainz($"/ws/2/{mbidUrl}?inc=user-ratings%2Brecordings&fmt=json");
+                        Release r = JsonConvert.DeserializeObject<Release>(json);
+                        Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] {r.Media}");
+                        foreach (ReleaseMedia rm in r.Media)
+                        {
+                            foreach (ReleaseMediaTrack rt in rm.Tracks)
+                            {
+                                rating = rt.Recording.CurrentUserRating;
+                                string recordingID = rt.Recording.MBID;
+                                if (rating.HasValue)
+                                {
+                                    rating = (rating * 2) * 10; // convert to 0-100 scale
+                                    mbidRatings.Add(recordingID, (int)Math.Round(rating.Value));
+                                }
+                                Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] Release Title: {r.Title}, Track Title: {rt.Title}, Rating: {rating}");
+                            }
+                        }
+                        break;
+
                     }
-                    if (rating.HasValue)
-                    {
-                        rating = (rating * 2) * 10; // convert to 0-100 scale
-                        mbidRatings.Add(mbid, (int)Math.Round(rating.Value));
-                    }
-                }
+                    
+                
             }
             return mbidRatings;
         }
@@ -418,6 +487,10 @@ namespace plugin
         // # Tag functions
 
         // function to find and replace tags based on user specified settings.
+        /// <summary>
+        /// Function to find and replace tags based on user-specified settings.<br/><br/>
+        /// This depends on how the user wants to handle tag submission<br/>(e.g. a user's genre tags may not match the tag associated with a genre on MusicBrainz and the user wishes to map the tag to the MusicBrainz version.).
+        /// </summary>
         private string FindReplaceTag(string tag)
         {
             tag = tag.ToLower();
@@ -452,9 +525,12 @@ namespace plugin
                      
         }
 
+        /// <summary>
+        /// Generates XML from user-inputted tags and MBIDs and sends that XML to MusicBrainz to add/change on the user's behalf.<br/><br/>
+        /// </summary>
         public async Task SetTags(Dictionary<string, string> trackMbid_TagPairing, string entityType = "recording")
         {
-            if (user != null) {
+            if (user != null) { // TODO: This check should not be here IMO, move it to main plugin functions instead.
                 StringWriter stringWriter = new StringWriter();
                 XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
                 xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");

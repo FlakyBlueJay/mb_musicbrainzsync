@@ -8,10 +8,15 @@ using plugin.Properties;
 
 namespace plugin
 {
+
+    /// <summary>
+    /// An object representing a track, based on data from MusicBee and TagLib#.<br/>
+    /// MusicBee does not support MusicBrainz ID metadata, which is needed for this.
+    /// </summary>
     public class MusicBeeTrack
     {
 
-        public string MusicBrainzTrackId { get; private set; }
+        public string MusicBrainzRecordingId { get; private set; }
         public string MusicBrainzReleaseId { get; private set; }
         public string MusicBrainzReleaseGroupId { get; private set; }
         public string[] MusicBrainzArtistId { get; private set; }
@@ -58,7 +63,7 @@ namespace plugin
                 FilePath = path;
 
                 // MusicBrainz tags: single
-                MusicBrainzTrackId = TagLib_TrackData.Tag.MusicBrainzTrackId;
+                MusicBrainzRecordingId = TagLib_TrackData.Tag.MusicBrainzTrackId;
                 MusicBrainzReleaseId = TagLib_TrackData.Tag.MusicBrainzReleaseId;
                 MusicBrainzReleaseGroupId = TagLib_TrackData.Tag.MusicBrainzReleaseGroupId;
 
@@ -79,6 +84,10 @@ namespace plugin
 
         // for the tag functions, we want to get a collection of tags, as defined in the tag binding settings.
         // it doesn't make as much sense to have these as properties at the moment.
+        /// <summary>
+        /// Grabs all tags from a file, depending on the tag bindings used (defaults to recording, which is also used for global tag bindings)<br/><br/>
+        /// Tag bindings are handled in the main plugin file.
+        /// </summary>
         public List<string> GetAllTagsFromFile(string type = "recording")
         {
             // get the tags the user has chosen to submit

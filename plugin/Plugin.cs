@@ -91,11 +91,12 @@ namespace YourNamespace
 
 namespace MusicBeePlugin
 {
+    using plugin;
+    using plugin.Properties;
+    using System.Collections;
     using System.Diagnostics;
     using System.Drawing;
     using System.Windows.Forms;
-    using plugin;
-    using plugin.Properties;
     using YourNamespace;
     using static plugin.MusicBeeTrack;
 
@@ -363,6 +364,7 @@ namespace MusicBeePlugin
             TagBindingConfig tagBindingConfig = new TagBindingConfig();
             tagBindingConfig.ShowDialog();
         }
+
         private async void revokeAccessLabel_Clicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
             await mbz.RevokeAccess();
@@ -371,6 +373,9 @@ namespace MusicBeePlugin
             ToggleAuthPanelsVisibility();
         }
 
+        /// <summary>
+        /// Adds the menu items and hotkeys to the currently running MusicBee interface.
+        /// </summary>
         public void AddMenuItems()
         {
 
@@ -385,6 +390,7 @@ namespace MusicBeePlugin
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings", "", SendTrackRatings);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", SendReleaseGroupRatings);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Retrieve Album Ratings", "", GetAlbumRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Retrieve Track Ratings", "", GetTrackRatings);
 
             // ### tag sub-menu items
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recordings", "", SendTrackTags);
@@ -412,8 +418,8 @@ namespace MusicBeePlugin
             Debug.WriteLine("[Plugin.AddMenuItems] Done");
         }
 
-        // receive event notifications from MusicBee
-        // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
+       // receive event notifications from MusicBee
+       // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
        public void ReceiveNotification(string sourceFileUrl, NotificationType type)
         {
             // perform some action depending on the notification type
@@ -434,7 +440,10 @@ namespace MusicBeePlugin
         }
 
         // # Data submission functions
-        // 
+
+        /// <summary>
+        /// Processes the track or album's rating data to be sent to MusicBrainz.
+        /// </summary>
         public async Task SendRatingData(string entity_type, bool reset = false)
         {
             mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
@@ -469,7 +478,7 @@ namespace MusicBeePlugin
                                 statusBarErrorMessage = "Ratings not submitted due to inconsistent data";
                                 break;
                             default:
-                                currentMbid = track.MusicBrainzTrackId;
+                                currentMbid = track.MusicBrainzRecordingId;
                                 if (!string.IsNullOrEmpty(track.Rating) && !reset)
                                 {
                                     onlineRating = float.Parse(track.Rating) * 20;
@@ -517,6 +526,9 @@ namespace MusicBeePlugin
             }
         }
 
+        /// <summary>
+        /// Processes the track or album's tag data to be sent to MusicBrainz.
+        /// </summary>
         public async Task SendTagData(string entity_type)
         {
             string shownEntity = entity_type.Replace('-', ' ');
@@ -547,7 +559,7 @@ namespace MusicBeePlugin
                                 currentMbid = track.MusicBrainzReleaseGroupId;
                                 break;
                             default:
-                                currentMbid = track.MusicBrainzTrackId;
+                                currentMbid = track.MusicBrainzRecordingId;
                                 errorMessage = "The group of tracks you attempted to submit tags for have two track MBIDs that are the same. This is likely due to a malformed data entry to MusicBrainz.\n\nCheck that the recordings should actually be the same.";
                                 statusBarErrorMessage = "Tags not submitted due to likely malformed data";
                                 break;
@@ -588,6 +600,9 @@ namespace MusicBeePlugin
             }
         }
 
+        /// <summary>
+        /// Processes track and/or album IDs to retrieve the currently logged in user's ratings.
+        /// </summary>
         public async Task GetRatingData(string entity_type)
         {
             mbApiInterface.MB_SetBackgroundTaskMessage($"Requesting {entity_type.Replace('-', ' ')} ratings from MusicBrainz...");
@@ -609,37 +624,54 @@ namespace MusicBeePlugin
 
                     foreach (MusicBeeTrack track in tracks)
                     {
-                        string currentMbid;
-                        switch (entity_type)
+                        if (!string.IsNullOrEmpty(track.MusicBrainzRecordingId) || !string.IsNullOrEmpty(track.MusicBrainzReleaseGroupId)) // check if the track actually has a MBID.
                         {
-                            case "release-group":
-                                // release group / album ratings
-                                currentMbid = track.MusicBrainzReleaseGroupId;
-                                break;
-                            default:
-                                // release ID is being used for recording ratings instead, as I can grab all the tracks on given releases, preventing a potential DDoS/"hug of death" on MusicBrainz by querying recordings.
-                                currentMbid = track.MusicBrainzReleaseId;
-                                break;
-                        }
+                            string currentMbid;
+                            string currentOnlineMbid;
+                            switch (entity_type)
+                            {
+                                case "release-group":
+                                    // release group / album ratings
+                                    currentMbid = track.MusicBrainzReleaseGroupId;
+                                    // I could make something fancy here but lmao just prefix the ID with the entity type will do. If it ain't broke don't fix it.
+                                    currentOnlineMbid = "release-group/" + track.MusicBrainzReleaseGroupId;
+                                    break;
+                                default:
+                                    // the recording ID is the key regardless, but for online queries, we want to use the release ID if it exists.
+                                    // This makes querying for recordings tied to a specific release more reliable, preventing any potential DDoS/rate limiting.
+                                    currentMbid = track.MusicBrainzRecordingId;
+                                    if (!String.IsNullOrEmpty(track.MusicBrainzReleaseId))
+                                    {
+                                        currentOnlineMbid = "release/" + track.MusicBrainzReleaseId;
+                                    }
+                                    else
+                                    {
+                                        currentOnlineMbid = "recording/" + track.MusicBrainzRecordingId;
+                                    }
+                                    break;
+                            }
 
-                        if (!string.IsNullOrEmpty(currentMbid))
-                        {
-                            Debug.WriteLine($"[Plugin.GetRatingData] Title: {track.Title}, {entity_type} MBID: {currentMbid}");
-                            Debug.WriteLine("[Plugin.GetRatingData]" + string.Join("; ", onlineMbids));
-                            if (mbidTrackPairs.ContainsKey(currentMbid))
+                            if (!string.IsNullOrEmpty(currentMbid))
                             {
-                                mbidTrackPairs[currentMbid].Add(track);
-                            }
-                            else
-                            {
-                                mbidTrackPairs.Add(currentMbid, new List<MusicBeeTrack> { track });
-                            }
-                            if (onlineMbids.Contains(currentMbid) == false)
-                            {
-                                onlineMbids.Add(currentMbid);
+                                Debug.WriteLine($"[Plugin.GetRatingData] Title: {track.Title}, {entity_type} MBID: {currentMbid}");
+                                Debug.WriteLine("[Plugin.GetRatingData]" + string.Join("; ", onlineMbids));
+                                // currentMbids should have one track object associated with them when it comes to getting recordings,
+                                // but should have all tracks on a release bundled together for RG ratings.
+                                // The idea is to implement this as generically as possible.
+                                if (mbidTrackPairs.ContainsKey(currentMbid))
+                                {
+                                    mbidTrackPairs[currentMbid].Add(track);
+                                }
+                                else
+                                {
+                                    mbidTrackPairs.Add(currentMbid, new List<MusicBeeTrack> { track });
+                                }
+                                if (onlineMbids.Contains(currentOnlineMbid) == false)
+                                {
+                                    onlineMbids.Add(currentOnlineMbid);
+                                }
                             }
                         }
-
                     }
                     if (mbidTrackPairs.Count == 0)
                     {
@@ -647,30 +679,39 @@ namespace MusicBeePlugin
                     }
                     else
                     {
-                        Dictionary<string, int?> albumsAndRatings = await mbz.GetUserRatings(onlineMbids, entity_type);
+                        Dictionary<string, int?> albumsAndRatings = await mbz.GetUserRatings(onlineMbids);
 
+#if DEBUG
                         foreach (var pair in albumsAndRatings)
                         {
                             Debug.WriteLine($"[Plugin.GetRatingData] MBID: {pair.Key}, Rating: {pair.Value}");
                         }
-
-                        switch (entity_type)
+#endif
+                        int editedRatingCounter = 0;
+                        foreach (var pair in albumsAndRatings)
                         {
-                            case "release-group":
-                                foreach (var pair in albumsAndRatings)
+                            // don't want to do anything if the user hasn't rated it, so check if the key exists in mbidTrackPairs.
+                            if (mbidTrackPairs.ContainsKey(pair.Key))
+                            {
+                                foreach (MusicBeeTrack track in mbidTrackPairs[pair.Key])
                                 {
-                                    foreach (MusicBeeTrack track in mbidTrackPairs[pair.Key])
-                                    {
-                                        mbApiInterface.Library_SetFileTag(track.FilePath, MetaDataType.RatingAlbum, pair.Value.ToString());
-                                        mbApiInterface.Library_CommitTagsToFile(track.FilePath);
-                                    }
+                                    MetaDataType chosenMetadata = (entity_type == "release-group") ? MetaDataType.RatingAlbum : MetaDataType.Rating;
+                                    mbApiInterface.Library_SetFileTag(track.FilePath, chosenMetadata, pair.Value.ToString());
+                                    mbApiInterface.Library_CommitTagsToFile(track.FilePath);
+                                    editedRatingCounter++;
                                 }
-                                break;
-                            default:
-                                break;
+                            }
+                            
                         }
 
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entity_type.Replace('-', ' ')} ratings from MusicBrainz.");
+                        if (editedRatingCounter != 0)
+                        {
+                            mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entity_type.Replace('-', ' ')} ratings from MusicBrainz.");
+                        }
+                        else
+                        {
+                            mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
+                        }
                     }
 
                 }
@@ -713,6 +754,12 @@ namespace MusicBeePlugin
         async public void GetAlbumRatings(object sender, EventArgs args)
         { 
             await GetRatingData("release-group");
+        }
+
+        async public void GetTrackRatings(object sender, EventArgs args)
+        {
+            // this will handle both release-associated tracks and standalone recordings.
+            await GetRatingData("track");
         }
 
 #if DEBUG
