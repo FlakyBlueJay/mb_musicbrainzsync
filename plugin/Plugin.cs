@@ -674,11 +674,13 @@ namespace MusicBeePlugin
                     }
                     if (mbidTrackPairs.Count == 0)
                     {
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
                         MessageBox.Show("No ratings have been received since none of the files being processed have any MusicBrainz IDs to use. You need to match them to entries on MusicBrainz using Picard.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     else if (onlineMbids.Count > 50)
                     {
-                        MessageBox.Show("You are attempting to download data for too many entries, which will result in you hitting MusicBrainz's rate limits. Cut down on the amount of albums you're trying to download.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
+                        MessageBox.Show("You are attempting to download data for too many entries, which will result in you hitting MusicBrainz's rate limits. Cut down on the amount of things you're requesting MusicBrainz for.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     }
                     else
                     {
@@ -713,7 +715,7 @@ namespace MusicBeePlugin
                         }
                         else
                         {
-                            mbApiInterface.MB_SetBackgroundTaskMessage($"No tracks have been edited.");
+                            mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
                         }
 
                     }
