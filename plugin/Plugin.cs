@@ -353,7 +353,7 @@ namespace MusicBeePlugin
                 if (userAuthenticated)
                 {
                     userAuthenticatedLabel.Text = $"Logged in as {mbz.user}";
-                    ToggleAuthPanelsVisibility();
+                    ToggleAuthPanelsVisibility(); AddMenuItems();
                 }
             }
         }
@@ -532,7 +532,6 @@ namespace MusicBeePlugin
         public async Task SendTagData(string entity_type)
         {
             string shownEntity = entity_type.Replace('-', ' ');
-            // mbApiInterface.MB_SetBackgroundTaskMessage($"Submitting {shownEntity} tags to MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
             {
@@ -675,7 +674,11 @@ namespace MusicBeePlugin
                     }
                     if (mbidTrackPairs.Count == 0)
                     {
-                        mbApiInterface.MB_SetBackgroundTaskMessage("Ratings not retrieved due to no retrievable MusicBrainz IDs.");
+                        MessageBox.Show("No ratings have been received since none of the files being processed have any MusicBrainz IDs to use. You need to match them to entries on MusicBrainz using Picard.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else if (onlineMbids.Count > 50)
+                    {
+                        MessageBox.Show("You are attempting to download data for too many entries, which will result in you hitting MusicBrainz's rate limits. Cut down on the amount of albums you're trying to download.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     }
                     else
                     {
@@ -710,8 +713,9 @@ namespace MusicBeePlugin
                         }
                         else
                         {
-                            mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
+                            mbApiInterface.MB_SetBackgroundTaskMessage($"No tracks have been edited.");
                         }
+
                     }
 
                 }

@@ -476,12 +476,29 @@ namespace plugin
                             }
                         }
                         break;
+                    case "recording":
+                        json = await GetFromMusicBrainz($"/ws/2/{mbidUrl}?inc=user-ratings&fmt=json");
+                        Recording rec = JsonConvert.DeserializeObject<Recording>(json);
+                        rating = rec.CurrentUserRating;
+                        Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] Recording Title: {rec.Title}, Rating: {rating}");
+                        if (rating.HasValue)
+                        {
+                            rating = (rating * 2) * 10; // convert to 0-100 scale
+                            mbidRatings.Add(currentMbid, (int)Math.Round(rating.Value));
+                        }
+                        break;
+                }
 
-                    }
-                    
                 
+                if (mbids.Count > 1)
+                {
+                    Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] Waiting one second...");
+                    await Task.Delay(1000); // to avoid rate limiting  
+                }
+                  
             }
             return mbidRatings;
+            
         }
 
         // # Tag functions
