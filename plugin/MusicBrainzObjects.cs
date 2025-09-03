@@ -22,14 +22,14 @@ namespace plugin
         /// A release group's MusicBrainz ID (MBID).
         /// </summary>
         [JsonProperty("id")]
-        public string MBID { get; set; }
+        public string MBID { get; private set; }
 
         /// <summary>
         /// A release group's title.
         /// </summary>
         [JsonProperty("title")]
         // release title
-        public string Title { get; set; }
+        public string Title { get; private set; }
 
         /// <summary>
         /// A release group's disambiguation comment.<br/>
@@ -38,14 +38,14 @@ namespace plugin
         [JsonProperty("disambiguation")]
         // disambiguation, used as a comment for release groups with the same name (e.g. Weezer (Blue Album), Weezer (Green Album))
         // can be an empty string
-        public string Disambiguation { get; set; }
+        public string Disambiguation { get; private set; }
 
         /// <summary>
         /// A release group's primary type. (e.g. Album, Single, EP).
         /// </summary>
         [JsonProperty("primary-type")]
         // primary type, always filled in.
-        public string PrimaryType { get; set; }
+        public string PrimaryType { get; private set; }
 
 
 
@@ -59,7 +59,8 @@ namespace plugin
         public List<string> SecondaryTypes
         {
             get => _secondaryTypes;
-            set {
+            private set
+            {
             // make sure they're set to lowercase
                 _secondaryTypes = new List<string>();
                 foreach(var type in value)
@@ -75,22 +76,36 @@ namespace plugin
         /// </summary>
         [JsonProperty("first-release-date")]
         // TODO change to DateTime
-        public string FirstReleaseDate { get; set; }
+        public string FirstReleaseDate { get; private set; }
 
         [JsonProperty("user-rating")]
-        public UserRatingContainer userRatingContainer { get; set; }
+        public UserRatingContainer userRatingContainer { get; private set; }
 
         /// <summary>
         /// A release group's rating from the currently authenticated user.
         /// </summary>
         [JsonIgnore]
-        public double? CurrentUserRating => userRatingContainer?.Value;
+        public double? UserRating => userRatingContainer?.Value;
 
         /// <summary>
         /// A release group's rating from all MusicBrainz users who have rated it.
         /// </summary>
         [JsonProperty("rating")]
-        public CommunityRating CommunityRating { get; set; }
+        public CommunityRating CommunityRating { get; private set; }
+
+        /// <summary>
+        /// A release group's tags from all MusicBrainz users who have applied them.
+        /// </summary>
+        [JsonProperty("tags")]
+        public List<MusicBrainzTag> Tags { get; private set; }
+
+        /// <summary>
+        /// A release group's tags from the currently authenticated user.
+        /// </summary>
+        [JsonProperty("user-tags")]
+        public List<MusicBrainzTag> UserTags { get; private set; }
+
+        // TODO add top tags method?
 
     }
 
@@ -312,5 +327,20 @@ namespace plugin
         /// </summary>
         [JsonProperty("votes-count")]
         public int VotesCount { get; set; }
+    }
+
+    public class MusicBrainzTag
+    {   
+        /// <summary>
+        /// The name of the tag.
+        /// </summary>
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The count of how many times this tag has been applied by the community.
+        /// </summary>
+        [JsonProperty("count")]
+        public int? Count { get; set; }
     }
 }

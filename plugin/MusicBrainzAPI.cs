@@ -14,6 +14,7 @@ namespace plugin
     using plugin.Properties;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using TagLib;
 
     public class MusicBrainzAPI
     {
@@ -394,7 +395,7 @@ namespace plugin
         /// <summary>
         /// Generates XML from user-inputted ratings and MBIDs and sends that XML to MusicBrainz to add/change on the user's behalf.
         /// </summary>
-        public async Task SetRatings(Dictionary<string, float> mbidRatings, string entity_type)
+        public async Task SetUserRatings(Dictionary<string, float> mbidRatings, string entity_type)
         {
             if (user != null)
             {
@@ -448,7 +449,7 @@ namespace plugin
                         if (!string.IsNullOrEmpty(json))
                         {
                             ReleaseGroup rg = JsonConvert.DeserializeObject<ReleaseGroup>(json);
-                            rating = rg.CurrentUserRating; string id = rg.MBID;
+                            rating = rg.UserRating; string id = rg.MBID;
                             Debug.WriteLine($"[MusicBrainzAPI.GetUserRatings] Release Group Title: {rg.Title}, Rating: {rating}");
                             if (rating.HasValue)
                             {
@@ -506,9 +507,10 @@ namespace plugin
         // function to find and replace tags based on user specified settings.
         /// <summary>
         /// Function to find and replace tags based on user-specified settings.<br/><br/>
-        /// This depends on how the user wants to handle tag submission<br/>(e.g. a user's genre tags may not match the tag associated with a genre on MusicBrainz and the user wishes to map the tag to the MusicBrainz version.).
+        /// This depends on how the user wants to handle tag submission<br/>(e.g. a user's genre tags may not match the tag associated with a genre on MusicBrainz and the user wishes to map the tag to the MusicBrainz version.).<br/>
+        /// A reverse function is also available to convert MusicBrainz tags to user tags when retrieving tags.
         /// </summary>
-        private string FindReplaceTag(string tag)
+        private string FindReplaceTag(string tag, bool reverse = false)
         {
             tag = tag.ToLower();
             if (string.IsNullOrEmpty(Settings.Default.findReplace))
@@ -525,8 +527,8 @@ namespace plugin
                     string[] row = line.Split(new[] { ';' }, 2);
                     if (row.Length == 2)
                     {
-                        string findTag = row[0];
-                        string replaceTag = row[1];
+                        string findTag = (!reverse) ? row[0] : row[1];
+                        string replaceTag = (!reverse) ? row[1] : row[0];
                         findReplace.Add(findTag, replaceTag);
                     }
                 }
@@ -586,6 +588,53 @@ namespace plugin
                     "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             
+        }
+
+        public async Task<Dictionary<string, Dictionary<string, List<string>>>> GetTags(List<string> mbids)
+        {
+            string entity_type = "";
+            Dictionary<string, Dictionary<string, List<string>>> mbidTags = new Dictionary<string, Dictionary<string, List<string>>>();
+            foreach (string mbidUrl in mbids)
+            {
+                string[] mbidData = mbidUrl.Split('/');
+                entity_type = mbidData[0]; string currentMbid = mbidData[1];
+                List<string> tags = new List<string>();
+                string combinedTags = "";
+
+                // TODO respect user-tag setting
+                string retrievedTagType = "tags";
+                Debug.WriteLine($"[MusicBrainzAPI.GetTags] {MBzHttpClient.BaseAddress}/ws/2/{mbidUrl}?inc={retrievedTagType}&fmt=json");
+                string json = "";
+
+                switch (entity_type)
+                {
+                    case "release-group":
+                        json = await GetFromMusicBrainz($"/ws/2/{mbidUrl}?inc={retrievedTagType}&fmt=json");
+                        if (!string.IsNullOrEmpty(json))
+                        {
+                            Debug.WriteLine($"[MusicBrainzAPI.GetTags] Release Group JSON: {json}");
+                            ReleaseGroup rg = JsonConvert.DeserializeObject<ReleaseGroup>(json);
+                            List<MusicBrainzTag> tagData = (retrievedTagType == "tags") ? rg.Tags : rg.UserTags;
+                            if (tagData.Count > 0)
+                            {
+                                foreach (MusicBrainzTag mbzTag in tagData)
+                                {
+                                    Debug.WriteLine($"[MusicBrainzAPI.GetTags] Tag: {mbzTag.Name}, FindReplaced: {FindReplaceTag(mbzTag.Name, true)}");
+                                    tags.Add(FindReplaceTag(mbzTag.Name, true));
+                                }
+                            }
+                            mbidTags.Add(currentMbid, new Dictionary<string, List<string>> { { "keywords", tags } });
+                        }
+                        break;
+                    case "release":
+                        break;
+                    case "recording":
+                        break;
+                    // TODO artist tags? MusicBee allows this as an option.
+
+                }
+            }
+            return mbidTags;
         }
 
     }
