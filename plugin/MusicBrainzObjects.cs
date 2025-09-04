@@ -178,6 +178,33 @@ namespace plugin
         [JsonProperty("media")]
         public List<ReleaseMedia> Media { get; set; }
 
+        /// <summary>
+        /// A release's tags from all MusicBrainz users who have applied them.
+        /// </summary>
+        [JsonProperty("tags")]
+        public List<MusicBrainzTag> Tags { get; private set; }
+
+        /// <summary>
+        /// A release's tags from the currently authenticated user.
+        /// </summary>
+        [JsonProperty("user-tags")]
+        public List<MusicBrainzTag> UserTags { get; private set; }
+
+        // Genre tags below, separate from regular tags however they're applied the same way.
+        // Structure is similar enough that I can just use MusicBrainzTag for genres, too.
+
+        /// <summary>
+        /// A release's genres from all MusicBrainz users who have applied them.
+        /// </summary>
+        [JsonProperty("genres")]
+        public List<MusicBrainzTag> Genres { get; private set; }
+
+        /// <summary>
+        /// A release's genres from the currently authenticated user.
+        /// </summary>
+        [JsonProperty("user-genres")]
+        public List<MusicBrainzTag> UserGenres { get; private set; }
+
 
     }
 
@@ -317,6 +344,33 @@ namespace plugin
         /// </summary>
         [JsonProperty("rating")]
         public CommunityRating CommunityRating { get; set; }
+
+        /// <summary>
+        /// A recording's tags from all MusicBrainz users who have applied them.
+        /// </summary>
+        [JsonProperty("tags")]
+        public List<MusicBrainzTag> Tags { get; private set; }
+
+        /// <summary>
+        /// A recording's tags from the currently authenticated user.
+        /// </summary>
+        [JsonProperty("user-tags")]
+        public List<MusicBrainzTag> UserTags { get; private set; }
+
+        // Genre tags below, separate from regular tags however they're applied the same way.
+        // Structure is similar enough that I can just use MusicBrainzTag for genres, too.
+
+        /// <summary>
+        /// A recording's genres from all MusicBrainz users who have applied them.
+        /// </summary>
+        [JsonProperty("genres")]
+        public List<MusicBrainzTag> Genres { get; private set; }
+
+        /// <summary>
+        /// A recording's genres from the currently authenticated user.
+        /// </summary>
+        [JsonProperty("user-genres")]
+        public List<MusicBrainzTag> UserGenres { get; private set; }
 
     }
 
