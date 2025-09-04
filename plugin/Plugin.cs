@@ -171,7 +171,7 @@ namespace MusicBeePlugin
             about.Revision = (short)ver.Revision;
             about.MinInterfaceVersion = MinInterfaceVersion;
             about.MinApiRevision = MinApiRevision;
-            about.ReceiveNotifications = (ReceiveNotificationFlags.TagEvents);
+            about.ReceiveNotifications = (ReceiveNotificationFlags.StartupOnly);
             about.ConfigurationPanelHeight = 90;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
             // DO NOT decrease this height without testing on 100% and 200% DPI scaling!
             return about;
@@ -376,7 +376,7 @@ namespace MusicBeePlugin
         /// <summary>
         /// Adds the menu items and hotkeys to the currently running MusicBee interface.
         /// </summary>
-        public void AddMenuItems()
+        private void AddMenuItems()
         {
 
             // # context menu items
@@ -401,8 +401,8 @@ namespace MusicBeePlugin
             // ## debug sub-menu items
 #if DEBUG
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug", "", null);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Track Ratings", "", ResetTrackRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Album Ratings", "", ResetReleaseGroupRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Online Track Ratings", "", ResetTrackRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Online Album Ratings", "", ResetReleaseGroupRatings);
 #endif
 
             // # hotkey entries
@@ -428,7 +428,6 @@ namespace MusicBeePlugin
             {
                 case NotificationType.PluginStartup:
                     // perform startup initialisation
-
                     Debug.WriteLine($"[mbz_MusicBrainzSync] Plugin initialised - version: {stringVer} ");
                     if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
                     {
@@ -436,6 +435,7 @@ namespace MusicBeePlugin
                         // output username to status bar
                         mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user}");
                     }
+
                     break;
             }
         }
@@ -445,7 +445,7 @@ namespace MusicBeePlugin
         /// <summary>
         /// Processes the track or album's rating data to be sent to MusicBrainz.
         /// </summary>
-        public async Task SendRatingData(string entity_type, bool reset = false)
+        private async Task SendRatingData(string entity_type, bool reset = false)
         {
             mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
@@ -530,7 +530,7 @@ namespace MusicBeePlugin
         /// <summary>
         /// Processes the track or album's tag data to be sent to MusicBrainz.
         /// </summary>
-        public async Task SendTagData(string entity_type)
+        private async Task SendTagData(string entity_type)
         {
             string shownEntity = entity_type.Replace('-', ' ');
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
@@ -603,7 +603,7 @@ namespace MusicBeePlugin
         /// <summary>
         /// Processes track and/or album IDs to retrieve the currently logged in user's ratings.
         /// </summary>
-        public async Task GetRatingData(string entity_type)
+        private async Task GetRatingData(string entity_type)
         {
             mbApiInterface.MB_SetBackgroundTaskMessage($"Requesting {entity_type.Replace('-', ' ')} ratings from MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
@@ -731,7 +731,7 @@ namespace MusicBeePlugin
 
             }
 
-        public async Task GetTagData(string entity_type)
+        private async Task GetTagData(string entity_type)
         {
             mbApiInterface.MB_SetBackgroundTaskMessage($"Requesting {entity_type.Replace('-', ' ')} ratings from MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
@@ -820,30 +820,22 @@ namespace MusicBeePlugin
                             {
                                 foreach (MusicBeeTrack track in mbidTrackPairs[pair.Key])
                                 {
-                                    List<string> existingTags = new List<string>(
-                                        mbApiInterface.Library_GetFileTag(track.FilePath, MetaDataType.Keywords).Split(new char[] { ';' },
-                                        StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
-                                    List<string> newTags = new List<string>(existingTags);
+                                    
                                     foreach (var tagAndValues in pair.Value) // gonna need to find a new name for this variable
                                     {
-                                        foreach (var tag in tagAndValues.Value)
-                                        {
-                                            if (!newTags.Contains(tag))
-                                            {
-                                                newTags.Add(tag);
-                                            }
-                                        }
+                                        MetaDataType currentTag = listTagBindings[tagAndValues.Key];
+                                        mbApiInterface.Library_SetFileTag(track.FilePath, currentTag, string.Join("; ", tagAndValues.Value));
+                                        
                                     }
-                                    mbApiInterface.Library_SetFileTag(track.FilePath, MetaDataType.Keywords, string.Join("; ", newTags));
                                     mbApiInterface.Library_CommitTagsToFile(track.FilePath);
+                                    Debug.WriteLine($"[Plugin.GetTagData] Successfully committed edited tags to {track.Artist} - {track.Title}");
                                 }
-                                // Get tags from MusicBrainz
-                                // Process the tags so we can throw them all in keywords.
                             }
 
 
                         }
                     }
+                mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entity_type.Replace('-', ' ')} tags from MusicBrainz.");
                 }
                 catch (UnsupportedFormatException e)
                 {
@@ -853,56 +845,56 @@ namespace MusicBeePlugin
             }
         }
 
-        async public void SendTrackRatings(object sender, EventArgs args)
+        async private void SendTrackRatings(object sender, EventArgs args)
         {
             await SendRatingData("recording");
         }
 
-        async public void SendReleaseGroupRatings(object sender, EventArgs args)
+        async private void SendReleaseGroupRatings(object sender, EventArgs args)
         {
            await SendRatingData("release-group");
         }
 
-        async public void SendTrackTags(object sender, EventArgs args)
+        async private void SendTrackTags(object sender, EventArgs args)
         {
             await SendTagData("recording");
         }
 
-        async public void SendReleaseTags(object sender, EventArgs args)
+        async private void SendReleaseTags(object sender, EventArgs args)
         {
             await SendTagData("release");
         }
 
-        async public void SendReleaseGroupTags(object sender, EventArgs args)
+        async private void SendReleaseGroupTags(object sender, EventArgs args)
         {
             await SendTagData("release-group");
         }
 
         // # Data retrieval functions
 
-        async public void GetAlbumRatings(object sender, EventArgs args)
+        async private void GetAlbumRatings(object sender, EventArgs args)
         { 
             await GetRatingData("release-group");
         }
 
-        async public void GetTrackRatings(object sender, EventArgs args)
+        async private void GetTrackRatings(object sender, EventArgs args)
         {
             // this will handle both release-associated tracks and standalone recordings.
             await GetRatingData("track");
         }
 
-        async public void GetAlbumTags(object sender, EventArgs args)
+        async private void GetAlbumTags(object sender, EventArgs args)
         {
             await GetTagData("release-group");
         }
 
 #if DEBUG
-        async public void ResetTrackRatings(object sender, EventArgs args)
+        async private void ResetTrackRatings(object sender, EventArgs args)
         {
             await SendRatingData("recording", true);
         }
 
-        async public void ResetReleaseGroupRatings(object sender, EventArgs args)
+        async private void ResetReleaseGroupRatings(object sender, EventArgs args)
         {
             await SendRatingData("release-group", true);
         }

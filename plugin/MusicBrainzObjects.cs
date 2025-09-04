@@ -105,6 +105,21 @@ namespace plugin
         [JsonProperty("user-tags")]
         public List<MusicBrainzTag> UserTags { get; private set; }
 
+        // Genre tags below, separate from regular tags however they're applied the same way.
+        // Structure is similar enough that I can just use MusicBrainzTag for genres, too.
+
+        /// <summary>
+        /// A release group's genres from all MusicBrainz users who have applied them.
+        /// </summary>
+        [JsonProperty("genres")]
+        public List<MusicBrainzTag> Genres { get; private set; }
+
+        /// <summary>
+        /// A release group's genres from the currently authenticated user.
+        /// </summary>
+        [JsonProperty("user-genres")]
+        public List<MusicBrainzTag> UserGenres { get; private set; }
+
         // TODO add top tags method?
 
     }

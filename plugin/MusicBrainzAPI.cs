@@ -169,7 +169,7 @@ namespace plugin
                 }
                 return null;
             }
-            else if (DateTime.Now >= mbzAccessTokenExpiry)
+            else if (DateTime.Now >= mbzAccessTokenExpiry && !string.IsNullOrEmpty(refreshToken))
             {
                 // if the access token is expired, try to refresh it.
                 bool reauth = await AuthenticateUser();
@@ -188,6 +188,7 @@ namespace plugin
             {
                 try
                 {
+                    Debug.WriteLine($"[MusicBrainzAPI.GetFromMusicBrainz] {MBzHttpClient.BaseAddress}{endpoint}");
                     mbApiResponse = MBzHttpClient.GetAsync(endpoint);
                     if (mbApiResponse.Result.IsSuccessStatusCode)
                     {
@@ -510,6 +511,8 @@ namespace plugin
         /// This depends on how the user wants to handle tag submission<br/>(e.g. a user's genre tags may not match the tag associated with a genre on MusicBrainz and the user wishes to map the tag to the MusicBrainz version.).<br/>
         /// A reverse function is also available to convert MusicBrainz tags to user tags when retrieving tags.
         /// </summary>
+        /// <param name="tag">The tag to find and replace.</param>
+        /// <param name="reverse">If true, reverses the pairing (typically when retrieving the tags from MusicBrainz.)</param>
         private string FindReplaceTag(string tag, bool reverse = false)
         {
             tag = tag.ToLower();
@@ -547,6 +550,8 @@ namespace plugin
         /// <summary>
         /// Generates XML from user-inputted tags and MBIDs and sends that XML to MusicBrainz to add/change on the user's behalf.<br/><br/>
         /// </summary>
+        /// <param name="trackMbid_TagPairing">A Dictionary with the key being a MusicBrainz ID and the value being the tag(s).</param>
+        /// <param name="entityType">The type of MusicBrainz entity being dealt with.</param>
         public async Task SetTags(Dictionary<string, string> trackMbid_TagPairing, string entityType = "recording")
         {
             if (user != null) { // TODO: This check should not be here IMO, move it to main plugin functions instead.
@@ -590,6 +595,7 @@ namespace plugin
             
         }
 
+
         public async Task<Dictionary<string, Dictionary<string, List<string>>>> GetTags(List<string> mbids)
         {
             string entity_type = "";
@@ -598,32 +604,54 @@ namespace plugin
             {
                 string[] mbidData = mbidUrl.Split('/');
                 entity_type = mbidData[0]; string currentMbid = mbidData[1];
-                List<string> tags = new List<string>();
+                List<string> tags = new List<string>(); List<string> genres = new List<string>();
                 string combinedTags = "";
 
                 // TODO respect user-tag setting
+                string retrievedGenreType = "genres";
                 string retrievedTagType = "tags";
-                Debug.WriteLine($"[MusicBrainzAPI.GetTags] {MBzHttpClient.BaseAddress}/ws/2/{mbidUrl}?inc={retrievedTagType}&fmt=json");
                 string json = "";
 
                 switch (entity_type)
                 {
                     case "release-group":
-                        json = await GetFromMusicBrainz($"/ws/2/{mbidUrl}?inc={retrievedTagType}&fmt=json");
+                        json = await GetFromMusicBrainz($"/ws/2/{mbidUrl}?inc={retrievedTagType}+{retrievedGenreType}&fmt=json");
                         if (!string.IsNullOrEmpty(json))
                         {
                             Debug.WriteLine($"[MusicBrainzAPI.GetTags] Release Group JSON: {json}");
                             ReleaseGroup rg = JsonConvert.DeserializeObject<ReleaseGroup>(json);
+                            List<MusicBrainzTag> genreData = (retrievedGenreType == "genres") ? rg.Genres : rg.UserGenres;
                             List<MusicBrainzTag> tagData = (retrievedTagType == "tags") ? rg.Tags : rg.UserTags;
+
+                            // TODO only enable if an option to search for genres separately has been enabled.
+                            if (genreData.Count > 0)
+                            {
+                                foreach (MusicBrainzTag mbzGenre in genreData)
+                                {
+                                    Debug.WriteLine($"[MusicBrainzAPI.GetTags] Genre: {mbzGenre.Name}, FindReplaced: {FindReplaceTag(mbzGenre.Name, true)}");
+                                    genres.Add(FindReplaceTag(mbzGenre.Name, true));
+                                }
+                            }
+
                             if (tagData.Count > 0)
                             {
                                 foreach (MusicBrainzTag mbzTag in tagData)
                                 {
-                                    Debug.WriteLine($"[MusicBrainzAPI.GetTags] Tag: {mbzTag.Name}, FindReplaced: {FindReplaceTag(mbzTag.Name, true)}");
-                                    tags.Add(FindReplaceTag(mbzTag.Name, true));
+                                    string editedTag = FindReplaceTag(mbzTag.Name, true);
+                                    // if tag.Name in genres && genre grabbing enabled: break
+                                    if (genres.Contains(editedTag))
+                                    {
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        Debug.WriteLine($"[MusicBrainzAPI.GetTags] Tag: {mbzTag.Name}, FindReplaced: {editedTag}");
+                                        tags.Add(editedTag);
+                                    }
                                 }
                             }
-                            mbidTags.Add(currentMbid, new Dictionary<string, List<string>> { { "keywords", tags } });
+                            
+                            mbidTags.Add(currentMbid, new Dictionary<string, List<string>> { { "keywords", tags }, { "genres", genres } });
                         }
                         break;
                     case "release":
