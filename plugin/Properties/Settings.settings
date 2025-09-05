@@ -9,7 +9,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="recordingTagBindings" Type="System.String" Scope="User">
-      <Value Profile="(Default)">genres;mood</Value>
+      <Value Profile="(Default)">genre;mood</Value>
     </Setting>
     <Setting Name="releaseTagBindings" Type="System.String" Scope="User">
       <Value Profile="(Default)">genres</Value>
@@ -27,6 +27,30 @@ alt-pop;alternative pop</Value>
     </Setting>
     <Setting Name="cachedUsername" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="recordingGenreField" Type="System.String" Scope="User">
+      <Value Profile="(Default)">genre</Value>
+    </Setting>
+    <Setting Name="recordingTagField" Type="System.String" Scope="User">
+      <Value Profile="(Default)">keywords</Value>
+    </Setting>
+    <Setting Name="separateGenres" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="releaseGenreField" Type="System.String" Scope="User">
+      <Value Profile="(Default)">genre</Value>
+    </Setting>
+    <Setting Name="releaseTagField" Type="System.String" Scope="User">
+      <Value Profile="(Default)">keywords</Value>
+    </Setting>
+    <Setting Name="releaseGroupGenreField" Type="System.String" Scope="User">
+      <Value Profile="(Default)">genre</Value>
+    </Setting>
+    <Setting Name="releaseGroupTagField" Type="System.String" Scope="User">
+      <Value Profile="(Default)">keywords</Value>
+    </Setting>
+    <Setting Name="separateFieldsByEntityType" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

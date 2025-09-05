@@ -49,7 +49,7 @@ namespace plugin.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("genres;mood")]
+        [global::System.Configuration.DefaultSettingValueAttribute("genre;mood")]
         public string recordingTagBindings {
             get {
                 return ((string)(this["recordingTagBindings"]));
@@ -116,6 +116,102 @@ namespace plugin.Properties {
             }
             set {
                 this["cachedUsername"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("genre")]
+        public string recordingGenreField {
+            get {
+                return ((string)(this["recordingGenreField"]));
+            }
+            set {
+                this["recordingGenreField"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("keywords")]
+        public string recordingTagField {
+            get {
+                return ((string)(this["recordingTagField"]));
+            }
+            set {
+                this["recordingTagField"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool separateGenres {
+            get {
+                return ((bool)(this["separateGenres"]));
+            }
+            set {
+                this["separateGenres"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("genre")]
+        public string releaseGenreField {
+            get {
+                return ((string)(this["releaseGenreField"]));
+            }
+            set {
+                this["releaseGenreField"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("keywords")]
+        public string releaseTagField {
+            get {
+                return ((string)(this["releaseTagField"]));
+            }
+            set {
+                this["releaseTagField"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("genre")]
+        public string releaseGroupGenreField {
+            get {
+                return ((string)(this["releaseGroupGenreField"]));
+            }
+            set {
+                this["releaseGroupGenreField"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("keywords")]
+        public string releaseGroupTagField {
+            get {
+                return ((string)(this["releaseGroupTagField"]));
+            }
+            set {
+                this["releaseGroupTagField"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool separateFieldsByEntityType {
+            get {
+                return ((bool)(this["separateFieldsByEntityType"]));
+            }
+            set {
+                this["separateFieldsByEntityType"] = value;
             }
         }
     }

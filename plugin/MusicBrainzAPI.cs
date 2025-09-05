@@ -597,16 +597,22 @@ namespace plugin
 
         private async Task<Dictionary<string, List<string>>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null)
         {
+            Dictionary<string, List<string>> combinedData = new Dictionary<string, List<string>>();
+
             List<string> tags = new List<string>();
             List<string> genres = new List<string>();
-            // TODO only enable if an option to search for genres separately has been enabled.
-            if (onlineGenreData.Count > 0 || onlineGenreData != null)
+
+            if (Settings.Default.separateGenres)
             {
-                foreach (MusicBrainzTag mbzGenre in onlineGenreData)
+                if (onlineGenreData.Count > 0 || onlineGenreData != null)
                 {
-                    Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzGenre.Name}, FindReplaced: {FindReplaceTag(mbzGenre.Name, true)}");
-                    genres.Add(FindReplaceTag(mbzGenre.Name, true));
+                    foreach (MusicBrainzTag mbzGenre in onlineGenreData)
+                    {
+                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzGenre.Name}, FindReplaced: {FindReplaceTag(mbzGenre.Name, true)}");
+                        genres.Add(FindReplaceTag(mbzGenre.Name, true));
+                    }
                 }
+                combinedData.Add(Settings.Default.recordingGenreField, genres);
             }
 
             if (onlineTagData.Count > 0)
@@ -625,15 +631,10 @@ namespace plugin
                         tags.Add(editedTag);
                     }
                 }
+                combinedData.Add(Settings.Default.recordingTagField, tags);
             }
 
-            // TODO check against "advanced" config
-            Dictionary<string, List<string>> combinedData = new Dictionary<string, List<string>>
-            {
-                { "genres", genres },
-                { "keywords", tags }
-            };
-
+            // TODO check against other entity types and "advanced" config
             return combinedData;
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
@@ -21,11 +22,24 @@ namespace plugin
             InitializeComponent();
         }
 
-
+        /// <summary>
+        /// A basic class object to store the display names and keys of MusicBee tags.
+        /// </summary>
         public class TagListItem
         {
+            /// <summary>
+            /// The display name of the tag.
+            /// </summary>
             public string tagDisplayName { get; set; }
+
+            /// <summary>
+            /// The key of the tag that we can access through the tag binding dictionary.
+            /// </summary>
             public string tagKey { get; set; }
+
+            /// <summary>
+            /// Returns the tag display name.
+            /// </summary>
             public override string ToString()
             {
                 return tagDisplayName;
@@ -59,11 +73,13 @@ namespace plugin
             }
         }
 
+        
+
         private void TagBindingConfig_Load(object sender, EventArgs e)
         {
-            this.separateCheckBox.Checked = Settings.Default.separateTagBindings;
             ToggleSeparateBindUI(sender, e, Settings.Default.separateTagBindings);
-            UpdateFindReplaceTable(); UpdateTagModeRadioButtons();
+            UpdateFindReplaceTable(); UpdateTagModeRadioButtons(); FillTagComboBoxes(); UpdateCheckBoxes();
+            ToggleGenreComboBoxes(Settings.Default.separateGenres); ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
         }
 
         // UI functions
@@ -95,6 +111,9 @@ namespace plugin
             }
         }
 
+        /// <summary>
+        /// Updates the find and replace table based on data from the findReplace setting.
+        /// </summary>
         private void UpdateFindReplaceTable()
         {
             findReplaceTable.Rows.Clear();
@@ -110,6 +129,84 @@ namespace plugin
             }
         }
 
+        /// <summary>
+        /// A list is manually created containing the combo boxes handling the tag splitting functionality as well as the relevant setting.<br/>
+        /// This method basically returns that list.
+        /// </summary>
+        /// <returns>comboBoxesAndSettings: a list containing two-item tuples: item 1 being a combo box, item 2 being the setting property relevant to it.</returns>
+        private List<Tuple<ComboBox, SettingsProperty>> GetTagField_ComboBoxesAndSettings(bool genres = false, bool otherGroups = false)
+        {
+            // Add the tag-related combo boxes here.
+            List<Tuple<ComboBox, SettingsProperty>> comboBoxesAndSettings = new List<Tuple<ComboBox, SettingsProperty>>
+            {
+                Tuple.Create(recordingGenreComboBox, Properties.Settings.Default.Properties["recordingGenreField"]),
+                Tuple.Create(releaseGenreComboBox, Properties.Settings.Default.Properties["releaseGenreField"]),
+                Tuple.Create(releaseGroupGenreComboBox, Properties.Settings.Default.Properties["releaseGroupGenreField"]),
+                Tuple.Create(recordingTagComboBox, Properties.Settings.Default.Properties["recordingTagField"]),
+                Tuple.Create(releaseTagComboBox, Properties.Settings.Default.Properties["releaseTagField"]),
+                Tuple.Create(releaseGroupTagComboBox, Properties.Settings.Default.Properties["releaseGroupTagField"])
+            };
+            return comboBoxesAndSettings;
+        }
+
+        private void FillTagComboBoxes()
+        {
+            
+            List<TagListItem> validTags = new List<TagListItem>();
+            List<Tuple<ComboBox, SettingsProperty>> comboBoxesAndSettings = GetTagField_ComboBoxesAndSettings();
+
+            foreach (KeyValuePair<string, MetaDataType> tagBindingPair in MusicBeePlugin.Plugin.listTagBindings)
+            {
+                string tagName = mbApiInterface.Setting_GetFieldName(tagBindingPair.Value);
+                string tagKey = tagBindingPair.Key;
+                validTags.Add(new TagListItem { tagDisplayName = tagName, tagKey = tagKey });
+                                Debug.WriteLine($"[TagBindingConfig.UpdateTagComboBoxes] Added {tagKey} to validTags.");
+            }
+            foreach (Tuple<ComboBox, SettingsProperty> comboBoxSettingPair in comboBoxesAndSettings)
+            {
+                ComboBox comboBox = comboBoxSettingPair.Item1;
+                Debug.WriteLine($"[TagBindingConfig.UpdateTagComboBoxes] {comboBox.Name}");
+                string setting = (string)Properties.Settings.Default[comboBoxSettingPair.Item2.Name];
+                Debug.WriteLine($"[TagBindingConfig.UpdateTagComboBoxes] {setting}");
+                
+                comboBox.DataSource = new List<TagListItem>(validTags);
+                TagListItem selectedItem = validTags.FirstOrDefault(i => i.tagKey == setting);
+                comboBox.SelectedItem = selectedItem;
+            }
+        }
+
+        private void ToggleGenreComboBoxes(bool toggle)
+        {
+            List<ComboBox> comboBoxes = new List<ComboBox>
+            { 
+                recordingGenreComboBox, releaseGenreComboBox, releaseGroupGenreComboBox
+            };
+
+            foreach (ComboBox comboBox in comboBoxes)
+            {
+                comboBox.Enabled = toggle;
+            }
+        }
+
+        private void ToggleNonRecordingComboBoxPanel(bool toggle)
+        {
+            if (toggle)
+            {
+                otherTypePanel.Enabled = true;
+                recordingGenreLabel.Text = "Send recording genre tags to...";
+                recordingTagLabel.Text = "Send all (other) recording tags to...";
+            }
+            else
+            {
+                otherTypePanel.Enabled = false;
+                recordingGenreLabel.Text = "Send genre tags to...";
+                recordingTagLabel.Text = "Send all (other) tags to...";
+            }
+        }
+
+        /// <summary>
+        /// Updates the tag mode radio buttons depending on if the user has enabled destructive tag submission.
+        /// </summary>
         private void UpdateTagModeRadioButtons()
         {
             if (Settings.Default.tagSubmitIsDestructive)
@@ -120,6 +217,13 @@ namespace plugin
             {
                 appendRadioButton.Checked = true;
             }
+        }
+
+        private void UpdateCheckBoxes()
+        {
+            separateCheckBox.Checked = Settings.Default.separateTagBindings;
+            genreDownloadCheckBox.Checked = Settings.Default.separateGenres;
+            sepByEntityCheckBox.Checked = Settings.Default.separateFieldsByEntityType;
         }
 
         private void separateCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -201,6 +305,22 @@ namespace plugin
 
             }
 
+            Properties.Settings.Default.separateGenres = genreDownloadCheckBox.Checked;
+            Properties.Settings.Default.separateFieldsByEntityType = sepByEntityCheckBox.Checked;
+
+            List<Tuple<ComboBox, SettingsProperty>> comboBoxesAndSettings = GetTagField_ComboBoxesAndSettings();
+            foreach (Tuple<ComboBox, SettingsProperty> comboBoxSettingPair in comboBoxesAndSettings)
+            {
+                ComboBox comboBox = comboBoxSettingPair.Item1;
+                TagListItem selectedItem = comboBox.SelectedItem as TagListItem;
+                SettingsProperty setting = comboBoxSettingPair.Item2;
+                if (selectedItem.tagKey != null)
+                {
+                    Properties.Settings.Default[setting.Name] = selectedItem.tagKey;
+                }
+
+            }
+
             string newFindReplaceString = "";
             foreach (DataGridViewRow row in findReplaceTable.Rows)
             {
@@ -254,7 +374,13 @@ namespace plugin
             public bool separate_tag_bindings { get; set; }
             public bool tag_submit_destructive { get; set; }
             public string find_replace { get; set; }
-            public TagBindings tag_bindings { get; set; }
+            public TagBindings upload_tag_bindings { get; set; }
+            public TagBindings download_tag_fields { get; set; }
+            public bool separate_genres { get; set; }
+            public bool separate_entities { get; set; }
+            public TagBindings download_genre_fields { get; set; }
+
+
         }
 
         private void exportLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -274,12 +400,22 @@ namespace plugin
                         separate_tag_bindings = Settings.Default.separateTagBindings,
                         tag_submit_destructive = Settings.Default.tagSubmitIsDestructive,
                         find_replace = Settings.Default.findReplace,
-                        tag_bindings = new TagBindings
+                        separate_genres = Settings.Default.separateGenres,
+                        separate_entities = Settings.Default.separateFieldsByEntityType,
+                        upload_tag_bindings = new TagBindings
                         {
                             recording = Settings.Default.recordingTagBindings,
                             release = Settings.Default.releaseTagBindings,
                             release_group = Settings.Default.releaseGroupTagBindings
                         },
+                        download_tag_fields = new TagBindings
+                        {
+                            recording = Settings.Default.recordingTagField,
+                        },
+                        download_genre_fields = new TagBindings
+                        {
+                            recording = Settings.Default.recordingGenreField,
+                        }
                     };
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(exportedSettings, Newtonsoft.Json.Formatting.Indented);
                     System.IO.File.WriteAllText(saveDialog.FileName, json);
@@ -312,7 +448,7 @@ namespace plugin
                     {
                         string json = System.IO.File.ReadAllText(openDialog.FileName);
                         PluginSettings importedSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<PluginSettings>(json);
-                        if (importedSettings == null || importedSettings.tag_bindings == null)
+                        if (importedSettings == null || importedSettings.upload_tag_bindings == null)
                         {
                             throw new InvalidOperationException("The selected file does not appear to be a valid MusicBrainz Sync settings file.");
                         }
@@ -321,13 +457,21 @@ namespace plugin
                             Settings.Default.separateTagBindings = importedSettings.separate_tag_bindings;
                             Settings.Default.tagSubmitIsDestructive = importedSettings.tag_submit_destructive;
                             Settings.Default.findReplace = importedSettings.find_replace ?? "";
-                            Settings.Default.recordingTagBindings = importedSettings.tag_bindings.recording ?? "";
-                            Settings.Default.releaseTagBindings = importedSettings.tag_bindings.release ?? "";
-                            Settings.Default.releaseGroupTagBindings = importedSettings.tag_bindings.release_group ?? "";
+                            Settings.Default.recordingTagBindings = importedSettings.upload_tag_bindings.recording ?? "";
+                            Settings.Default.releaseTagBindings = importedSettings.upload_tag_bindings.release ?? "";
+                            Settings.Default.releaseGroupTagBindings = importedSettings.upload_tag_bindings.release_group ?? "";
+                            Settings.Default.separateGenres = importedSettings.separate_genres;
+                            Settings.Default.recordingTagField = importedSettings.download_tag_fields.recording;
+                            Settings.Default.recordingGenreField = importedSettings.download_genre_fields.recording;
+                            Settings.Default.separateFieldsByEntityType = importedSettings.separate_entities;
+
                             Settings.Default.Save();
-                            separateCheckBox.Checked = Settings.Default.separateTagBindings;
+                            UpdateCheckBoxes();
                             UpdateFindReplaceTable();
                             UpdateTagModeRadioButtons();
+                            FillTagComboBoxes();
+                            ToggleGenreComboBoxes(Settings.Default.separateGenres);
+                            ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
                             MessageBox.Show("Settings have been successfully imported. Please review the settings and click OK to apply them.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         // 2. process the data.
@@ -361,11 +505,26 @@ namespace plugin
                 Settings.Default.releaseGroupTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
                 Settings.Default.findReplace = (string)Settings.Default.Properties["findReplace"].DefaultValue;
                 Settings.Default.tagSubmitIsDestructive = Convert.ToBoolean(Settings.Default.Properties["tagSubmitIsDestructive"].DefaultValue);
+                Settings.Default.separateGenres = Convert.ToBoolean(Settings.Default.Properties["separateGenres"].DefaultValue);
                 Settings.Default.Save();
-                separateCheckBox.Checked = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
-                UpdateFindReplaceTable(); UpdateTagModeRadioButtons();
+                UpdateFindReplaceTable();
+                UpdateTagModeRadioButtons();
+                FillTagComboBoxes();
+                UpdateCheckBoxes();
+                ToggleGenreComboBoxes(Settings.Default.separateGenres);
+                ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
                 MessageBox.Show("Your MusicBrainz Sync plugin settings have been reset to default values.", null, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+        }
+
+        private void genreDownloadCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            ToggleGenreComboBoxes(genreDownloadCheckBox.Checked);
+        }
+
+        private void sepByEntityCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            ToggleNonRecordingComboBoxPanel(sepByEntityCheckBox.Checked);
         }
     }
 }

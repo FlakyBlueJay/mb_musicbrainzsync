@@ -123,7 +123,7 @@ namespace MusicBeePlugin
 
         public static Dictionary<string, MetaDataType> listTagBindings = new Dictionary<string, MetaDataType>
         {
-            {"genres",   MetaDataType.Genre },
+            {"genre",    MetaDataType.Genre },
             {"mood",     MetaDataType.Mood },
             {"occasion", MetaDataType.Occasion },
             {"keywords", MetaDataType.Keywords },
