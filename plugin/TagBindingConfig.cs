@@ -90,6 +90,7 @@ namespace plugin
             UpdateCheckBoxes();
             ToggleGenreComponents(Settings.Default.separateGenres);
             ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
+            letterCasingComboBox.SelectedIndex = Settings.Default.letterCaseMode;
         }
 
         // UI functions
@@ -307,7 +308,6 @@ namespace plugin
             Properties.Settings.Default.recordingTagBindings = string.Join(";", trackSavedTags);
             Properties.Settings.Default.separateTagBindings = separateCheckBox.Checked;
 
-            // this setting could have been changed so trust the check box over the setting. Either way we'll save the check box state afterwards.
             if (separateCheckBox.Checked)
             {
                 List<string> releaseSavedTags = new List<string>();
@@ -327,6 +327,7 @@ namespace plugin
 
             }
 
+            Properties.Settings.Default.letterCaseMode = letterCasingComboBox.SelectedIndex;
             Properties.Settings.Default.separateGenres = genreDownloadCheckBox.Checked;
             Properties.Settings.Default.separateFieldsByEntityType = sepByEntityCheckBox.Checked;
             Properties.Settings.Default.downloadOnlyUserTags = userTagsCheckBox.Checked;
@@ -418,6 +419,7 @@ namespace plugin
             public TagBindings download_genre_fields { get; set; }
 
             public TagThresholds tag_thresholds { get; set; }
+            public int letter_case_mode { get; set; }
         }
 
         private void exportLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -464,7 +466,8 @@ namespace plugin
                             minimum_genre_threshold = Settings.Default.genreThresholdPercentage,
                             maximum_tags = Settings.Default.maxTags,
                             maximum_genres = Settings.Default.maxGenres
-                        }
+                        },
+                        letter_case_mode = Settings.Default.letterCaseMode
 
                     };
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(exportedSettings, Newtonsoft.Json.Formatting.Indented);
@@ -523,6 +526,7 @@ namespace plugin
                             Settings.Default.genreThresholdPercentage = importedSettings.tag_thresholds.minimum_genre_threshold;
                             Settings.Default.maxTags = importedSettings.tag_thresholds.maximum_tags;
                             Settings.Default.maxGenres = importedSettings.tag_thresholds.maximum_genres;
+                            Settings.Default.letterCaseMode = importedSettings.letter_case_mode;
 
                             Settings.Default.Save();
                             UpdateAllComponents();

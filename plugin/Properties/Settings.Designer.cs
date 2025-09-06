@@ -278,12 +278,12 @@ namespace plugin.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int formattingMode {
+        public int letterCaseMode {
             get {
-                return ((int)(this["formattingMode"]));
+                return ((int)(this["letterCaseMode"]));
             }
             set {
-                this["formattingMode"] = value;
+                this["letterCaseMode"] = value;
             }
         }
     }

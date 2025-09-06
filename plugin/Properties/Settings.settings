@@ -67,7 +67,7 @@ alt-pop;alternative pop</Value>
     <Setting Name="maxGenres" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">10</Value>
     </Setting>
-    <Setting Name="formattingMode" Type="System.Int32" Scope="User">
+    <Setting Name="letterCaseMode" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
   </Settings>
