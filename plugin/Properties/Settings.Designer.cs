@@ -226,5 +226,65 @@ namespace plugin.Properties {
                 this["downloadOnlyUserTags"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int tagThresholdPercentage {
+            get {
+                return ((int)(this["tagThresholdPercentage"]));
+            }
+            set {
+                this["tagThresholdPercentage"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int genreThresholdPercentage {
+            get {
+                return ((int)(this["genreThresholdPercentage"]));
+            }
+            set {
+                this["genreThresholdPercentage"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int maxTags {
+            get {
+                return ((int)(this["maxTags"]));
+            }
+            set {
+                this["maxTags"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int maxGenres {
+            get {
+                return ((int)(this["maxGenres"]));
+            }
+            set {
+                this["maxGenres"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int formattingMode {
+            get {
+                return ((int)(this["formattingMode"]));
+            }
+            set {
+                this["formattingMode"] = value;
+            }
+        }
     }
 }

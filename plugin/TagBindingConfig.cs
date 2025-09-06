@@ -77,16 +77,27 @@ namespace plugin
 
         private void TagBindingConfig_Load(object sender, EventArgs e)
         {
-            ToggleSeparateBindUI(sender, e, Settings.Default.separateTagBindings);
-            UpdateFindReplaceTable(); UpdateTagModeRadioButtons(); FillTagComboBoxes(); UpdateCheckBoxes();
-            ToggleGenreComponents(Settings.Default.separateGenres); ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
+            UpdateAllComponents();
+        }
+
+        private void UpdateAllComponents()
+        {
+            ToggleSeparateBindUI(Settings.Default.separateTagBindings);
+            UpdateFindReplaceTable();
+            UpdateTagModeRadioButtons();
+            UpdateNumericUpDowns();
+            FillTagComboBoxes();
+            UpdateCheckBoxes();
+            ToggleGenreComponents(Settings.Default.separateGenres);
+            ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
         }
 
         // UI functions
-        private void ToggleSeparateBindUI(object sender, EventArgs e, bool separate = false)
+        private void ToggleSeparateBindUI(bool separate = false)
         {
             UpdateTagBindingList(trackListBox);
             // god I hate WinForms.
+            // GOD I FUCKING HATE WINFORMS
             if (separate)
             {
                 trackTab.Text = "Tracks/Recordings";
@@ -106,8 +117,10 @@ namespace plugin
             {
                 trackTab.Text = "Global tag bindings";
                 tagTabControl.SelectTab(trackTab);
-                tagTabControl.TabPages.Remove(tagTabControl.TabPages["releaseGroupTab"]);
-                tagTabControl.TabPages.Remove(tagTabControl.TabPages["releaseTab"]);
+                if (tagTabControl.TabPages["releaseGroupTab"] != null)
+                    tagTabControl.TabPages.Remove(tagTabControl.TabPages["releaseGroupTab"]);
+                if (tagTabControl.TabPages["releaseTab"] != null)
+                    tagTabControl.TabPages.Remove(tagTabControl.TabPages["releaseTab"]);
             }
         }
 
@@ -174,6 +187,13 @@ namespace plugin
                 comboBox.SelectedItem = selectedItem;
             }
         }
+        private void UpdateNumericUpDowns()
+        {
+            minimalTagThreshold.Value = Settings.Default.tagThresholdPercentage;
+            minimalGenreThreshold.Value = Settings.Default.genreThresholdPercentage;
+            maxNumberTags.Value = Settings.Default.maxTags;
+            maxNumberGenres.Value = Settings.Default.maxGenres;
+        }
 
         private void ToggleGenreComponents(bool toggle)
         {
@@ -183,12 +203,11 @@ namespace plugin
 
             if (!userTagsCheckBox.Checked)
             {
-                minimalGenreCheckBox.Enabled = toggle;
                 minimalGenreThreshold.Enabled = toggle;
-                maxGenreCheckBox.Enabled = toggle;
                 maxNumberGenres.Enabled = toggle;
             }
         }
+
 
         private void ToggleNonRecordingComboBoxPanel(bool toggle)
         {
@@ -231,7 +250,7 @@ namespace plugin
 
         private void separateCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            ToggleSeparateBindUI(sender, e, separateCheckBox.Checked);
+            ToggleSeparateBindUI(separateCheckBox.Checked);
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
@@ -322,8 +341,12 @@ namespace plugin
                 {
                     Properties.Settings.Default[setting.Name] = selectedItem.tagKey;
                 }
-
             }
+
+            Properties.Settings.Default.tagThresholdPercentage = (int)minimalTagThreshold.Value;
+            Properties.Settings.Default.genreThresholdPercentage = (int)minimalGenreThreshold.Value;
+            Properties.Settings.Default.maxTags = (int)maxNumberTags.Value;
+            Properties.Settings.Default.maxGenres = (int)maxNumberGenres.Value;
 
             string newFindReplaceString = "";
             foreach (DataGridViewRow row in findReplaceTable.Rows)
@@ -373,18 +396,28 @@ namespace plugin
             public string release_group { get; set; }
         }
 
-        public class PluginSettings
+        private class TagThresholds
+        {
+            public int minimum_tag_threshold { get; set; }
+            public int minimum_genre_threshold { get; set; }
+            public int maximum_tags { get; set; }
+            public int maximum_genres { get; set; }
+        }
+
+        private class PluginSettings
         {
             public bool separate_tag_bindings { get; set; }
             public bool tag_submit_destructive { get; set; }
             public string find_replace { get; set; }
             public TagBindings upload_tag_bindings { get; set; }
-            public TagBindings download_tag_fields { get; set; }
+
+            public bool own_tags_only { get; set; }
             public bool separate_genres { get; set; }
             public bool separate_entities { get; set; }
+            public TagBindings download_tag_fields { get; set; }
             public TagBindings download_genre_fields { get; set; }
-            public bool own_tags_only { get; set; }
 
+            public TagThresholds tag_thresholds { get; set; }
         }
 
         private void exportLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -424,7 +457,15 @@ namespace plugin
                             recording = Settings.Default.recordingGenreField,
                             release = Settings.Default.releaseGenreField,
                             release_group = Settings.Default.releaseGroupGenreField,
+                        },
+                        tag_thresholds = new TagThresholds
+                        {
+                            minimum_tag_threshold = Settings.Default.tagThresholdPercentage,
+                            minimum_genre_threshold = Settings.Default.genreThresholdPercentage,
+                            maximum_tags = Settings.Default.maxTags,
+                            maximum_genres = Settings.Default.maxGenres
                         }
+
                     };
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(exportedSettings, Newtonsoft.Json.Formatting.Indented);
                     System.IO.File.WriteAllText(saveDialog.FileName, json);
@@ -478,14 +519,13 @@ namespace plugin
                             Settings.Default.releaseGroupGenreField = importedSettings.download_genre_fields.release_group;
                             Settings.Default.separateFieldsByEntityType = importedSettings.separate_entities;
                             Settings.Default.downloadOnlyUserTags = importedSettings.own_tags_only;
+                            Settings.Default.tagThresholdPercentage = importedSettings.tag_thresholds.minimum_tag_threshold;
+                            Settings.Default.genreThresholdPercentage = importedSettings.tag_thresholds.minimum_genre_threshold;
+                            Settings.Default.maxTags = importedSettings.tag_thresholds.maximum_tags;
+                            Settings.Default.maxGenres = importedSettings.tag_thresholds.maximum_genres;
 
                             Settings.Default.Save();
-                            UpdateCheckBoxes();
-                            UpdateFindReplaceTable();
-                            UpdateTagModeRadioButtons();
-                            FillTagComboBoxes();
-                            ToggleGenreComponents(Settings.Default.separateGenres);
-                            ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
+                            UpdateAllComponents();
                             MessageBox.Show("Settings have been successfully imported. Please review the settings and click OK to apply them.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         // 2. process the data.
@@ -513,29 +553,11 @@ namespace plugin
             DialogResult resetMessageResult = MessageBox.Show("Are you sure you want to reset the tag binding settings to default? This will remove all custom tag bindings, set them to the default values and default back to sharing the tag bindings across all entities.", null, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (resetMessageResult == DialogResult.Yes)
             {
-                Settings.Default.separateTagBindings = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
-                Settings.Default.recordingTagBindings = (string)Settings.Default.Properties["recordingTagBindings"].DefaultValue;
-                Settings.Default.releaseTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
-                Settings.Default.releaseGroupTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
-                Settings.Default.findReplace = (string)Settings.Default.Properties["findReplace"].DefaultValue;
-                Settings.Default.tagSubmitIsDestructive = Convert.ToBoolean(Settings.Default.Properties["tagSubmitIsDestructive"].DefaultValue);
-                Settings.Default.separateGenres = Convert.ToBoolean(Settings.Default.Properties["separateGenres"].DefaultValue);
-                Settings.Default.separateFieldsByEntityType = Convert.ToBoolean(Settings.Default.Properties["separateFieldsByEntityType"].DefaultValue);
-                Settings.Default.downloadOnlyUserTags = Convert.ToBoolean(Settings.Default.Properties["downloadOnlyUserTags"].DefaultValue);
-                Settings.Default.recordingGenreField = (string)Settings.Default.Properties["recordingGenreField"].DefaultValue;
-                Settings.Default.releaseGenreField = (string)Settings.Default.Properties["releaseGenreField"].DefaultValue;
-                Settings.Default.releaseGroupGenreField = (string)Settings.Default.Properties["releaseGroupGenreField"].DefaultValue;
-                Settings.Default.recordingTagField = (string)Settings.Default.Properties["recordingTagField"].DefaultValue;
-                Settings.Default.releaseTagField = (string)Settings.Default.Properties["releaseTagField"].DefaultValue;
-                Settings.Default.releaseGroupTagField = (string)Settings.Default.Properties["releaseGroupTagField"].DefaultValue;
-
+                string refreshToken = Settings.Default.refreshToken; string cachedUsername = Settings.Default.cachedUsername;
+                Settings.Default.Reset();
+                Settings.Default.cachedUsername = cachedUsername; Settings.Default.refreshToken = refreshToken;
                 Settings.Default.Save();
-                UpdateFindReplaceTable();
-                UpdateTagModeRadioButtons();
-                FillTagComboBoxes();
-                UpdateCheckBoxes();
-                ToggleGenreComponents(Settings.Default.separateGenres);
-                ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
+                UpdateAllComponents();
                 MessageBox.Show("Your MusicBrainz Sync plugin settings have been reset to default values.", null, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -554,16 +576,12 @@ namespace plugin
         {
             bool checkedState = userTagsCheckBox.Checked;
 
-            minimalTagCheckBox.Enabled = !checkedState;
             minimalTagThreshold.Enabled = !checkedState;
-            maxTagCheckBox.Enabled = !checkedState;
             maxNumberTags.Enabled = !checkedState;
             
             if (genreDownloadCheckBox.Checked)
             {
-                minimalGenreCheckBox.Enabled = !checkedState;
                 minimalGenreThreshold.Enabled = !checkedState;
-                maxGenreCheckBox.Enabled = !checkedState;
                 maxNumberGenres.Enabled = !checkedState;
             }
             

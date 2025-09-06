@@ -74,16 +74,11 @@
             this.formattingTitle = new System.Windows.Forms.Label();
             this.letterCasingLabel = new System.Windows.Forms.Label();
             this.letterCasingComboBox = new System.Windows.Forms.ComboBox();
-            this.sortVoteCheckBox = new System.Windows.Forms.CheckBox();
             this.tagThresholdTitle = new System.Windows.Forms.Label();
             this.thresholdTableLayout = new System.Windows.Forms.TableLayoutPanel();
             this.maxNumberGenres = new System.Windows.Forms.NumericUpDown();
             this.maxNumberTags = new System.Windows.Forms.NumericUpDown();
             this.minimalGenreThreshold = new System.Windows.Forms.NumericUpDown();
-            this.minimalTagCheckBox = new System.Windows.Forms.CheckBox();
-            this.minimalGenreCheckBox = new System.Windows.Forms.CheckBox();
-            this.maxTagCheckBox = new System.Windows.Forms.CheckBox();
-            this.maxGenreCheckBox = new System.Windows.Forms.CheckBox();
             this.minimalTagThreshold = new System.Windows.Forms.NumericUpDown();
             this.thresholdNote = new System.Windows.Forms.Label();
             this.findReplacePage = new System.Windows.Forms.TabPage();
@@ -103,6 +98,10 @@
             this.resetDescription = new System.Windows.Forms.Label();
             this.resetLink = new System.Windows.Forms.LinkLabel();
             this.mainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.minTagPercentLabel = new System.Windows.Forms.Label();
+            this.minGenrePercentLabel = new System.Windows.Forms.Label();
+            this.maxTagLabel = new System.Windows.Forms.Label();
+            this.maxGenreLabel = new System.Windows.Forms.Label();
             this.tagGroupBox.SuspendLayout();
             this.tagTabControl.SuspendLayout();
             this.trackTab.SuspendLayout();
@@ -134,7 +133,7 @@
             this.separateCheckBox.Location = new System.Drawing.Point(6, 6);
             this.separateCheckBox.Margin = new System.Windows.Forms.Padding(6);
             this.separateCheckBox.Name = "separateCheckBox";
-            this.separateCheckBox.Size = new System.Drawing.Size(564, 29);
+            this.separateCheckBox.Size = new System.Drawing.Size(531, 29);
             this.separateCheckBox.TabIndex = 0;
             this.separateCheckBox.Text = "Submit separate tags to releases and release groups.             ";
             this.separateCheckBox.UseVisualStyleBackColor = true;
@@ -148,7 +147,7 @@
             this.separateHelperLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.separateHelperLabel.Name = "separateHelperLabel";
             this.separateHelperLabel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 11);
-            this.separateHelperLabel.Size = new System.Drawing.Size(614, 36);
+            this.separateHelperLabel.Size = new System.Drawing.Size(489, 61);
             this.separateHelperLabel.TabIndex = 1;
             this.separateHelperLabel.Text = "Useful if you use separate tags for whole releases (e.g. album genres)";
             // 
@@ -156,11 +155,11 @@
             // 
             this.tagGroupBox.Controls.Add(this.tagTabControl);
             this.tagGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tagGroupBox.Location = new System.Drawing.Point(4, 81);
+            this.tagGroupBox.Location = new System.Drawing.Point(4, 106);
             this.tagGroupBox.Margin = new System.Windows.Forms.Padding(4);
             this.tagGroupBox.Name = "tagGroupBox";
             this.tagGroupBox.Padding = new System.Windows.Forms.Padding(4);
-            this.tagGroupBox.Size = new System.Drawing.Size(800, 1124);
+            this.tagGroupBox.Size = new System.Drawing.Size(535, 827);
             this.tagGroupBox.TabIndex = 3;
             this.tagGroupBox.TabStop = false;
             this.tagGroupBox.Text = "Tags";
@@ -175,7 +174,7 @@
             this.tagTabControl.Margin = new System.Windows.Forms.Padding(6);
             this.tagTabControl.Name = "tagTabControl";
             this.tagTabControl.SelectedIndex = 0;
-            this.tagTabControl.Size = new System.Drawing.Size(792, 1094);
+            this.tagTabControl.Size = new System.Drawing.Size(527, 797);
             this.tagTabControl.TabIndex = 0;
             // 
             // trackTab
@@ -185,7 +184,7 @@
             this.trackTab.Margin = new System.Windows.Forms.Padding(6);
             this.trackTab.Name = "trackTab";
             this.trackTab.Padding = new System.Windows.Forms.Padding(6);
-            this.trackTab.Size = new System.Drawing.Size(784, 1057);
+            this.trackTab.Size = new System.Drawing.Size(519, 760);
             this.trackTab.TabIndex = 0;
             this.trackTab.Text = "Tracks/Recordings";
             this.trackTab.UseVisualStyleBackColor = true;
@@ -197,7 +196,7 @@
             this.trackListBox.Location = new System.Drawing.Point(6, 6);
             this.trackListBox.Margin = new System.Windows.Forms.Padding(6);
             this.trackListBox.Name = "trackListBox";
-            this.trackListBox.Size = new System.Drawing.Size(772, 1045);
+            this.trackListBox.Size = new System.Drawing.Size(507, 748);
             this.trackListBox.TabIndex = 0;
             this.trackListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.trackListBox_ItemCheck);
             // 
@@ -250,10 +249,10 @@
             // 
             this.saveNote.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.saveNote.AutoSize = true;
-            this.saveNote.Location = new System.Drawing.Point(26, 54);
+            this.saveNote.Location = new System.Drawing.Point(82, 54);
             this.saveNote.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.saveNote.Name = "saveNote";
-            this.saveNote.Size = new System.Drawing.Size(796, 25);
+            this.saveNote.Size = new System.Drawing.Size(543, 50);
             this.saveNote.TabIndex = 6;
             this.saveNote.Text = "Settings are automatically saved upon clicking Save or Apply, independent from Mu" +
     "sicBee.";
@@ -268,15 +267,15 @@
             this.buttonPanel.Controls.Add(this.saveNote);
             this.buttonPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.buttonPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.buttonPanel.Location = new System.Drawing.Point(6, 1276);
+            this.buttonPanel.Location = new System.Drawing.Point(6, 855);
             this.buttonPanel.Margin = new System.Windows.Forms.Padding(6);
             this.buttonPanel.Name = "buttonPanel";
-            this.buttonPanel.Size = new System.Drawing.Size(828, 79);
+            this.buttonPanel.Size = new System.Drawing.Size(631, 104);
             this.buttonPanel.TabIndex = 5;
             // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(684, 6);
+            this.cancelButton.Location = new System.Drawing.Point(487, 6);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(6);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(138, 42);
@@ -287,7 +286,7 @@
             // 
             // OKButton
             // 
-            this.OKButton.Location = new System.Drawing.Point(534, 6);
+            this.OKButton.Location = new System.Drawing.Point(337, 6);
             this.OKButton.Margin = new System.Windows.Forms.Padding(6);
             this.OKButton.Name = "OKButton";
             this.OKButton.Size = new System.Drawing.Size(138, 42);
@@ -298,7 +297,7 @@
             // 
             // applyButton
             // 
-            this.applyButton.Location = new System.Drawing.Point(384, 6);
+            this.applyButton.Location = new System.Drawing.Point(187, 6);
             this.applyButton.Margin = new System.Windows.Forms.Padding(6);
             this.applyButton.Name = "applyButton";
             this.applyButton.Size = new System.Drawing.Size(138, 42);
@@ -318,7 +317,7 @@
             this.mainTabControl.Margin = new System.Windows.Forms.Padding(6);
             this.mainTabControl.Name = "mainTabControl";
             this.mainTabControl.SelectedIndex = 0;
-            this.mainTabControl.Size = new System.Drawing.Size(828, 1258);
+            this.mainTabControl.Size = new System.Drawing.Size(631, 837);
             this.mainTabControl.TabIndex = 1;
             // 
             // tagBindingPage
@@ -328,7 +327,7 @@
             this.tagBindingPage.Margin = new System.Windows.Forms.Padding(6);
             this.tagBindingPage.Name = "tagBindingPage";
             this.tagBindingPage.Padding = new System.Windows.Forms.Padding(6);
-            this.tagBindingPage.Size = new System.Drawing.Size(820, 1221);
+            this.tagBindingPage.Size = new System.Drawing.Size(555, 949);
             this.tagBindingPage.TabIndex = 0;
             this.tagBindingPage.Text = "Tag Uploading";
             this.tagBindingPage.UseVisualStyleBackColor = true;
@@ -351,7 +350,7 @@
             this.tagBindingLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tagBindingLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tagBindingLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tagBindingLayoutPanel.Size = new System.Drawing.Size(808, 1209);
+            this.tagBindingLayoutPanel.Size = new System.Drawing.Size(543, 937);
             this.tagBindingLayoutPanel.TabIndex = 1;
             // 
             // tagDownloadTab
@@ -361,17 +360,17 @@
             this.tagDownloadTab.Margin = new System.Windows.Forms.Padding(4);
             this.tagDownloadTab.Name = "tagDownloadTab";
             this.tagDownloadTab.Padding = new System.Windows.Forms.Padding(4);
-            this.tagDownloadTab.Size = new System.Drawing.Size(820, 1221);
+            this.tagDownloadTab.Size = new System.Drawing.Size(623, 800);
             this.tagDownloadTab.TabIndex = 3;
             this.tagDownloadTab.Text = "Tag Downloading";
             this.tagDownloadTab.UseVisualStyleBackColor = true;
             // 
             // flowLayoutPanel2
             // 
+            this.flowLayoutPanel2.AutoScroll = true;
             this.flowLayoutPanel2.Controls.Add(this.formattingTitle);
             this.flowLayoutPanel2.Controls.Add(this.letterCasingLabel);
             this.flowLayoutPanel2.Controls.Add(this.letterCasingComboBox);
-            this.flowLayoutPanel2.Controls.Add(this.sortVoteCheckBox);
             this.flowLayoutPanel2.Controls.Add(this.userTagConfigTitle);
             this.flowLayoutPanel2.Controls.Add(this.userTagsCheckBox);
             this.flowLayoutPanel2.Controls.Add(this.genreConfigTitle);
@@ -386,21 +385,22 @@
             this.flowLayoutPanel2.Controls.Add(this.recordingTagComboBox);
             this.flowLayoutPanel2.Controls.Add(this.otherTypePanel);
             this.flowLayoutPanel2.Controls.Add(this.tagThresholdTitle);
-            this.flowLayoutPanel2.Controls.Add(this.thresholdTableLayout);
             this.flowLayoutPanel2.Controls.Add(this.thresholdNote);
+            this.flowLayoutPanel2.Controls.Add(this.thresholdTableLayout);
             this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel2.Location = new System.Drawing.Point(4, 4);
             this.flowLayoutPanel2.Margin = new System.Windows.Forms.Padding(4);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(812, 1213);
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(615, 792);
             this.flowLayoutPanel2.TabIndex = 0;
+            this.flowLayoutPanel2.WrapContents = false;
             // 
             // userTagConfigTitle
             // 
             this.userTagConfigTitle.AutoSize = true;
             this.userTagConfigTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.userTagConfigTitle.Location = new System.Drawing.Point(4, 127);
+            this.userTagConfigTitle.Location = new System.Drawing.Point(4, 90);
             this.userTagConfigTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.userTagConfigTitle.Name = "userTagConfigTitle";
             this.userTagConfigTitle.Size = new System.Drawing.Size(104, 25);
@@ -410,7 +410,7 @@
             // userTagsCheckBox
             // 
             this.userTagsCheckBox.AutoSize = true;
-            this.userTagsCheckBox.Location = new System.Drawing.Point(4, 156);
+            this.userTagsCheckBox.Location = new System.Drawing.Point(4, 119);
             this.userTagsCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.userTagsCheckBox.Name = "userTagsCheckBox";
             this.userTagsCheckBox.Size = new System.Drawing.Size(280, 29);
@@ -423,7 +423,7 @@
             // 
             this.genreConfigTitle.AutoSize = true;
             this.genreConfigTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.genreConfigTitle.Location = new System.Drawing.Point(4, 189);
+            this.genreConfigTitle.Location = new System.Drawing.Point(4, 152);
             this.genreConfigTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.genreConfigTitle.Name = "genreConfigTitle";
             this.genreConfigTitle.Size = new System.Drawing.Size(82, 25);
@@ -433,7 +433,7 @@
             // genreDownloadCheckBox
             // 
             this.genreDownloadCheckBox.AutoSize = true;
-            this.genreDownloadCheckBox.Location = new System.Drawing.Point(4, 218);
+            this.genreDownloadCheckBox.Location = new System.Drawing.Point(4, 181);
             this.genreDownloadCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.genreDownloadCheckBox.Name = "genreDownloadCheckBox";
             this.genreDownloadCheckBox.Size = new System.Drawing.Size(328, 29);
@@ -446,11 +446,11 @@
             // 
             this.label3.AutoSize = true;
             this.label3.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label3.Location = new System.Drawing.Point(6, 251);
+            this.label3.Location = new System.Drawing.Point(6, 214);
             this.label3.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label3.Name = "label3";
             this.label3.Padding = new System.Windows.Forms.Padding(0, 0, 0, 11);
-            this.label3.Size = new System.Drawing.Size(781, 61);
+            this.label3.Size = new System.Drawing.Size(532, 61);
             this.label3.TabIndex = 7;
             this.label3.Text = "This will ask MusicBrainz for genres as well as tags, and will separate genres an" +
     "d regular tags upon retrieval.\r\n";
@@ -459,7 +459,7 @@
             // 
             this.fieldConfigTitle.AutoSize = true;
             this.fieldConfigTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.fieldConfigTitle.Location = new System.Drawing.Point(4, 312);
+            this.fieldConfigTitle.Location = new System.Drawing.Point(4, 275);
             this.fieldConfigTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.fieldConfigTitle.Name = "fieldConfigTitle";
             this.fieldConfigTitle.Size = new System.Drawing.Size(212, 25);
@@ -469,7 +469,7 @@
             // sepByEntityCheckBox
             // 
             this.sepByEntityCheckBox.AutoSize = true;
-            this.sepByEntityCheckBox.Location = new System.Drawing.Point(4, 341);
+            this.sepByEntityCheckBox.Location = new System.Drawing.Point(4, 304);
             this.sepByEntityCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.sepByEntityCheckBox.Name = "sepByEntityCheckBox";
             this.sepByEntityCheckBox.Size = new System.Drawing.Size(496, 29);
@@ -482,18 +482,18 @@
             // 
             this.label1.AutoSize = true;
             this.label1.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label1.Location = new System.Drawing.Point(6, 374);
+            this.label1.Location = new System.Drawing.Point(6, 337);
             this.label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label1.Name = "label1";
             this.label1.Padding = new System.Windows.Forms.Padding(0, 0, 0, 11);
-            this.label1.Size = new System.Drawing.Size(614, 36);
+            this.label1.Size = new System.Drawing.Size(547, 61);
             this.label1.TabIndex = 2;
             this.label1.Text = "Useful if you use separate tags for whole releases (e.g. album genres)";
             // 
             // recordingGenreLabel
             // 
             this.recordingGenreLabel.AutoSize = true;
-            this.recordingGenreLabel.Location = new System.Drawing.Point(4, 410);
+            this.recordingGenreLabel.Location = new System.Drawing.Point(4, 398);
             this.recordingGenreLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.recordingGenreLabel.Name = "recordingGenreLabel";
             this.recordingGenreLabel.Size = new System.Drawing.Size(192, 25);
@@ -503,7 +503,7 @@
             // recordingGenreComboBox
             // 
             this.recordingGenreComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.recordingGenreComboBox.Location = new System.Drawing.Point(4, 439);
+            this.recordingGenreComboBox.Location = new System.Drawing.Point(4, 427);
             this.recordingGenreComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.recordingGenreComboBox.Name = "recordingGenreComboBox";
             this.recordingGenreComboBox.Size = new System.Drawing.Size(281, 32);
@@ -512,7 +512,7 @@
             // recordingTagLabel
             // 
             this.recordingTagLabel.AutoSize = true;
-            this.recordingTagLabel.Location = new System.Drawing.Point(4, 475);
+            this.recordingTagLabel.Location = new System.Drawing.Point(4, 463);
             this.recordingTagLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.recordingTagLabel.Name = "recordingTagLabel";
             this.recordingTagLabel.Size = new System.Drawing.Size(224, 25);
@@ -523,7 +523,7 @@
             // 
             this.recordingTagComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.recordingTagComboBox.FormattingEnabled = true;
-            this.recordingTagComboBox.Location = new System.Drawing.Point(4, 504);
+            this.recordingTagComboBox.Location = new System.Drawing.Point(4, 492);
             this.recordingTagComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.recordingTagComboBox.Name = "recordingTagComboBox";
             this.recordingTagComboBox.Size = new System.Drawing.Size(281, 32);
@@ -533,10 +533,10 @@
             // 
             this.otherTypePanel.Controls.Add(this.flowLayoutPanel3);
             this.otherTypePanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.otherTypePanel.Location = new System.Drawing.Point(4, 544);
+            this.otherTypePanel.Location = new System.Drawing.Point(4, 532);
             this.otherTypePanel.Margin = new System.Windows.Forms.Padding(4);
             this.otherTypePanel.Name = "otherTypePanel";
-            this.otherTypePanel.Size = new System.Drawing.Size(785, 294);
+            this.otherTypePanel.Size = new System.Drawing.Size(551, 294);
             this.otherTypePanel.TabIndex = 22;
             // 
             // flowLayoutPanel3
@@ -554,7 +554,7 @@
             this.flowLayoutPanel3.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel3.Margin = new System.Windows.Forms.Padding(4);
             this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(785, 294);
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(551, 294);
             this.flowLayoutPanel3.TabIndex = 0;
             // 
             // releaseGenreLabel
@@ -669,22 +669,11 @@
             this.letterCasingComboBox.Size = new System.Drawing.Size(281, 32);
             this.letterCasingComboBox.TabIndex = 22;
             // 
-            // sortVoteCheckBox
-            // 
-            this.sortVoteCheckBox.AutoSize = true;
-            this.sortVoteCheckBox.Location = new System.Drawing.Point(4, 94);
-            this.sortVoteCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.sortVoteCheckBox.Name = "sortVoteCheckBox";
-            this.sortVoteCheckBox.Size = new System.Drawing.Size(448, 29);
-            this.sortVoteCheckBox.TabIndex = 31;
-            this.sortVoteCheckBox.Text = "Sort by vote count, instead of alphabetical order";
-            this.sortVoteCheckBox.UseVisualStyleBackColor = true;
-            // 
             // tagThresholdTitle
             // 
             this.tagThresholdTitle.AutoSize = true;
             this.tagThresholdTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tagThresholdTitle.Location = new System.Drawing.Point(4, 842);
+            this.tagThresholdTitle.Location = new System.Drawing.Point(4, 830);
             this.tagThresholdTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.tagThresholdTitle.Name = "tagThresholdTitle";
             this.tagThresholdTitle.Size = new System.Drawing.Size(156, 25);
@@ -697,15 +686,15 @@
             this.thresholdTableLayout.ColumnCount = 2;
             this.thresholdTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.thresholdTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.thresholdTableLayout.Controls.Add(this.maxGenreLabel, 0, 3);
+            this.thresholdTableLayout.Controls.Add(this.maxTagLabel, 0, 2);
+            this.thresholdTableLayout.Controls.Add(this.minGenrePercentLabel, 0, 1);
             this.thresholdTableLayout.Controls.Add(this.maxNumberGenres, 1, 3);
             this.thresholdTableLayout.Controls.Add(this.maxNumberTags, 1, 2);
             this.thresholdTableLayout.Controls.Add(this.minimalGenreThreshold, 1, 1);
-            this.thresholdTableLayout.Controls.Add(this.minimalTagCheckBox, 0, 0);
-            this.thresholdTableLayout.Controls.Add(this.minimalGenreCheckBox, 0, 1);
-            this.thresholdTableLayout.Controls.Add(this.maxTagCheckBox, 0, 2);
-            this.thresholdTableLayout.Controls.Add(this.maxGenreCheckBox, 0, 3);
             this.thresholdTableLayout.Controls.Add(this.minimalTagThreshold, 1, 0);
-            this.thresholdTableLayout.Location = new System.Drawing.Point(6, 873);
+            this.thresholdTableLayout.Controls.Add(this.minTagPercentLabel, 0, 0);
+            this.thresholdTableLayout.Location = new System.Drawing.Point(6, 911);
             this.thresholdTableLayout.Margin = new System.Windows.Forms.Padding(6);
             this.thresholdTableLayout.Name = "thresholdTableLayout";
             this.thresholdTableLayout.RowCount = 4;
@@ -713,100 +702,41 @@
             this.thresholdTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.thresholdTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.thresholdTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.thresholdTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.thresholdTableLayout.Size = new System.Drawing.Size(427, 182);
             this.thresholdTableLayout.TabIndex = 27;
             // 
             // maxNumberGenres
             // 
-            this.maxNumberGenres.Location = new System.Drawing.Point(304, 129);
+            this.maxNumberGenres.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.maxNumberGenres.Location = new System.Drawing.Point(272, 138);
             this.maxNumberGenres.Margin = new System.Windows.Forms.Padding(6);
-            this.maxNumberGenres.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.maxNumberGenres.Name = "maxNumberGenres";
             this.maxNumberGenres.Size = new System.Drawing.Size(95, 29);
             this.maxNumberGenres.TabIndex = 7;
-            this.maxNumberGenres.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             // 
             // maxNumberTags
             // 
-            this.maxNumberTags.Location = new System.Drawing.Point(304, 88);
+            this.maxNumberTags.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.maxNumberTags.Location = new System.Drawing.Point(272, 88);
             this.maxNumberTags.Margin = new System.Windows.Forms.Padding(6);
-            this.maxNumberTags.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.maxNumberTags.Name = "maxNumberTags";
             this.maxNumberTags.Size = new System.Drawing.Size(95, 29);
             this.maxNumberTags.TabIndex = 6;
-            this.maxNumberTags.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             // 
             // minimalGenreThreshold
             // 
-            this.minimalGenreThreshold.Location = new System.Drawing.Point(304, 47);
+            this.minimalGenreThreshold.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minimalGenreThreshold.Location = new System.Drawing.Point(272, 47);
             this.minimalGenreThreshold.Margin = new System.Windows.Forms.Padding(6);
             this.minimalGenreThreshold.Name = "minimalGenreThreshold";
             this.minimalGenreThreshold.Size = new System.Drawing.Size(95, 29);
             this.minimalGenreThreshold.TabIndex = 5;
             // 
-            // minimalTagCheckBox
-            // 
-            this.minimalTagCheckBox.AutoSize = true;
-            this.minimalTagCheckBox.Location = new System.Drawing.Point(6, 6);
-            this.minimalTagCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.minimalTagCheckBox.Name = "minimalTagCheckBox";
-            this.minimalTagCheckBox.Size = new System.Drawing.Size(202, 29);
-            this.minimalTagCheckBox.TabIndex = 0;
-            this.minimalTagCheckBox.Text = "Minimal tag usage:";
-            this.minimalTagCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // minimalGenreCheckBox
-            // 
-            this.minimalGenreCheckBox.AutoSize = true;
-            this.minimalGenreCheckBox.Location = new System.Drawing.Point(6, 47);
-            this.minimalGenreCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.minimalGenreCheckBox.Name = "minimalGenreCheckBox";
-            this.minimalGenreCheckBox.Size = new System.Drawing.Size(225, 29);
-            this.minimalGenreCheckBox.TabIndex = 1;
-            this.minimalGenreCheckBox.Text = "Minimal genre usage:";
-            this.minimalGenreCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // maxTagCheckBox
-            // 
-            this.maxTagCheckBox.AutoSize = true;
-            this.maxTagCheckBox.Location = new System.Drawing.Point(6, 88);
-            this.maxTagCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.maxTagCheckBox.Name = "maxTagCheckBox";
-            this.maxTagCheckBox.Size = new System.Drawing.Size(263, 29);
-            this.maxTagCheckBox.TabIndex = 2;
-            this.maxTagCheckBox.Text = "Maximum number of tags:";
-            this.maxTagCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // maxGenreCheckBox
-            // 
-            this.maxGenreCheckBox.AutoSize = true;
-            this.maxGenreCheckBox.Location = new System.Drawing.Point(6, 129);
-            this.maxGenreCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.maxGenreCheckBox.Name = "maxGenreCheckBox";
-            this.maxGenreCheckBox.Size = new System.Drawing.Size(286, 29);
-            this.maxGenreCheckBox.TabIndex = 3;
-            this.maxGenreCheckBox.Text = "Maximum number of genres:";
-            this.maxGenreCheckBox.UseVisualStyleBackColor = true;
-            // 
             // minimalTagThreshold
             // 
-            this.minimalTagThreshold.Location = new System.Drawing.Point(304, 6);
+            this.minimalTagThreshold.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minimalTagThreshold.Location = new System.Drawing.Point(272, 6);
             this.minimalTagThreshold.Margin = new System.Windows.Forms.Padding(6);
             this.minimalTagThreshold.Name = "minimalTagThreshold";
             this.minimalTagThreshold.Size = new System.Drawing.Size(95, 29);
@@ -815,12 +745,12 @@
             // thresholdNote
             // 
             this.thresholdNote.AutoSize = true;
-            this.thresholdNote.Location = new System.Drawing.Point(6, 1061);
+            this.thresholdNote.Location = new System.Drawing.Point(6, 855);
             this.thresholdNote.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.thresholdNote.Name = "thresholdNote";
-            this.thresholdNote.Size = new System.Drawing.Size(427, 25);
+            this.thresholdNote.Size = new System.Drawing.Size(529, 50);
             this.thresholdNote.TabIndex = 28;
-            this.thresholdNote.Text = "This will be ignored when querying for user tags.";
+            this.thresholdNote.Text = "This will be ignored when querying for user tags. Applying 0 means no limits.";
             // 
             // findReplacePage
             // 
@@ -829,7 +759,7 @@
             this.findReplacePage.Margin = new System.Windows.Forms.Padding(6);
             this.findReplacePage.Name = "findReplacePage";
             this.findReplacePage.Padding = new System.Windows.Forms.Padding(6);
-            this.findReplacePage.Size = new System.Drawing.Size(820, 1221);
+            this.findReplacePage.Size = new System.Drawing.Size(623, 800);
             this.findReplacePage.TabIndex = 1;
             this.findReplacePage.Text = "Find and Replace";
             this.findReplacePage.UseVisualStyleBackColor = true;
@@ -846,7 +776,7 @@
             this.findReplaceTable.Margin = new System.Windows.Forms.Padding(6);
             this.findReplaceTable.Name = "findReplaceTable";
             this.findReplaceTable.RowHeadersWidth = 82;
-            this.findReplaceTable.Size = new System.Drawing.Size(808, 1209);
+            this.findReplaceTable.Size = new System.Drawing.Size(611, 788);
             this.findReplaceTable.TabIndex = 0;
             // 
             // findColumn
@@ -1029,15 +959,55 @@
             this.mainLayoutPanel.RowCount = 2;
             this.mainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.mainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.mainLayoutPanel.Size = new System.Drawing.Size(840, 1361);
+            this.mainLayoutPanel.Size = new System.Drawing.Size(643, 965);
             this.mainLayoutPanel.TabIndex = 6;
+            // 
+            // minTagPercentLabel
+            // 
+            this.minTagPercentLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minTagPercentLabel.AutoSize = true;
+            this.minTagPercentLabel.Location = new System.Drawing.Point(3, 8);
+            this.minTagPercentLabel.Name = "minTagPercentLabel";
+            this.minTagPercentLabel.Size = new System.Drawing.Size(211, 25);
+            this.minTagPercentLabel.TabIndex = 8;
+            this.minTagPercentLabel.Text = "Minimum tag usage %:";
+            // 
+            // minGenrePercentLabel
+            // 
+            this.minGenrePercentLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minGenrePercentLabel.AutoSize = true;
+            this.minGenrePercentLabel.Location = new System.Drawing.Point(3, 49);
+            this.minGenrePercentLabel.Name = "minGenrePercentLabel";
+            this.minGenrePercentLabel.Size = new System.Drawing.Size(234, 25);
+            this.minGenrePercentLabel.TabIndex = 9;
+            this.minGenrePercentLabel.Text = "Minimum genre usage %:";
+            // 
+            // maxTagLabel
+            // 
+            this.maxTagLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.maxTagLabel.AutoSize = true;
+            this.maxTagLabel.Location = new System.Drawing.Point(3, 90);
+            this.maxTagLabel.Name = "maxTagLabel";
+            this.maxTagLabel.Size = new System.Drawing.Size(237, 25);
+            this.maxTagLabel.TabIndex = 10;
+            this.maxTagLabel.Text = "Maximum number of tags:";
+            // 
+            // maxGenreLabel
+            // 
+            this.maxGenreLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.maxGenreLabel.AutoSize = true;
+            this.maxGenreLabel.Location = new System.Drawing.Point(3, 140);
+            this.maxGenreLabel.Name = "maxGenreLabel";
+            this.maxGenreLabel.Size = new System.Drawing.Size(260, 25);
+            this.maxGenreLabel.TabIndex = 11;
+            this.maxGenreLabel.Text = "Maximum number of genres:";
             // 
             // TagBindingConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(840, 1361);
+            this.ClientSize = new System.Drawing.Size(643, 965);
             this.Controls.Add(this.mainLayoutPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(6);
@@ -1146,18 +1116,17 @@
         private System.Windows.Forms.CheckBox userTagsCheckBox;
         private System.Windows.Forms.Label tagThresholdTitle;
         private System.Windows.Forms.TableLayoutPanel thresholdTableLayout;
-        private System.Windows.Forms.CheckBox minimalTagCheckBox;
-        private System.Windows.Forms.CheckBox minimalGenreCheckBox;
-        private System.Windows.Forms.CheckBox maxTagCheckBox;
         private System.Windows.Forms.Label thresholdNote;
         private System.Windows.Forms.NumericUpDown maxNumberGenres;
         private System.Windows.Forms.NumericUpDown maxNumberTags;
         private System.Windows.Forms.NumericUpDown minimalGenreThreshold;
-        private System.Windows.Forms.CheckBox maxGenreCheckBox;
         private System.Windows.Forms.NumericUpDown minimalTagThreshold;
         private System.Windows.Forms.Label formattingTitle;
         private System.Windows.Forms.Label letterCasingLabel;
         private System.Windows.Forms.ComboBox letterCasingComboBox;
-        private System.Windows.Forms.CheckBox sortVoteCheckBox;
+        private System.Windows.Forms.Label minTagPercentLabel;
+        private System.Windows.Forms.Label maxGenreLabel;
+        private System.Windows.Forms.Label maxTagLabel;
+        private System.Windows.Forms.Label minGenrePercentLabel;
     }
 }
