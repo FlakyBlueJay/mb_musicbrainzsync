@@ -604,8 +604,8 @@ namespace plugin
                 string entityType = mbidData[0]; string currentMbid = mbidData[1];
 
                 // TODO respect user-tag setting
-                string retrievedGenreType = "genres";
-                string retrievedTagType = "tags";
+                string retrievedGenreType = (Settings.Default.downloadOnlyUserTags) ? "user-genres" : "genres";
+                string retrievedTagType = (Settings.Default.downloadOnlyUserTags) ? "user-tags" : "tags";
                 string json = "";
                 List<MusicBrainzTag> onlineGenreData = new List<MusicBrainzTag>();
                 List<MusicBrainzTag> onlineTagData = new List<MusicBrainzTag>();
@@ -626,7 +626,7 @@ namespace plugin
                                 Debug.WriteLine($"[MusicBrainzAPI.GetTags] Processing tags for recording: {rc.Title}");
                                 onlineGenreData = (retrievedGenreType == "genres") ? rc.Genres : rc.UserGenres;
                                 onlineTagData = (retrievedTagType == "tags") ? rc.Tags : rc.UserTags;
-                                Dictionary<string, List<string>> onlineRecordingTags = await ProcessOnlineTags(onlineTagData, onlineGenreData);
+                                Dictionary<string, List<string>> onlineRecordingTags = await Task.Run(() => ProcessOnlineTags(onlineTagData, onlineGenreData));
                                 mbidTags.Add(recordingID, onlineRecordingTags);
                             }
                         }
@@ -657,14 +657,14 @@ namespace plugin
                                 break;
                         }
                     }
-                    Dictionary<string, List<string>> onlineTags = await ProcessOnlineTags(onlineTagData, onlineGenreData, entityType);
+                    Dictionary<string, List<string>> onlineTags = await Task.Run(() => ProcessOnlineTags(onlineTagData, onlineGenreData, entityType));
                     mbidTags.Add(currentMbid, onlineTags);
                 }
             }
             return mbidTags;
         }
 
-        private async Task<Dictionary<string, List<string>>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null, string entityType = "recording")
+        private Dictionary<string, List<string>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null, string entityType = "recording")
         {
             Dictionary<string, List<string>> combinedTagData = new Dictionary<string, List<string>>();
 

@@ -407,6 +407,9 @@ namespace MusicBeePlugin
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug", "", null);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Online Track Ratings", "", ResetTrackRatings);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Reset Online Album Ratings", "", ResetReleaseGroupRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Open JSON in Browser: Recording", "", OpenJSONRecording);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Open JSON in Browser: Release", "", OpenJSONRelease);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Debug/Open JSON in Browser: Release Group", "", OpenJSONReleaseGroup);
 #endif
 
             // # hotkey entries
@@ -830,6 +833,7 @@ namespace MusicBeePlugin
                                     foreach (var tagAndValues in pair.Value) // gonna need to find a new name for this variable
                                     {
                                         MetaDataType currentTag = listTagBindings[tagAndValues.Key];
+                                        // possible bottleneck?
                                         mbApiInterface.Library_SetFileTag(track.FilePath, currentTag, string.Join("; ", tagAndValues.Value));
                                         
                                     }
@@ -913,6 +917,57 @@ namespace MusicBeePlugin
         async private void ResetReleaseGroupRatings(object sender, EventArgs args)
         {
             await SendRatingData("release-group", true);
+        }
+
+        private void OpenJSONDataInBrowser(MusicBeeTrack track, string entityType)
+        {
+            string MBID = string.Empty;
+            string MusicBrainzServer = mbz.MusicBrainzServer;
+            switch (entityType)
+            {
+                case "release-group":
+                    MBID = track.MusicBrainzReleaseGroupId;
+                    break;
+                case "release":
+                    MBID = track.MusicBrainzReleaseId;
+                    break;
+                case "recording":
+                    MBID = track.MusicBrainzRecordingId;
+                    break;
+            }
+            string URL = MusicBrainzServer + "/ws/2/" + entityType + "/" + MBID + "?fmt=json&inc=tags+genres+user-tags+user-genres";
+            if (entityType == "release") URL += "+recordings"; 
+            Process.Start("https://" + URL);
+        }
+
+        private MusicBeeTrack GetFirstTrackInSelection()
+        {
+            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
+            List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
+            Debug.WriteLine(tracks.Count);
+            MusicBeeTrack track = tracks[0];
+            return track;
+        }
+
+        private void OpenJSONRecording(object sender, EventArgs args)
+        {
+            
+            MusicBeeTrack track = GetFirstTrackInSelection();
+            OpenJSONDataInBrowser(track, "recording");
+        }
+
+        private void OpenJSONRelease(object sender, EventArgs args)
+        {
+
+            MusicBeeTrack track = GetFirstTrackInSelection();
+            OpenJSONDataInBrowser(track, "release");
+        }
+
+        private void OpenJSONReleaseGroup(object sender, EventArgs args)
+        {
+
+            MusicBeeTrack track = GetFirstTrackInSelection();
+            OpenJSONDataInBrowser(track, "release-group");
         }
 #endif
     }

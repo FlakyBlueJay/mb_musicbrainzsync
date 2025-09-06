@@ -221,9 +221,9 @@
             // 
             this.saveNote.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.saveNote.AutoSize = true;
-            this.saveNote.Location = new System.Drawing.Point(52, 29);
+            this.saveNote.Location = new System.Drawing.Point(5, 29);
             this.saveNote.Name = "saveNote";
-            this.saveNote.Size = new System.Drawing.Size(297, 26);
+            this.saveNote.Size = new System.Drawing.Size(382, 26);
             this.saveNote.TabIndex = 6;
             this.saveNote.Text = "Settings are automatically saved upon clicking Save or Apply, independent from Mu" +
     "sicBee.";
@@ -240,12 +240,12 @@
             this.buttonPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.buttonPanel.Location = new System.Drawing.Point(3, 559);
             this.buttonPanel.Name = "buttonPanel";
-            this.buttonPanel.Size = new System.Drawing.Size(352, 55);
+            this.buttonPanel.Size = new System.Drawing.Size(390, 55);
             this.buttonPanel.TabIndex = 5;
             // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(274, 3);
+            this.cancelButton.Location = new System.Drawing.Point(312, 3);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 1;
@@ -255,7 +255,7 @@
             // 
             // OKButton
             // 
-            this.OKButton.Location = new System.Drawing.Point(193, 3);
+            this.OKButton.Location = new System.Drawing.Point(231, 3);
             this.OKButton.Name = "OKButton";
             this.OKButton.Size = new System.Drawing.Size(75, 23);
             this.OKButton.TabIndex = 0;
@@ -265,7 +265,7 @@
             // 
             // applyButton
             // 
-            this.applyButton.Location = new System.Drawing.Point(112, 3);
+            this.applyButton.Location = new System.Drawing.Point(150, 3);
             this.applyButton.Name = "applyButton";
             this.applyButton.Size = new System.Drawing.Size(75, 23);
             this.applyButton.TabIndex = 7;
@@ -283,7 +283,7 @@
             this.mainTabControl.Location = new System.Drawing.Point(3, 3);
             this.mainTabControl.Name = "mainTabControl";
             this.mainTabControl.SelectedIndex = 0;
-            this.mainTabControl.Size = new System.Drawing.Size(352, 550);
+            this.mainTabControl.Size = new System.Drawing.Size(390, 550);
             this.mainTabControl.TabIndex = 1;
             // 
             // tagBindingPage
@@ -324,7 +324,7 @@
             this.tagDownloadTab.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tagDownloadTab.Name = "tagDownloadTab";
             this.tagDownloadTab.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tagDownloadTab.Size = new System.Drawing.Size(344, 524);
+            this.tagDownloadTab.Size = new System.Drawing.Size(382, 524);
             this.tagDownloadTab.TabIndex = 3;
             this.tagDownloadTab.Text = "Tag Downloading";
             this.tagDownloadTab.UseVisualStyleBackColor = true;
@@ -349,7 +349,7 @@
             this.flowLayoutPanel2.Location = new System.Drawing.Point(2, 2);
             this.flowLayoutPanel2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(340, 520);
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(378, 520);
             this.flowLayoutPanel2.TabIndex = 0;
             // 
             // userTagConfigTitle
@@ -404,7 +404,7 @@
             this.label3.Location = new System.Drawing.Point(3, 68);
             this.label3.Name = "label3";
             this.label3.Padding = new System.Windows.Forms.Padding(0, 0, 0, 6);
-            this.label3.Size = new System.Drawing.Size(334, 32);
+            this.label3.Size = new System.Drawing.Size(369, 32);
             this.label3.TabIndex = 7;
             this.label3.Text = "This will ask MusicBrainz for genres as well as tags, and will separate genres an" +
     "d regular tags upon retrieval.\r\n";
@@ -489,7 +489,7 @@
             this.otherTypePanel.Location = new System.Drawing.Point(2, 231);
             this.otherTypePanel.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.otherTypePanel.Name = "otherTypePanel";
-            this.otherTypePanel.Size = new System.Drawing.Size(336, 159);
+            this.otherTypePanel.Size = new System.Drawing.Size(371, 159);
             this.otherTypePanel.TabIndex = 22;
             // 
             // flowLayoutPanel3
@@ -507,7 +507,7 @@
             this.flowLayoutPanel3.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel3.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(336, 159);
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(371, 159);
             this.flowLayoutPanel3.TabIndex = 0;
             // 
             // releaseGenreLabel
@@ -784,7 +784,7 @@
             this.mainLayoutPanel.RowCount = 2;
             this.mainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.mainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.mainLayoutPanel.Size = new System.Drawing.Size(358, 617);
+            this.mainLayoutPanel.Size = new System.Drawing.Size(396, 617);
             this.mainLayoutPanel.TabIndex = 6;
             // 
             // TagBindingConfig
@@ -792,7 +792,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(358, 617);
+            this.ClientSize = new System.Drawing.Size(396, 617);
             this.Controls.Add(this.mainLayoutPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
