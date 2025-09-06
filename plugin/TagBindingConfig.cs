@@ -79,7 +79,7 @@ namespace plugin
         {
             ToggleSeparateBindUI(sender, e, Settings.Default.separateTagBindings);
             UpdateFindReplaceTable(); UpdateTagModeRadioButtons(); FillTagComboBoxes(); UpdateCheckBoxes();
-            ToggleGenreComboBoxes(Settings.Default.separateGenres); ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
+            ToggleGenreComponents(Settings.Default.separateGenres); ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
         }
 
         // UI functions
@@ -175,16 +175,18 @@ namespace plugin
             }
         }
 
-        private void ToggleGenreComboBoxes(bool toggle)
+        private void ToggleGenreComponents(bool toggle)
         {
-            List<ComboBox> comboBoxes = new List<ComboBox>
-            { 
-                recordingGenreComboBox, releaseGenreComboBox, releaseGroupGenreComboBox
-            };
+            recordingGenreComboBox.Enabled = toggle;
+            releaseGenreComboBox.Enabled = toggle;
+            releaseGroupGenreComboBox.Enabled = toggle;
 
-            foreach (ComboBox comboBox in comboBoxes)
+            if (!userTagsCheckBox.Checked)
             {
-                comboBox.Enabled = toggle;
+                minimalGenreCheckBox.Enabled = toggle;
+                minimalGenreThreshold.Enabled = toggle;
+                maxGenreCheckBox.Enabled = toggle;
+                maxNumberGenres.Enabled = toggle;
             }
         }
 
@@ -482,7 +484,7 @@ namespace plugin
                             UpdateFindReplaceTable();
                             UpdateTagModeRadioButtons();
                             FillTagComboBoxes();
-                            ToggleGenreComboBoxes(Settings.Default.separateGenres);
+                            ToggleGenreComponents(Settings.Default.separateGenres);
                             ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
                             MessageBox.Show("Settings have been successfully imported. Please review the settings and click OK to apply them.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
@@ -532,7 +534,7 @@ namespace plugin
                 UpdateTagModeRadioButtons();
                 FillTagComboBoxes();
                 UpdateCheckBoxes();
-                ToggleGenreComboBoxes(Settings.Default.separateGenres);
+                ToggleGenreComponents(Settings.Default.separateGenres);
                 ToggleNonRecordingComboBoxPanel(Settings.Default.separateFieldsByEntityType);
                 MessageBox.Show("Your MusicBrainz Sync plugin settings have been reset to default values.", null, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -540,12 +542,31 @@ namespace plugin
 
         private void genreDownloadCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            ToggleGenreComboBoxes(genreDownloadCheckBox.Checked);
+            ToggleGenreComponents(genreDownloadCheckBox.Checked);
         }
 
         private void sepByEntityCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             ToggleNonRecordingComboBoxPanel(sepByEntityCheckBox.Checked);
+        }
+
+        private void userTagsCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            bool checkedState = userTagsCheckBox.Checked;
+
+            minimalTagCheckBox.Enabled = !checkedState;
+            minimalTagThreshold.Enabled = !checkedState;
+            maxTagCheckBox.Enabled = !checkedState;
+            maxNumberTags.Enabled = !checkedState;
+            
+            if (genreDownloadCheckBox.Checked)
+            {
+                minimalGenreCheckBox.Enabled = !checkedState;
+                minimalGenreThreshold.Enabled = !checkedState;
+                maxGenreCheckBox.Enabled = !checkedState;
+                maxNumberGenres.Enabled = !checkedState;
+            }
+            
         }
     }
 }
