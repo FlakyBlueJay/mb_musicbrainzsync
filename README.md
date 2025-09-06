@@ -10,24 +10,22 @@ Yeah, it still means I'm dependent on Windows for a bit, but at least my workflo
 
 ## Features
 - Send track and album ratings from your local library to MusicBrainz (recordings and release groups).
+- Retrieve track and album ratings from MusicBrainz to your local tracks.
 - Send tags to recordings, releases and release groups.
 - Choose to have separate tags to send for recordings, releases and release groups.
-- Find and replace while sending. (e.g. mapping your genre tags to MusicBrainz's default genre tags like "synth-pop" vs. "synthpop")
+- Find and replace while sending and retrieving. (e.g. mapping your genre tags to MusicBrainz's default genre tags + vice versa, like "synth-pop" vs. "synthpop")
 - Import/export of plugin settings
 
 ### Planned
 - The ability to get data from MusicBrainz as well as set.
-  - Retrieval of ratings is in development.
-  
-### Lower priority
-I'll do this whenever... No guarantees though.
-- Automatic submission of tags/ratings when you change them in MusicBee.
+
+After this, the plugin will go into "maintenance mode" so I can focus on Linux native projects, and any new features I want to work on will arrive when I'm motivated to work on them. Since I mainly use Linux and desktop virtualisation is in a **very** dire state, I'm not really that motivated to work on projects in Windows.
 
 ### Not planned
 - Submission of artist ratings/tags
     - I implemented this on another plugin I wrote - Submit Folksonomy Tags, for Picard - but it didn't exactly make much sense. I feel it'd be better to do this via the MusicBrainz web UI itself.
 - Collections
-    - Doable, but I'd need to see if I can use any alternative to WinForms because WinForms is bad.
+    - Doable, but I'd need to see if I can use any alternative to WinForms because WinForms is fucking awful and I don't want to work with it longer than I have to.
 
 ## Installation
 Move all of the DLLs from the MusicBrainz Sync ZIP into your MusicBee plugins directory.
