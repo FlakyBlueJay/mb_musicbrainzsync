@@ -595,9 +595,97 @@ namespace plugin
             
         }
 
-        private async Task<Dictionary<string, List<string>>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null)
+        public async Task<Dictionary<string, Dictionary<string, List<string>>>> GetTags(List<string> mbids, bool releaseRecordings = false)
         {
-            Dictionary<string, List<string>> combinedData = new Dictionary<string, List<string>>();
+            Dictionary<string, Dictionary<string, List<string>>> mbidTags = new Dictionary<string, Dictionary<string, List<string>>>();
+            foreach (string mbidUrl in mbids)
+            {
+                string[] mbidData = mbidUrl.Split('/');
+                string entityType = mbidData[0]; string currentMbid = mbidData[1];
+
+                // TODO respect user-tag setting
+                string retrievedGenreType = "genres";
+                string retrievedTagType = "tags";
+                string json = "";
+                List<MusicBrainzTag> onlineGenreData = new List<MusicBrainzTag>();
+                List<MusicBrainzTag> onlineTagData = new List<MusicBrainzTag>();
+
+                if (entityType == "recording-release")
+                {
+                    // This is a fake entity tag to handle recordings associated with a release
+                    json = await GetFromMusicBrainz($"/ws/2/{mbidUrl.Replace("recording-", "")}?inc={retrievedTagType}+{retrievedGenreType}+recordings&fmt=json");
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        Release r = JsonConvert.DeserializeObject<Release>(json);
+                        foreach (ReleaseMedia rm in r.Media)
+                        {
+                            foreach (ReleaseMediaTrack rt in rm.Tracks)
+                            {
+                                Recording rc = rt.Recording;
+                                string recordingID = rc.MBID;
+                                Debug.WriteLine($"[MusicBrainzAPI.GetTags] Processing tags for recording: {rc.Title}");
+                                onlineGenreData = (retrievedGenreType == "genres") ? rc.Genres : rc.UserGenres;
+                                onlineTagData = (retrievedTagType == "tags") ? rc.Tags : rc.UserTags;
+                                Dictionary<string, List<string>> onlineRecordingTags = await ProcessOnlineTags(onlineTagData, onlineGenreData);
+                                mbidTags.Add(recordingID, onlineRecordingTags);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    json = await GetFromMusicBrainz($"/ws/2/{mbidUrl}?inc={retrievedTagType}+{retrievedGenreType}&fmt=json");
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        Debug.WriteLine($"[MusicBrainzAPI.GetTags] {entityType} JSON: {json}");
+                        switch (entityType)
+                        {
+                            case "release-group":
+                                ReleaseGroup rg = JsonConvert.DeserializeObject<ReleaseGroup>(json);
+                                onlineGenreData = (retrievedGenreType == "genres") ? rg.Genres : rg.UserGenres;
+                                onlineTagData = (retrievedTagType == "tags") ? rg.Tags : rg.UserTags;
+                                break;
+                            case "release":
+                                Release rl = JsonConvert.DeserializeObject<Release>(json);
+                                onlineGenreData = (retrievedGenreType == "genres") ? rl.Genres : rl.UserGenres;
+                                onlineTagData = (retrievedTagType == "tags") ? rl.Tags : rl.UserTags;
+                                break;
+                            case "recording":
+                                Recording rc = JsonConvert.DeserializeObject<Recording>(json);
+                                onlineGenreData = (retrievedGenreType == "genres") ? rc.Genres : rc.UserGenres;
+                                onlineTagData = (retrievedTagType == "tags") ? rc.Tags : rc.UserTags;
+                                break;
+                        }
+                    }
+                    Dictionary<string, List<string>> onlineTags = await ProcessOnlineTags(onlineTagData, onlineGenreData, entityType);
+                    mbidTags.Add(currentMbid, onlineTags);
+                }
+            }
+            return mbidTags;
+        }
+
+        private async Task<Dictionary<string, List<string>>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null, string entityType = "recording")
+        {
+            Dictionary<string, List<string>> combinedTagData = new Dictionary<string, List<string>>();
+
+            // recording is the "default" for when separation by entity type is disabled...
+            string genreField = Settings.Default.recordingGenreField;
+            string tagField = Settings.Default.recordingTagField;
+
+            if (Settings.Default.separateFieldsByEntityType)
+            {
+                if (entityType == "release-group")
+                {
+                    genreField = Settings.Default.releaseGroupGenreField;
+                    tagField = Settings.Default.releaseGroupTagField;
+                }
+                else if (entityType == "release")
+                {
+                    genreField = Settings.Default.releaseGenreField;
+                    tagField = Settings.Default.releaseTagField;
+                }
+                // ...no need to check recordings as a result.
+            }
 
             List<string> tags = new List<string>();
             List<string> genres = new List<string>();
@@ -612,7 +700,7 @@ namespace plugin
                         genres.Add(FindReplaceTag(mbzGenre.Name, true));
                     }
                 }
-                combinedData.Add(Settings.Default.recordingGenreField, genres);
+                combinedTagData.Add(genreField, genres);
             }
 
             if (onlineTagData.Count > 0)
@@ -631,83 +719,12 @@ namespace plugin
                         tags.Add(editedTag);
                     }
                 }
-                combinedData.Add(Settings.Default.recordingTagField, tags);
+                combinedTagData.Add(tagField, tags);
             }
 
             // TODO check against other entity types and "advanced" config
-            return combinedData;
+            return combinedTagData;
         }
 
-        public async Task<Dictionary<string, Dictionary<string, List<string>>>> GetTags(List<string> mbids, bool releaseRecordings = false)
-        {
-            Dictionary<string, Dictionary<string, List<string>>> mbidTags = new Dictionary<string, Dictionary<string, List<string>>>();
-            foreach (string mbidUrl in mbids)
-            {
-                string[] mbidData = mbidUrl.Split('/');
-                string entityType = mbidData[0]; string currentMbid = mbidData[1];
-
-                // TODO respect user-tag setting
-                string retrievedGenreType = "genres";
-                string retrievedTagType = "tags";
-                string json = "";
-                List<MusicBrainzTag> onlineGenreData = new List<MusicBrainzTag>();
-                List<MusicBrainzTag> onlineTagData = new List<MusicBrainzTag>();
-
-                switch (entityType)
-                {
-                    case "recording-release":
-                        // This is a fake entity tag to handle recordings associated with a release
-                        Debug.WriteLine($"[MusicBrainzAPI.GetTags] recording-release detected, not implemented yet!");
-                        json = await GetFromMusicBrainz($"/ws/2/{mbidUrl.Replace("recording-", "")}?inc={retrievedTagType}+{retrievedGenreType}+recordings&fmt=json");
-                        if (!string.IsNullOrEmpty(json))
-                        {
-                            Release r = JsonConvert.DeserializeObject<Release>(json);
-                            foreach (ReleaseMedia rm in r.Media)
-                            {
-                                foreach (ReleaseMediaTrack rt in rm.Tracks)
-                                {
-                                    Recording rc = rt.Recording;
-                                    string recordingID = rc.MBID;
-                                    Debug.WriteLine($"[MusicBrainzAPI.GetTags] Processing tags for recording: {rc.Title}");
-                                    onlineGenreData = (retrievedGenreType == "genres") ? rc.Genres : rc.UserGenres;
-                                    onlineTagData = (retrievedTagType == "tags") ? rc.Tags : rc.UserTags;
-                                    Dictionary<string, List<string>> onlineRecordingTags = await ProcessOnlineTags(onlineTagData, onlineGenreData);
-                                    mbidTags.Add(recordingID, onlineRecordingTags);
-                                }
-                            }
-                        } 
-                        break;
-                    default:
-                        json = await GetFromMusicBrainz($"/ws/2/{mbidUrl}?inc={retrievedTagType}+{retrievedGenreType}&fmt=json");
-                        if (!string.IsNullOrEmpty(json))
-                        {
-                            Debug.WriteLine($"[MusicBrainzAPI.GetTags] {entityType} JSON: {json}");
-                            switch (entityType)
-                            {
-                                case "release-group":
-                                    ReleaseGroup rg = JsonConvert.DeserializeObject<ReleaseGroup>(json);
-                                    onlineGenreData = (retrievedGenreType == "genres") ? rg.Genres : rg.UserGenres;
-                                    onlineTagData = (retrievedTagType == "tags") ? rg.Tags : rg.UserTags;
-                                    break;
-                                case "release":
-                                    Release rl = JsonConvert.DeserializeObject<Release>(json);
-                                    onlineGenreData = (retrievedGenreType == "genres") ? rl.Genres : rl.UserGenres;
-                                    onlineTagData = (retrievedTagType == "tags") ? rl.Tags : rl.UserTags;
-                                    break;
-                                case "recording":
-                                    Recording rc = JsonConvert.DeserializeObject<Recording>(json);
-                                    onlineGenreData = (retrievedGenreType == "genres") ? rc.Genres : rc.UserGenres;
-                                    onlineTagData = (retrievedTagType == "tags") ? rc.Tags : rc.UserTags;
-                                    break;
-                            }
-                        }
-                        Dictionary<string, List<string>> onlineTags = await ProcessOnlineTags(onlineTagData, onlineGenreData);
-                        mbidTags.Add(currentMbid, onlineTags);
-                        break;
-                        // TODO artist tags? MusicBee allows this as an option.
-                }
-            }
-            return mbidTags;
-        }
     }
 }
