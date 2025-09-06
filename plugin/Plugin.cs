@@ -919,6 +919,7 @@ namespace MusicBeePlugin
             await SendRatingData("release-group", true);
         }
 
+
         private void OpenJSONDataInBrowser(MusicBeeTrack track, string entityType)
         {
             string MBID = string.Empty;
@@ -940,6 +941,7 @@ namespace MusicBeePlugin
             Process.Start("https://" + URL);
         }
 
+        // I'm not going to spam-open windows... :|
         private MusicBeeTrack GetFirstTrackInSelection()
         {
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
