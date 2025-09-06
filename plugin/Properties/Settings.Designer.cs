@@ -214,5 +214,17 @@ namespace plugin.Properties {
                 this["separateFieldsByEntityType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool downloadOnlyUserTags {
+            get {
+                return ((bool)(this["downloadOnlyUserTags"]));
+            }
+            set {
+                this["downloadOnlyUserTags"] = value;
+            }
+        }
     }
 }

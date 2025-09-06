@@ -224,6 +224,7 @@ namespace plugin
             separateCheckBox.Checked = Settings.Default.separateTagBindings;
             genreDownloadCheckBox.Checked = Settings.Default.separateGenres;
             sepByEntityCheckBox.Checked = Settings.Default.separateFieldsByEntityType;
+            userTagsCheckBox.Checked = Settings.Default.downloadOnlyUserTags;
         }
 
         private void separateCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -307,6 +308,7 @@ namespace plugin
 
             Properties.Settings.Default.separateGenres = genreDownloadCheckBox.Checked;
             Properties.Settings.Default.separateFieldsByEntityType = sepByEntityCheckBox.Checked;
+            Properties.Settings.Default.downloadOnlyUserTags = userTagsCheckBox.Checked;
 
             List<Tuple<ComboBox, SettingsProperty>> comboBoxesAndSettings = GetTagField_ComboBoxesAndSettings();
             foreach (Tuple<ComboBox, SettingsProperty> comboBoxSettingPair in comboBoxesAndSettings)
@@ -379,7 +381,7 @@ namespace plugin
             public bool separate_genres { get; set; }
             public bool separate_entities { get; set; }
             public TagBindings download_genre_fields { get; set; }
-
+            public bool own_tags_only { get; set; }
 
         }
 
@@ -402,6 +404,7 @@ namespace plugin
                         find_replace = Settings.Default.findReplace,
                         separate_genres = Settings.Default.separateGenres,
                         separate_entities = Settings.Default.separateFieldsByEntityType,
+                        own_tags_only = Settings.Default.downloadOnlyUserTags,
                         upload_tag_bindings = new TagBindings
                         {
                             recording = Settings.Default.recordingTagBindings,
@@ -411,10 +414,14 @@ namespace plugin
                         download_tag_fields = new TagBindings
                         {
                             recording = Settings.Default.recordingTagField,
+                            release = Settings.Default.releaseTagField,
+                            release_group = Settings.Default.releaseGroupTagField,
                         },
                         download_genre_fields = new TagBindings
                         {
                             recording = Settings.Default.recordingGenreField,
+                            release = Settings.Default.releaseGenreField,
+                            release_group = Settings.Default.releaseGroupGenreField,
                         }
                     };
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(exportedSettings, Newtonsoft.Json.Formatting.Indented);
@@ -463,7 +470,12 @@ namespace plugin
                             Settings.Default.separateGenres = importedSettings.separate_genres;
                             Settings.Default.recordingTagField = importedSettings.download_tag_fields.recording;
                             Settings.Default.recordingGenreField = importedSettings.download_genre_fields.recording;
+                            Settings.Default.releaseTagField = importedSettings.download_tag_fields.release;
+                            Settings.Default.releaseGenreField = importedSettings.download_genre_fields.release;
+                            Settings.Default.releaseGroupTagField = importedSettings.download_tag_fields.release_group;
+                            Settings.Default.releaseGroupGenreField = importedSettings.download_genre_fields.release_group;
                             Settings.Default.separateFieldsByEntityType = importedSettings.separate_entities;
+                            Settings.Default.downloadOnlyUserTags = importedSettings.own_tags_only;
 
                             Settings.Default.Save();
                             UpdateCheckBoxes();
@@ -499,13 +511,22 @@ namespace plugin
             DialogResult resetMessageResult = MessageBox.Show("Are you sure you want to reset the tag binding settings to default? This will remove all custom tag bindings, set them to the default values and default back to sharing the tag bindings across all entities.", null, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (resetMessageResult == DialogResult.Yes)
             {
-                //Settings.Default.separateTagBindings = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
+                Settings.Default.separateTagBindings = Convert.ToBoolean(Settings.Default.Properties["separateTagBindings"].DefaultValue);
                 Settings.Default.recordingTagBindings = (string)Settings.Default.Properties["recordingTagBindings"].DefaultValue;
                 Settings.Default.releaseTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
                 Settings.Default.releaseGroupTagBindings = (string)Settings.Default.Properties["releaseTagBindings"].DefaultValue;
                 Settings.Default.findReplace = (string)Settings.Default.Properties["findReplace"].DefaultValue;
                 Settings.Default.tagSubmitIsDestructive = Convert.ToBoolean(Settings.Default.Properties["tagSubmitIsDestructive"].DefaultValue);
                 Settings.Default.separateGenres = Convert.ToBoolean(Settings.Default.Properties["separateGenres"].DefaultValue);
+                Settings.Default.separateFieldsByEntityType = Convert.ToBoolean(Settings.Default.Properties["separateFieldsByEntityType"].DefaultValue);
+                Settings.Default.downloadOnlyUserTags = Convert.ToBoolean(Settings.Default.Properties["downloadOnlyUserTags"].DefaultValue);
+                Settings.Default.recordingGenreField = (string)Settings.Default.Properties["recordingGenreField"].DefaultValue;
+                Settings.Default.releaseGenreField = (string)Settings.Default.Properties["releaseGenreField"].DefaultValue;
+                Settings.Default.releaseGroupGenreField = (string)Settings.Default.Properties["releaseGroupGenreField"].DefaultValue;
+                Settings.Default.recordingTagField = (string)Settings.Default.Properties["recordingTagField"].DefaultValue;
+                Settings.Default.releaseTagField = (string)Settings.Default.Properties["releaseTagField"].DefaultValue;
+                Settings.Default.releaseGroupTagField = (string)Settings.Default.Properties["releaseGroupTagField"].DefaultValue;
+
                 Settings.Default.Save();
                 UpdateFindReplaceTable();
                 UpdateTagModeRadioButtons();

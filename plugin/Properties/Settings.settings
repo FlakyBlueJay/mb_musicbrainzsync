@@ -52,5 +52,8 @@ alt-pop;alternative pop</Value>
     <Setting Name="separateFieldsByEntityType" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="downloadOnlyUserTags" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
