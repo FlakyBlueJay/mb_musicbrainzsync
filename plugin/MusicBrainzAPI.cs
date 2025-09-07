@@ -733,6 +733,7 @@ namespace plugin
                         
                     }
                 }
+
                 combinedTagData.Add(genreField, genres);
             }
 
@@ -743,22 +744,18 @@ namespace plugin
                 {
                     string addedTag = ProcessTagLetterCase(FindReplaceTag(mbzTag.Name, true));
                     // if tag.Name in genres && genre grabbing enabled: break
-                    if (genres.Contains(addedTag))
-                    {
-                        break;
-                    }
-                    else
+                    if (!genres.Contains(addedTag))
                     {
                         int? percentage = null;
                         if (!Settings.Default.downloadOnlyUserTags)
                             percentage = 100 * mbzTag.Count / topTag.Count;
 
-                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, Relative percentage use: {percentage} (Percentage threshold for tags: {Settings.Default.genreCountThreshold})");
+                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, Relative percentage use: {percentage} (Percentage threshold for tags: {Settings.Default.tagCountThreshold})");
                         if ((percentage != null && percentage > Settings.Default.tagCountThreshold) || Settings.Default.downloadOnlyUserTags)
                         {
                             Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, FindReplaced: {addedTag}");
                             tags.Add(addedTag);
-                        } 
+                        }
                     }
                 }
                 combinedTagData.Add(tagField, tags);

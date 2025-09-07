@@ -742,9 +742,9 @@
             this.minGenrePercentLabel.AutoSize = true;
             this.minGenrePercentLabel.Location = new System.Drawing.Point(3, 49);
             this.minGenrePercentLabel.Name = "minGenrePercentLabel";
-            this.minGenrePercentLabel.Size = new System.Drawing.Size(204, 25);
+            this.minGenrePercentLabel.Size = new System.Drawing.Size(217, 25);
             this.minGenrePercentLabel.TabIndex = 9;
-            this.minGenrePercentLabel.Text = "Minimum genre votes:";
+            this.minGenrePercentLabel.Text = "Minimum genre vote %:";
             // 
             // maxNumberGenres
             // 
@@ -788,9 +788,9 @@
             this.minTagPercentLabel.AutoSize = true;
             this.minTagPercentLabel.Location = new System.Drawing.Point(3, 8);
             this.minTagPercentLabel.Name = "minTagPercentLabel";
-            this.minTagPercentLabel.Size = new System.Drawing.Size(181, 25);
+            this.minTagPercentLabel.Size = new System.Drawing.Size(194, 25);
             this.minTagPercentLabel.TabIndex = 8;
-            this.minTagPercentLabel.Text = "Minimum tag votes:";
+            this.minTagPercentLabel.Text = "Minimum tag vote %:";
             // 
             // findReplacePage
             // 
