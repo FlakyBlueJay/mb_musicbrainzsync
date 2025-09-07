@@ -739,7 +739,7 @@ namespace MusicBeePlugin
 
         private async Task GetTagData(string entityType)
         {
-            mbApiInterface.MB_SetBackgroundTaskMessage($"Requesting {entityType.Replace('-', ' ')} ratings from MusicBrainz...");
+            mbApiInterface.MB_SetBackgroundTaskMessage($"Requesting {entityType.Replace('-', ' ')} tags from MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
             {

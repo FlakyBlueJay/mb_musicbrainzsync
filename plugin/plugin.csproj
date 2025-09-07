@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>1.1.0</Version>    <!-- This is the version of the plugin AND DLL -->
+    <Version>1.4.0</Version>    <!-- This is the version of the plugin AND DLL -->
     <AssemblyName>mb_MusicBrainzSync</AssemblyName>    <!-- This is the name of the DLL file -->
     <AssemblyTitle>MusicBrainz Sync</AssemblyTitle>    <!-- This is the title of the plugin AND DLL -->
     <Company>Flaky</Company>    <!-- This is the name of the author -->

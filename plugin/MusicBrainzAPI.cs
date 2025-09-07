@@ -507,48 +507,6 @@ namespace plugin
 
         // # Tag functions
 
-        // function to find and replace tags based on user specified settings.
-        /// <summary>
-        /// Function to find and replace tags based on user-specified settings.<br/><br/>
-        /// This depends on how the user wants to handle tag submission<br/>(e.g. a user's genre tags may not match the tag associated with a genre on MusicBrainz and the user wishes to map the tag to the MusicBrainz version.).<br/>
-        /// A reverse function is also available to convert MusicBrainz tags to user tags when retrieving tags.
-        /// </summary>
-        /// <param name="tag">The tag to find and replace.</param>
-        /// <param name="reverse">If true, reverses the pairing (typically when retrieving the tags from MusicBrainz.)</param>
-        private string FindReplaceTag(string tag, bool reverse = false)
-        {
-            tag = tag.ToLower();
-            if (string.IsNullOrEmpty(Settings.Default.findReplace))
-            {
-                return tag;
-            }
-            else
-            {
-                Dictionary<string, string> findReplace = new Dictionary<string, string>();
-                // convert the findReplace setting into a dictionary for easier.
-                foreach (string line in Settings.Default.findReplace.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
-                {
-                    // split by the first semicolon to get the find and replace values
-                    string[] row = line.Split(new[] { ';' }, 2);
-                    if (row.Length == 2)
-                    {
-                        string findTag = (!reverse) ? row[0] : row[1];
-                        string replaceTag = (!reverse) ? row[1] : row[0];
-                        findReplace.Add(findTag, replaceTag);
-                    }
-                }
-                if (findReplace.ContainsKey(tag))
-                {
-                    return findReplace[tag];
-                }
-                else
-                {
-                    return tag;
-                }
-            }
-                     
-        }
-
         /// <summary>
         /// Generates XML from user-inputted tags and MBIDs and sends that XML to MusicBrainz to add/change on the user's behalf.<br/><br/>
         /// </summary>
@@ -684,19 +642,16 @@ namespace plugin
             return tag;
         }
 
-        private Dictionary<string, List<string>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null, string entityType = "recording")
+        private Tuple<string, string> GetCurrentFields(string entityType)
         {
-            Dictionary<string, List<string>> combinedTagData = new Dictionary<string, List<string>>();
-
-            onlineTagData = onlineTagData.OrderByDescending(tag => tag.Count).ToList();
-            onlineGenreData = onlineGenreData.OrderByDescending(genre => genre.Count).ToList();
-
             // recording is the "default" for when separation by entity type is disabled...
             string genreField = Settings.Default.recordingGenreField;
             string tagField = Settings.Default.recordingTagField;
+            Debug.WriteLine($"[MusicBrainzAPI.GetCurrentFields] sepFieldsByEntityType: {Settings.Default.separateFieldsByEntityType}, entityType: {entityType}");
 
             if (Settings.Default.separateFieldsByEntityType)
             {
+                Debug.WriteLine($"[MusicBrainzAPI.GetCurrentFields] branching into if...");
                 if (entityType == "release-group")
                 {
                     genreField = Settings.Default.releaseGroupGenreField;
@@ -709,17 +664,85 @@ namespace plugin
                 }
                 // ...no need to check recordings as a result.
             }
+            Tuple<string, string> generatedTuple = Tuple.Create(genreField, tagField);
+            return generatedTuple;
+        }
+
+        private List<Tuple<string, string>> ProcessTagFieldAssignment(string tag, string defaultField, string entityType = "recording")
+        {
+            List<Tuple<string, string>> tagsAndFields = new List<Tuple<string, string>>();
+            tag = tag.ToLower();
+            bool matched = false;
+
+            Tuple<string, string> tagFields = GetCurrentFields(entityType);
+            string genreField = tagFields.Item1;
+            string tagField = tagFields.Item2;
+            string[] tagMoveLines = Settings.Default.tagsToMove.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            foreach (string line in Settings.Default.tagsToMove.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+            {
+                // split by the first semicolon to get the find and replace values
+                string[] row = line.Split(new[] { ';' }, 2);
+                if (row.Length == 2)
+                {
+                    if (row[0] == tag)
+                    {
+                        matched = true;
+                        switch (row[1])
+                        {
+                            case "current_genre":
+                                tagsAndFields.Add(Tuple.Create(tag, genreField));
+                                break;
+                            case "current_tag":
+                                tagsAndFields.Add(Tuple.Create(tag, tagField));
+                                break;
+                            case "delete":
+                                break;
+                            default:
+                                tagsAndFields.Add(Tuple.Create(tag, row[1]));
+                                break;
+                        }
+                    }
+                }
+            }
+
+            if (matched == false)
+            {
+                // assume it hasn't been added to tagsToMove
+                tagsAndFields.Add(Tuple.Create(tag, defaultField));
+            }
+            return tagsAndFields;
+        }
+
+        private async Task<Dictionary<string, List<string>>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null, string entityType = "recording")
+        {
+            Dictionary<string, List<string>> combinedTagData = new Dictionary<string, List<string>>();
+
+            onlineTagData = onlineTagData.OrderByDescending(tag => tag.Count).ToList();
+            onlineGenreData = onlineGenreData.OrderByDescending(genre => genre.Count).ToList();
+
+            Tuple<string, string> tagFields = GetCurrentFields(entityType);
+            string genreField = tagFields.Item1;
+            string tagField = tagFields.Item2;
 
             List<string> tags = new List<string>();
             List<string> genres = new List<string>();
 
             if (Settings.Default.separateGenres)
             {
+                List<MusicBrainzTag> genresTrimmed = new List<MusicBrainzTag>(onlineGenreData);
                 Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] {onlineGenreData.Count} ");
                 if (onlineGenreData != null && onlineGenreData.Count > 0)
                 {
                     MusicBrainzTag topGenre = onlineGenreData[0];
-                    foreach (MusicBrainzTag mbzGenre in onlineGenreData)
+                    if (Settings.Default.maxGenres > 0)
+                    {
+                        if (onlineGenreData.Count > Settings.Default.maxGenres)
+                        {
+                            onlineGenreData.RemoveRange(Settings.Default.maxTags, onlineGenreData.Count - Settings.Default.maxGenres);
+                        }
+                    }
+
+                    foreach (MusicBrainzTag mbzGenre in genresTrimmed)
                     {
                         int? percentage = null;
                         if (!Settings.Default.downloadOnlyUserTags)
@@ -729,34 +752,41 @@ namespace plugin
                         {
                             string addedGenre = ProcessTagLetterCase(FindReplaceTag(mbzGenre.Name, true));
                             Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzGenre.Name}, FindReplaced: {FindReplaceTag(mbzGenre.Name, true)}");
-                            genres.Add(addedGenre);
+                            List<Tuple<string, string>> tagFieldAssignment = ProcessTagFieldAssignment(addedGenre, genreField, entityType);
+                            foreach (Tuple<string, string> tagFieldPair in tagFieldAssignment)
+                            {
+                                string tag = tagFieldPair.Item1;
+                                string field = tagFieldPair.Item2;
+                                if (combinedTagData.ContainsKey(field))
+                                    combinedTagData[field].Add(addedGenre);
+                                else
+                                    combinedTagData.Add(field, new List<string> { addedGenre });
+                            }
                         }
                         
                     }
                 }
 
                 // a clone of the genre list is used here so the original list can be used for reference for the tag section.
-                List<string> genresTrimmed = new List<string>(genres);
-                if (Settings.Default.maxGenres > 0) {
-                    if (genres.Count > Settings.Default.maxGenres)
-                    {
-                        genresTrimmed.RemoveRange(Settings.Default.maxGenres, genres.Count - Settings.Default.maxGenres);
-                    }
-                }
-                genresTrimmed.Sort(StringComparer.CurrentCultureIgnoreCase);
-                combinedTagData.Add(genreField, genresTrimmed);
+                // combinedTagData.Add(genreField, genresTrimmed);
             }
 
             if (onlineTagData != null && onlineTagData.Count > 0)
             {
                 MusicBrainzTag topTag = onlineTagData[0];
+                if (Settings.Default.maxTags > 0)
+                {
+                    if (onlineTagData.Count > Settings.Default.maxTags)
+                    {
+                        onlineTagData.RemoveRange(Settings.Default.maxTags, onlineTagData.Count - Settings.Default.maxGenres);
+                    }
+                }
                 foreach (MusicBrainzTag mbzTag in onlineTagData)
                 {
-                    string addedTag = FindReplaceTag(mbzTag.Name, true);
-                    Debug.WriteLine($"[MusicBrainz ProcessOnlineTags] {addedTag} - is in genres: {genres.Contains(addedTag)} ");
-                    if (!onlineGenreData.Any(tag => tag.Name == addedTag))
+                    
+                    if (!onlineGenreData.Any(tg => tg.Name == mbzTag.Name))
                     {
-                        
+                        string addedTag = FindReplaceTag(mbzTag.Name, true);
                         int? percentage = null;
                         if (!Settings.Default.downloadOnlyUserTags)
                             percentage = 100 * mbzTag.Count / topTag.Count;
@@ -766,25 +796,69 @@ namespace plugin
                         {
                             addedTag = ProcessTagLetterCase(addedTag);
                             Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, FindReplaced: {addedTag}");
-                            tags.Add(addedTag);
+                            List<Tuple<string, string>> tagFieldAssignment = ProcessTagFieldAssignment(addedTag, tagField, entityType);
+                            foreach (Tuple<string, string> tagFieldPair in tagFieldAssignment)
+                            {
+                                string tag = tagFieldPair.Item1;
+                                string field = tagFieldPair.Item2;
+                                if (combinedTagData.ContainsKey(field) && !combinedTagData[genreField].Contains(addedTag))
+                                    combinedTagData[field].Add(addedTag);
+                                else
+                                    combinedTagData.Add(field, new List<string> { addedTag });
+                            }
                         }
                     }
                 }
-                if (Settings.Default.maxTags > 0)
-                {
-                    if (tags.Count > Settings.Default.maxTags)
-                    {
-                        tags.RemoveRange(Settings.Default.maxTags, tags.Count - Settings.Default.maxGenres);
-                    }
-                    
-                }
-                tags.Sort(StringComparer.CurrentCultureIgnoreCase);
-                combinedTagData.Add(tagField, tags);
             }
 
+            foreach (string key in combinedTagData.Keys)
+            {
+                combinedTagData[key].Sort(StringComparer.CurrentCultureIgnoreCase);
+            }
             // TODO check against other entity types and "advanced" config
             return combinedTagData;
         }
 
+
+        // function to find and replace tags based on user specified settings.
+        /// <summary>
+        /// Function to find and replace tags based on user-specified settings.<br/><br/>
+        /// This depends on how the user wants to handle tag submission<br/>(e.g. a user's genre tags may not match the tag associated with a genre on MusicBrainz and the user wishes to map the tag to the MusicBrainz version.).<br/>
+        /// A reverse function is also available to convert MusicBrainz tags to user tags when retrieving tags.
+        /// </summary>
+        /// <param name="tag">The tag to find and replace.</param>
+        /// <param name="reverse">If true, reverses the pairing (typically when retrieving the tags from MusicBrainz.)</param>
+        private string FindReplaceTag(string tag, bool reverse = false)
+        {
+            tag = tag.ToLower();
+            if (string.IsNullOrEmpty(Settings.Default.findReplace))
+            {
+                return tag;
+            }
+            else
+            {
+                Dictionary<string, string> findReplace = new Dictionary<string, string>();
+                // convert the findReplace setting into a dictionary for easier.
+                foreach (string line in Settings.Default.findReplace.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                {
+                    // split by the first semicolon to get the find and replace values
+                    string[] row = line.Split(new[] { ';' }, 2);
+                    if (row.Length == 2)
+                    {
+                        string findTag = (!reverse) ? row[0] : row[1];
+                        string replaceTag = (!reverse) ? row[1] : row[0];
+                        findReplace.Add(findTag, replaceTag);
+                    }
+                }
+                if (findReplace.ContainsKey(tag))
+                {
+                    return findReplace[tag];
+                }
+                else
+                {
+                    return tag;
+                }
+            }
+        }
     }
 }
