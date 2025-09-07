@@ -671,6 +671,7 @@ namespace plugin
             switch (Settings.Default.letterCaseMode)
             {
                 case 2: // lower case
+                    // MusicBrainz sends tags in lowercase so no need to do anything.
                     break;
                 case 1: // sentence case
                     tag = tag[0].ToString().ToUpper() + tag.Substring(1);
@@ -734,7 +735,16 @@ namespace plugin
                     }
                 }
 
-                combinedTagData.Add(genreField, genres);
+                // a clone of the genre list is used here so the original list can be used for reference for the tag section.
+                List<string> genresTrimmed = new List<string>(genres);
+                if (Settings.Default.maxGenres > 0) {
+                    if (genres.Count > Settings.Default.maxGenres)
+                    {
+                        genresTrimmed.RemoveRange(Settings.Default.maxGenres, genres.Count - Settings.Default.maxGenres);
+                    }
+                }
+                genresTrimmed.Sort(StringComparer.CurrentCultureIgnoreCase);
+                combinedTagData.Add(genreField, genresTrimmed);
             }
 
             if (onlineTagData != null && onlineTagData.Count > 0)
@@ -742,10 +752,11 @@ namespace plugin
                 MusicBrainzTag topTag = onlineTagData[0];
                 foreach (MusicBrainzTag mbzTag in onlineTagData)
                 {
-                    string addedTag = ProcessTagLetterCase(FindReplaceTag(mbzTag.Name, true));
-                    // if tag.Name in genres && genre grabbing enabled: break
-                    if (!genres.Contains(addedTag))
+                    string addedTag = FindReplaceTag(mbzTag.Name, true);
+                    Debug.WriteLine($"[MusicBrainz ProcessOnlineTags] {addedTag} - is in genres: {genres.Contains(addedTag)} ");
+                    if (!onlineGenreData.Any(tag => tag.Name == addedTag))
                     {
+                        
                         int? percentage = null;
                         if (!Settings.Default.downloadOnlyUserTags)
                             percentage = 100 * mbzTag.Count / topTag.Count;
@@ -753,11 +764,21 @@ namespace plugin
                         Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, Relative percentage use: {percentage} (Percentage threshold for tags: {Settings.Default.tagCountThreshold})");
                         if ((percentage != null && percentage > Settings.Default.tagCountThreshold) || Settings.Default.downloadOnlyUserTags)
                         {
+                            addedTag = ProcessTagLetterCase(addedTag);
                             Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, FindReplaced: {addedTag}");
                             tags.Add(addedTag);
                         }
                     }
                 }
+                if (Settings.Default.maxTags > 0)
+                {
+                    if (tags.Count > Settings.Default.maxTags)
+                    {
+                        tags.RemoveRange(Settings.Default.maxTags, tags.Count - Settings.Default.maxGenres);
+                    }
+                    
+                }
+                tags.Sort(StringComparer.CurrentCultureIgnoreCase);
                 combinedTagData.Add(tagField, tags);
             }
 
