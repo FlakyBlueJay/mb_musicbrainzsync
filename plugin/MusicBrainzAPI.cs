@@ -14,6 +14,7 @@ namespace plugin
     using plugin.Properties;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Globalization;
     using static MusicBeePlugin.Plugin;
 
     public class MusicBrainzAPI
@@ -664,6 +665,23 @@ namespace plugin
             return mbidTags;
         }
 
+        private string ProcessTagLetterCase(string tag)
+        {
+            switch (Settings.Default.letterCaseMode)
+            {
+                case 2: // lower case
+                    break;
+                case 1: // sentence case
+                    tag = tag[0].ToString().ToUpper() + tag.Substring(1);
+                    break;
+                default: // default, title case
+                    TextInfo ti = CultureInfo.CurrentCulture.TextInfo;
+                    tag = ti.ToTitleCase(tag);
+                    break;
+            }
+            return tag;
+        }
+
         private Dictionary<string, List<string>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null, string entityType = "recording")
         {
             Dictionary<string, List<string>> combinedTagData = new Dictionary<string, List<string>>();
@@ -696,8 +714,9 @@ namespace plugin
                 {
                     foreach (MusicBrainzTag mbzGenre in onlineGenreData)
                     {
+                        string addedGenre = ProcessTagLetterCase(FindReplaceTag(mbzGenre.Name, true));
                         Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzGenre.Name}, FindReplaced: {FindReplaceTag(mbzGenre.Name, true)}");
-                        genres.Add(FindReplaceTag(mbzGenre.Name, true));
+                        genres.Add(addedGenre);
                     }
                 }
                 combinedTagData.Add(genreField, genres);
@@ -715,6 +734,7 @@ namespace plugin
                     }
                     else
                     {
+                        editedTag = ProcessTagLetterCase(FindReplaceTag(editedTag));
                         Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, FindReplaced: {editedTag}");
                         tags.Add(editedTag);
                     }
