@@ -47,8 +47,7 @@
             this.mainTabControl = new System.Windows.Forms.TabControl();
             this.tagBindingPage = new System.Windows.Forms.TabPage();
             this.tagBindingLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.tagDownloadTab = new System.Windows.Forms.TabPage();
-            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.downloadMainLayout = new System.Windows.Forms.FlowLayoutPanel();
             this.formattingTitle = new System.Windows.Forms.Label();
             this.letterCasingLabel = new System.Windows.Forms.Label();
             this.letterCasingComboBox = new System.Windows.Forms.ComboBox();
@@ -57,9 +56,8 @@
             this.genreConfigTitle = new System.Windows.Forms.Label();
             this.genreDownloadCheckBox = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.fieldConfigTitle = new System.Windows.Forms.Label();
             this.sepByEntityCheckBox = new System.Windows.Forms.CheckBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.sepEntityNote = new System.Windows.Forms.Label();
             this.recordingGenreLabel = new System.Windows.Forms.Label();
             this.recordingGenreComboBox = new System.Windows.Forms.ComboBox();
             this.recordingTagLabel = new System.Windows.Forms.Label();
@@ -74,7 +72,6 @@
             this.releaseGroupGenreComboBox = new System.Windows.Forms.ComboBox();
             this.releaseGroupTagLabel = new System.Windows.Forms.Label();
             this.releaseGroupTagComboBox = new System.Windows.Forms.ComboBox();
-            this.tagThresholdTitle = new System.Windows.Forms.Label();
             this.thresholdNote = new System.Windows.Forms.Label();
             this.thresholdTableLayout = new System.Windows.Forms.TableLayoutPanel();
             this.maxGenreLabel = new System.Windows.Forms.Label();
@@ -102,6 +99,12 @@
             this.resetDescription = new System.Windows.Forms.Label();
             this.resetLink = new System.Windows.Forms.LinkLabel();
             this.mainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.tagDownloadPage = new System.Windows.Forms.TabPage();
+            this.downloadTabControl = new System.Windows.Forms.TabControl();
+            this.downloadGeneralTab = new System.Windows.Forms.TabPage();
+            this.fieldAssignmentTab = new System.Windows.Forms.TabPage();
+            this.fieldFlowLayout = new System.Windows.Forms.FlowLayoutPanel();
+            this.tagThresholdTitle = new System.Windows.Forms.Label();
             this.tagGroupBox.SuspendLayout();
             this.tagTabControl.SuspendLayout();
             this.trackTab.SuspendLayout();
@@ -111,8 +114,7 @@
             this.mainTabControl.SuspendLayout();
             this.tagBindingPage.SuspendLayout();
             this.tagBindingLayoutPanel.SuspendLayout();
-            this.tagDownloadTab.SuspendLayout();
-            this.flowLayoutPanel2.SuspendLayout();
+            this.downloadMainLayout.SuspendLayout();
             this.otherTypePanel.SuspendLayout();
             this.flowLayoutPanel3.SuspendLayout();
             this.thresholdTableLayout.SuspendLayout();
@@ -125,6 +127,11 @@
             this.otherSettingsPage.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.mainLayoutPanel.SuspendLayout();
+            this.tagDownloadPage.SuspendLayout();
+            this.downloadTabControl.SuspendLayout();
+            this.downloadGeneralTab.SuspendLayout();
+            this.fieldAssignmentTab.SuspendLayout();
+            this.fieldFlowLayout.SuspendLayout();
             this.SuspendLayout();
             // 
             // separateCheckBox
@@ -309,7 +316,7 @@
             // mainTabControl
             // 
             this.mainTabControl.Controls.Add(this.tagBindingPage);
-            this.mainTabControl.Controls.Add(this.tagDownloadTab);
+            this.mainTabControl.Controls.Add(this.tagDownloadPage);
             this.mainTabControl.Controls.Add(this.findReplacePage);
             this.mainTabControl.Controls.Add(this.otherSettingsPage);
             this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -353,48 +360,28 @@
             this.tagBindingLayoutPanel.Size = new System.Drawing.Size(611, 788);
             this.tagBindingLayoutPanel.TabIndex = 1;
             // 
-            // tagDownloadTab
+            // downloadMainLayout
             // 
-            this.tagDownloadTab.Controls.Add(this.flowLayoutPanel2);
-            this.tagDownloadTab.Location = new System.Drawing.Point(4, 33);
-            this.tagDownloadTab.Margin = new System.Windows.Forms.Padding(4);
-            this.tagDownloadTab.Name = "tagDownloadTab";
-            this.tagDownloadTab.Padding = new System.Windows.Forms.Padding(4);
-            this.tagDownloadTab.Size = new System.Drawing.Size(623, 800);
-            this.tagDownloadTab.TabIndex = 3;
-            this.tagDownloadTab.Text = "Tag Downloading";
-            this.tagDownloadTab.UseVisualStyleBackColor = true;
-            // 
-            // flowLayoutPanel2
-            // 
-            this.flowLayoutPanel2.AutoScroll = true;
-            this.flowLayoutPanel2.Controls.Add(this.formattingTitle);
-            this.flowLayoutPanel2.Controls.Add(this.letterCasingLabel);
-            this.flowLayoutPanel2.Controls.Add(this.letterCasingComboBox);
-            this.flowLayoutPanel2.Controls.Add(this.userTagConfigTitle);
-            this.flowLayoutPanel2.Controls.Add(this.userTagsCheckBox);
-            this.flowLayoutPanel2.Controls.Add(this.genreConfigTitle);
-            this.flowLayoutPanel2.Controls.Add(this.genreDownloadCheckBox);
-            this.flowLayoutPanel2.Controls.Add(this.label3);
-            this.flowLayoutPanel2.Controls.Add(this.fieldConfigTitle);
-            this.flowLayoutPanel2.Controls.Add(this.sepByEntityCheckBox);
-            this.flowLayoutPanel2.Controls.Add(this.label1);
-            this.flowLayoutPanel2.Controls.Add(this.recordingGenreLabel);
-            this.flowLayoutPanel2.Controls.Add(this.recordingGenreComboBox);
-            this.flowLayoutPanel2.Controls.Add(this.recordingTagLabel);
-            this.flowLayoutPanel2.Controls.Add(this.recordingTagComboBox);
-            this.flowLayoutPanel2.Controls.Add(this.otherTypePanel);
-            this.flowLayoutPanel2.Controls.Add(this.tagThresholdTitle);
-            this.flowLayoutPanel2.Controls.Add(this.thresholdNote);
-            this.flowLayoutPanel2.Controls.Add(this.thresholdTableLayout);
-            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(4, 4);
-            this.flowLayoutPanel2.Margin = new System.Windows.Forms.Padding(4);
-            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(615, 792);
-            this.flowLayoutPanel2.TabIndex = 0;
-            this.flowLayoutPanel2.WrapContents = false;
+            this.downloadMainLayout.AutoScroll = true;
+            this.downloadMainLayout.Controls.Add(this.formattingTitle);
+            this.downloadMainLayout.Controls.Add(this.letterCasingLabel);
+            this.downloadMainLayout.Controls.Add(this.letterCasingComboBox);
+            this.downloadMainLayout.Controls.Add(this.userTagConfigTitle);
+            this.downloadMainLayout.Controls.Add(this.userTagsCheckBox);
+            this.downloadMainLayout.Controls.Add(this.genreConfigTitle);
+            this.downloadMainLayout.Controls.Add(this.genreDownloadCheckBox);
+            this.downloadMainLayout.Controls.Add(this.label3);
+            this.downloadMainLayout.Controls.Add(this.tagThresholdTitle);
+            this.downloadMainLayout.Controls.Add(this.thresholdNote);
+            this.downloadMainLayout.Controls.Add(this.thresholdTableLayout);
+            this.downloadMainLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.downloadMainLayout.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.downloadMainLayout.Location = new System.Drawing.Point(3, 3);
+            this.downloadMainLayout.Margin = new System.Windows.Forms.Padding(4);
+            this.downloadMainLayout.Name = "downloadMainLayout";
+            this.downloadMainLayout.Size = new System.Drawing.Size(603, 751);
+            this.downloadMainLayout.TabIndex = 0;
+            this.downloadMainLayout.WrapContents = false;
             // 
             // formattingTitle
             // 
@@ -489,21 +476,10 @@
             this.label3.Text = "This will ask MusicBrainz for genres as well as tags, and will separate genres an" +
     "d regular tags upon retrieval.\r\n";
             // 
-            // fieldConfigTitle
-            // 
-            this.fieldConfigTitle.AutoSize = true;
-            this.fieldConfigTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.fieldConfigTitle.Location = new System.Drawing.Point(4, 275);
-            this.fieldConfigTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.fieldConfigTitle.Name = "fieldConfigTitle";
-            this.fieldConfigTitle.Size = new System.Drawing.Size(212, 25);
-            this.fieldConfigTitle.TabIndex = 4;
-            this.fieldConfigTitle.Text = "Tag field assignment";
-            // 
             // sepByEntityCheckBox
             // 
             this.sepByEntityCheckBox.AutoSize = true;
-            this.sepByEntityCheckBox.Location = new System.Drawing.Point(4, 304);
+            this.sepByEntityCheckBox.Location = new System.Drawing.Point(4, 4);
             this.sepByEntityCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.sepByEntityCheckBox.Name = "sepByEntityCheckBox";
             this.sepByEntityCheckBox.Size = new System.Drawing.Size(496, 29);
@@ -512,22 +488,22 @@
             this.sepByEntityCheckBox.UseVisualStyleBackColor = true;
             this.sepByEntityCheckBox.CheckedChanged += new System.EventHandler(this.sepByEntityCheckBox_CheckedChanged);
             // 
-            // label1
+            // sepEntityNote
             // 
-            this.label1.AutoSize = true;
-            this.label1.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label1.Location = new System.Drawing.Point(6, 337);
-            this.label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label1.Name = "label1";
-            this.label1.Padding = new System.Windows.Forms.Padding(0, 0, 0, 11);
-            this.label1.Size = new System.Drawing.Size(547, 61);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Useful if you use separate tags for whole releases (e.g. album genres)";
+            this.sepEntityNote.AutoSize = true;
+            this.sepEntityNote.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.sepEntityNote.Location = new System.Drawing.Point(6, 37);
+            this.sepEntityNote.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.sepEntityNote.Name = "sepEntityNote";
+            this.sepEntityNote.Padding = new System.Windows.Forms.Padding(0, 0, 0, 11);
+            this.sepEntityNote.Size = new System.Drawing.Size(547, 61);
+            this.sepEntityNote.TabIndex = 2;
+            this.sepEntityNote.Text = "Useful if you use separate tags for whole releases (e.g. album genres)";
             // 
             // recordingGenreLabel
             // 
             this.recordingGenreLabel.AutoSize = true;
-            this.recordingGenreLabel.Location = new System.Drawing.Point(4, 398);
+            this.recordingGenreLabel.Location = new System.Drawing.Point(4, 98);
             this.recordingGenreLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.recordingGenreLabel.Name = "recordingGenreLabel";
             this.recordingGenreLabel.Size = new System.Drawing.Size(192, 25);
@@ -537,7 +513,7 @@
             // recordingGenreComboBox
             // 
             this.recordingGenreComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.recordingGenreComboBox.Location = new System.Drawing.Point(4, 427);
+            this.recordingGenreComboBox.Location = new System.Drawing.Point(4, 127);
             this.recordingGenreComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.recordingGenreComboBox.Name = "recordingGenreComboBox";
             this.recordingGenreComboBox.Size = new System.Drawing.Size(281, 32);
@@ -546,7 +522,7 @@
             // recordingTagLabel
             // 
             this.recordingTagLabel.AutoSize = true;
-            this.recordingTagLabel.Location = new System.Drawing.Point(4, 463);
+            this.recordingTagLabel.Location = new System.Drawing.Point(4, 163);
             this.recordingTagLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.recordingTagLabel.Name = "recordingTagLabel";
             this.recordingTagLabel.Size = new System.Drawing.Size(224, 25);
@@ -557,7 +533,7 @@
             // 
             this.recordingTagComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.recordingTagComboBox.FormattingEnabled = true;
-            this.recordingTagComboBox.Location = new System.Drawing.Point(4, 492);
+            this.recordingTagComboBox.Location = new System.Drawing.Point(4, 192);
             this.recordingTagComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.recordingTagComboBox.Name = "recordingTagComboBox";
             this.recordingTagComboBox.Size = new System.Drawing.Size(281, 32);
@@ -567,10 +543,10 @@
             // 
             this.otherTypePanel.Controls.Add(this.flowLayoutPanel3);
             this.otherTypePanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.otherTypePanel.Location = new System.Drawing.Point(4, 532);
+            this.otherTypePanel.Location = new System.Drawing.Point(4, 232);
             this.otherTypePanel.Margin = new System.Windows.Forms.Padding(4);
             this.otherTypePanel.Name = "otherTypePanel";
-            this.otherTypePanel.Size = new System.Drawing.Size(597, 294);
+            this.otherTypePanel.Size = new System.Drawing.Size(551, 294);
             this.otherTypePanel.TabIndex = 22;
             // 
             // flowLayoutPanel3
@@ -588,7 +564,7 @@
             this.flowLayoutPanel3.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel3.Margin = new System.Windows.Forms.Padding(4);
             this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(597, 294);
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(551, 294);
             this.flowLayoutPanel3.TabIndex = 0;
             // 
             // releaseGenreLabel
@@ -669,24 +645,13 @@
             this.releaseGroupTagComboBox.Size = new System.Drawing.Size(281, 32);
             this.releaseGroupTagComboBox.TabIndex = 19;
             // 
-            // tagThresholdTitle
-            // 
-            this.tagThresholdTitle.AutoSize = true;
-            this.tagThresholdTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tagThresholdTitle.Location = new System.Drawing.Point(4, 830);
-            this.tagThresholdTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.tagThresholdTitle.Name = "tagThresholdTitle";
-            this.tagThresholdTitle.Size = new System.Drawing.Size(156, 25);
-            this.tagThresholdTitle.TabIndex = 26;
-            this.tagThresholdTitle.Text = "Tag thresholds";
-            // 
             // thresholdNote
             // 
             this.thresholdNote.AutoSize = true;
-            this.thresholdNote.Location = new System.Drawing.Point(6, 855);
+            this.thresholdNote.Location = new System.Drawing.Point(6, 300);
             this.thresholdNote.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.thresholdNote.Name = "thresholdNote";
-            this.thresholdNote.Size = new System.Drawing.Size(593, 50);
+            this.thresholdNote.Size = new System.Drawing.Size(588, 50);
             this.thresholdNote.TabIndex = 28;
             this.thresholdNote.Text = "This will be ignored when querying for user tags. Applying 0 means no limits.";
             // 
@@ -704,7 +669,7 @@
             this.thresholdTableLayout.Controls.Add(this.minimalGenreThreshold, 1, 1);
             this.thresholdTableLayout.Controls.Add(this.minimalTagThreshold, 1, 0);
             this.thresholdTableLayout.Controls.Add(this.minTagPercentLabel, 0, 0);
-            this.thresholdTableLayout.Location = new System.Drawing.Point(6, 911);
+            this.thresholdTableLayout.Location = new System.Drawing.Point(6, 356);
             this.thresholdTableLayout.Margin = new System.Windows.Forms.Padding(6);
             this.thresholdTableLayout.Name = "thresholdTableLayout";
             this.thresholdTableLayout.RowCount = 4;
@@ -1002,6 +967,77 @@
             this.mainLayoutPanel.Size = new System.Drawing.Size(643, 965);
             this.mainLayoutPanel.TabIndex = 6;
             // 
+            // tagDownloadPage
+            // 
+            this.tagDownloadPage.Controls.Add(this.downloadTabControl);
+            this.tagDownloadPage.Location = new System.Drawing.Point(4, 33);
+            this.tagDownloadPage.Name = "tagDownloadPage";
+            this.tagDownloadPage.Padding = new System.Windows.Forms.Padding(3);
+            this.tagDownloadPage.Size = new System.Drawing.Size(623, 800);
+            this.tagDownloadPage.TabIndex = 4;
+            this.tagDownloadPage.Text = "Tag Downloading";
+            this.tagDownloadPage.UseVisualStyleBackColor = true;
+            // 
+            // downloadTabControl
+            // 
+            this.downloadTabControl.Controls.Add(this.downloadGeneralTab);
+            this.downloadTabControl.Controls.Add(this.fieldAssignmentTab);
+            this.downloadTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.downloadTabControl.Location = new System.Drawing.Point(3, 3);
+            this.downloadTabControl.Name = "downloadTabControl";
+            this.downloadTabControl.SelectedIndex = 0;
+            this.downloadTabControl.Size = new System.Drawing.Size(617, 794);
+            this.downloadTabControl.TabIndex = 0;
+            // 
+            // downloadGeneralTab
+            // 
+            this.downloadGeneralTab.Controls.Add(this.downloadMainLayout);
+            this.downloadGeneralTab.Location = new System.Drawing.Point(4, 33);
+            this.downloadGeneralTab.Name = "downloadGeneralTab";
+            this.downloadGeneralTab.Padding = new System.Windows.Forms.Padding(3);
+            this.downloadGeneralTab.Size = new System.Drawing.Size(609, 757);
+            this.downloadGeneralTab.TabIndex = 0;
+            this.downloadGeneralTab.Text = "General";
+            this.downloadGeneralTab.UseVisualStyleBackColor = true;
+            // 
+            // fieldAssignmentTab
+            // 
+            this.fieldAssignmentTab.Controls.Add(this.fieldFlowLayout);
+            this.fieldAssignmentTab.Location = new System.Drawing.Point(4, 33);
+            this.fieldAssignmentTab.Name = "fieldAssignmentTab";
+            this.fieldAssignmentTab.Padding = new System.Windows.Forms.Padding(3);
+            this.fieldAssignmentTab.Size = new System.Drawing.Size(609, 757);
+            this.fieldAssignmentTab.TabIndex = 1;
+            this.fieldAssignmentTab.Text = "Field Assignment";
+            this.fieldAssignmentTab.UseVisualStyleBackColor = true;
+            // 
+            // fieldFlowLayout
+            // 
+            this.fieldFlowLayout.Controls.Add(this.sepByEntityCheckBox);
+            this.fieldFlowLayout.Controls.Add(this.sepEntityNote);
+            this.fieldFlowLayout.Controls.Add(this.recordingGenreLabel);
+            this.fieldFlowLayout.Controls.Add(this.recordingGenreComboBox);
+            this.fieldFlowLayout.Controls.Add(this.recordingTagLabel);
+            this.fieldFlowLayout.Controls.Add(this.recordingTagComboBox);
+            this.fieldFlowLayout.Controls.Add(this.otherTypePanel);
+            this.fieldFlowLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.fieldFlowLayout.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.fieldFlowLayout.Location = new System.Drawing.Point(3, 3);
+            this.fieldFlowLayout.Name = "fieldFlowLayout";
+            this.fieldFlowLayout.Size = new System.Drawing.Size(603, 751);
+            this.fieldFlowLayout.TabIndex = 0;
+            // 
+            // tagThresholdTitle
+            // 
+            this.tagThresholdTitle.AutoSize = true;
+            this.tagThresholdTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tagThresholdTitle.Location = new System.Drawing.Point(4, 275);
+            this.tagThresholdTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.tagThresholdTitle.Name = "tagThresholdTitle";
+            this.tagThresholdTitle.Size = new System.Drawing.Size(156, 25);
+            this.tagThresholdTitle.TabIndex = 26;
+            this.tagThresholdTitle.Text = "Tag thresholds";
+            // 
             // TagBindingConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
@@ -1030,9 +1066,8 @@
             this.tagBindingPage.PerformLayout();
             this.tagBindingLayoutPanel.ResumeLayout(false);
             this.tagBindingLayoutPanel.PerformLayout();
-            this.tagDownloadTab.ResumeLayout(false);
-            this.flowLayoutPanel2.ResumeLayout(false);
-            this.flowLayoutPanel2.PerformLayout();
+            this.downloadMainLayout.ResumeLayout(false);
+            this.downloadMainLayout.PerformLayout();
             this.otherTypePanel.ResumeLayout(false);
             this.flowLayoutPanel3.ResumeLayout(false);
             this.flowLayoutPanel3.PerformLayout();
@@ -1050,6 +1085,12 @@
             this.flowLayoutPanel1.PerformLayout();
             this.mainLayoutPanel.ResumeLayout(false);
             this.mainLayoutPanel.PerformLayout();
+            this.tagDownloadPage.ResumeLayout(false);
+            this.downloadTabControl.ResumeLayout(false);
+            this.downloadGeneralTab.ResumeLayout(false);
+            this.fieldAssignmentTab.ResumeLayout(false);
+            this.fieldFlowLayout.ResumeLayout(false);
+            this.fieldFlowLayout.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1090,14 +1131,12 @@
         private System.Windows.Forms.Label resetTitle;
         private System.Windows.Forms.Label resetDescription;
         private System.Windows.Forms.LinkLabel resetLink;
-        private System.Windows.Forms.TabPage tagDownloadTab;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.FlowLayoutPanel downloadMainLayout;
         private System.Windows.Forms.CheckBox sepByEntityCheckBox;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label sepEntityNote;
         private System.Windows.Forms.Label genreConfigTitle;
         private System.Windows.Forms.CheckBox genreDownloadCheckBox;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label fieldConfigTitle;
         private System.Windows.Forms.Label recordingTagLabel;
         private System.Windows.Forms.ComboBox recordingTagComboBox;
         private System.Windows.Forms.Label recordingGenreLabel;
@@ -1114,7 +1153,6 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel3;
         private System.Windows.Forms.Label userTagConfigTitle;
         private System.Windows.Forms.CheckBox userTagsCheckBox;
-        private System.Windows.Forms.Label tagThresholdTitle;
         private System.Windows.Forms.TableLayoutPanel thresholdTableLayout;
         private System.Windows.Forms.Label thresholdNote;
         private System.Windows.Forms.NumericUpDown maxNumberGenres;
@@ -1128,5 +1166,11 @@
         private System.Windows.Forms.Label maxGenreLabel;
         private System.Windows.Forms.Label maxTagLabel;
         private System.Windows.Forms.Label minGenrePercentLabel;
+        private System.Windows.Forms.TabPage tagDownloadPage;
+        private System.Windows.Forms.TabControl downloadTabControl;
+        private System.Windows.Forms.TabPage downloadGeneralTab;
+        private System.Windows.Forms.TabPage fieldAssignmentTab;
+        private System.Windows.Forms.FlowLayoutPanel fieldFlowLayout;
+        private System.Windows.Forms.Label tagThresholdTitle;
     }
 }
