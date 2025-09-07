@@ -15,6 +15,7 @@ namespace plugin
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
+    using System.Linq;
     using static MusicBeePlugin.Plugin;
 
     public class MusicBrainzAPI
@@ -686,6 +687,9 @@ namespace plugin
         {
             Dictionary<string, List<string>> combinedTagData = new Dictionary<string, List<string>>();
 
+            onlineTagData = onlineTagData.OrderByDescending(tag => tag.Count).ToList();
+            onlineGenreData = onlineGenreData.OrderByDescending(genre => genre.Count).ToList();
+
             // recording is the "default" for when separation by entity type is disabled...
             string genreField = Settings.Default.recordingGenreField;
             string tagField = Settings.Default.recordingTagField;
@@ -710,33 +714,51 @@ namespace plugin
 
             if (Settings.Default.separateGenres)
             {
-                if (onlineGenreData.Count > 0 || onlineGenreData != null)
+                Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] {onlineGenreData.Count} ");
+                if (onlineGenreData != null && onlineGenreData.Count > 0)
                 {
+                    MusicBrainzTag topGenre = onlineGenreData[0];
                     foreach (MusicBrainzTag mbzGenre in onlineGenreData)
                     {
-                        string addedGenre = ProcessTagLetterCase(FindReplaceTag(mbzGenre.Name, true));
-                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzGenre.Name}, FindReplaced: {FindReplaceTag(mbzGenre.Name, true)}");
-                        genres.Add(addedGenre);
+                        int? percentage = null;
+                        if (!Settings.Default.downloadOnlyUserTags)
+                            percentage = 100 * mbzGenre.Count / topGenre.Count;
+                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzGenre.Name}, Relative percentage use: {percentage} (Percentage threshold for genres: {Settings.Default.genreCountThreshold})");
+                        if ((percentage != null && percentage > Settings.Default.genreCountThreshold) || Settings.Default.downloadOnlyUserTags)
+                        {
+                            string addedGenre = ProcessTagLetterCase(FindReplaceTag(mbzGenre.Name, true));
+                            Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzGenre.Name}, FindReplaced: {FindReplaceTag(mbzGenre.Name, true)}");
+                            genres.Add(addedGenre);
+                        }
+                        
                     }
                 }
                 combinedTagData.Add(genreField, genres);
             }
 
-            if (onlineTagData.Count > 0)
+            if (onlineTagData != null && onlineTagData.Count > 0)
             {
+                MusicBrainzTag topTag = onlineTagData[0];
                 foreach (MusicBrainzTag mbzTag in onlineTagData)
                 {
-                    string editedTag = FindReplaceTag(mbzTag.Name, true);
+                    string addedTag = ProcessTagLetterCase(FindReplaceTag(mbzTag.Name, true));
                     // if tag.Name in genres && genre grabbing enabled: break
-                    if (genres.Contains(editedTag))
+                    if (genres.Contains(addedTag))
                     {
                         break;
                     }
                     else
                     {
-                        editedTag = ProcessTagLetterCase(FindReplaceTag(editedTag));
-                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, FindReplaced: {editedTag}");
-                        tags.Add(editedTag);
+                        int? percentage = null;
+                        if (!Settings.Default.downloadOnlyUserTags)
+                            percentage = 100 * mbzTag.Count / topTag.Count;
+
+                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzTag.Name}, Relative percentage use: {percentage} (Percentage threshold for tags: {Settings.Default.genreCountThreshold})");
+                        if ((percentage != null && percentage > Settings.Default.tagCountThreshold) || Settings.Default.downloadOnlyUserTags)
+                        {
+                            Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, FindReplaced: {addedTag}");
+                            tags.Add(addedTag);
+                        } 
                     }
                 }
                 combinedTagData.Add(tagField, tags);

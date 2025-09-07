@@ -55,10 +55,10 @@ alt-pop;alternative pop</Value>
     <Setting Name="downloadOnlyUserTags" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="tagThresholdPercentage" Type="System.Int32" Scope="User">
+    <Setting Name="tagCountThreshold" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">50</Value>
     </Setting>
-    <Setting Name="genreThresholdPercentage" Type="System.Int32" Scope="User">
+    <Setting Name="genreCountThreshold" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">50</Value>
     </Setting>
     <Setting Name="maxTags" Type="System.Int32" Scope="User">

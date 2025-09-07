@@ -230,24 +230,24 @@ namespace plugin.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public int tagThresholdPercentage {
+        public int tagCountThreshold {
             get {
-                return ((int)(this["tagThresholdPercentage"]));
+                return ((int)(this["tagCountThreshold"]));
             }
             set {
-                this["tagThresholdPercentage"] = value;
+                this["tagCountThreshold"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public int genreThresholdPercentage {
+        public int genreCountThreshold {
             get {
-                return ((int)(this["genreThresholdPercentage"]));
+                return ((int)(this["genreCountThreshold"]));
             }
             set {
-                this["genreThresholdPercentage"] = value;
+                this["genreCountThreshold"] = value;
             }
         }
         

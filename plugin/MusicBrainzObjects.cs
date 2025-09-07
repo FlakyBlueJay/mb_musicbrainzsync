@@ -395,7 +395,7 @@ namespace plugin
         /// The amount of votes that contributed to the community rating.
         /// </summary>
         [JsonProperty("votes-count")]
-        public int VotesCount { get; set; }
+        public int voteCount { get; set; }
     }
 
     public class MusicBrainzTag

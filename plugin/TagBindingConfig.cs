@@ -190,8 +190,8 @@ namespace plugin
         }
         private void UpdateNumericUpDowns()
         {
-            minimalTagThreshold.Value = Settings.Default.tagThresholdPercentage;
-            minimalGenreThreshold.Value = Settings.Default.genreThresholdPercentage;
+            minimalTagThreshold.Value = Settings.Default.tagCountThreshold;
+            minimalGenreThreshold.Value = Settings.Default.genreCountThreshold;
             maxNumberTags.Value = Settings.Default.maxTags;
             maxNumberGenres.Value = Settings.Default.maxGenres;
         }
@@ -344,8 +344,8 @@ namespace plugin
                 }
             }
 
-            Properties.Settings.Default.tagThresholdPercentage = (int)minimalTagThreshold.Value;
-            Properties.Settings.Default.genreThresholdPercentage = (int)minimalGenreThreshold.Value;
+            Properties.Settings.Default.tagCountThreshold = (int)minimalTagThreshold.Value;
+            Properties.Settings.Default.genreCountThreshold = (int)minimalGenreThreshold.Value;
             Properties.Settings.Default.maxTags = (int)maxNumberTags.Value;
             Properties.Settings.Default.maxGenres = (int)maxNumberGenres.Value;
 
@@ -462,8 +462,8 @@ namespace plugin
                         },
                         tag_thresholds = new TagThresholds
                         {
-                            minimum_tag_threshold = Settings.Default.tagThresholdPercentage,
-                            minimum_genre_threshold = Settings.Default.genreThresholdPercentage,
+                            minimum_tag_threshold = Settings.Default.tagCountThreshold,
+                            minimum_genre_threshold = Settings.Default.genreCountThreshold,
                             maximum_tags = Settings.Default.maxTags,
                             maximum_genres = Settings.Default.maxGenres
                         },
@@ -522,8 +522,8 @@ namespace plugin
                             Settings.Default.releaseGroupGenreField = importedSettings.download_genre_fields.release_group;
                             Settings.Default.separateFieldsByEntityType = importedSettings.separate_entities;
                             Settings.Default.downloadOnlyUserTags = importedSettings.own_tags_only;
-                            Settings.Default.tagThresholdPercentage = importedSettings.tag_thresholds.minimum_tag_threshold;
-                            Settings.Default.genreThresholdPercentage = importedSettings.tag_thresholds.minimum_genre_threshold;
+                            Settings.Default.tagCountThreshold = importedSettings.tag_thresholds.minimum_tag_threshold;
+                            Settings.Default.genreCountThreshold = importedSettings.tag_thresholds.minimum_genre_threshold;
                             Settings.Default.maxTags = importedSettings.tag_thresholds.maximum_tags;
                             Settings.Default.maxGenres = importedSettings.tag_thresholds.maximum_genres;
                             Settings.Default.letterCaseMode = importedSettings.letter_case_mode;
