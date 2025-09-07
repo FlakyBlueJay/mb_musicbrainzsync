@@ -753,7 +753,7 @@ namespace plugin
                         if (!Settings.Default.downloadOnlyUserTags)
                             percentage = 100 * mbzTag.Count / topTag.Count;
 
-                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Genre: {mbzTag.Name}, Relative percentage use: {percentage} (Percentage threshold for tags: {Settings.Default.genreCountThreshold})");
+                        Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, Relative percentage use: {percentage} (Percentage threshold for tags: {Settings.Default.genreCountThreshold})");
                         if ((percentage != null && percentage > Settings.Default.tagCountThreshold) || Settings.Default.downloadOnlyUserTags)
                         {
                             Debug.WriteLine($"[MusicBrainzAPI.ProcessOnlineTags] Tag: {mbzTag.Name}, FindReplaced: {addedTag}");
