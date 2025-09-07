@@ -286,5 +286,29 @@ namespace plugin.Properties {
                 this["letterCaseMode"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool tagMoveEnabled {
+            get {
+                return ((bool)(this["tagMoveEnabled"]));
+            }
+            set {
+                this["tagMoveEnabled"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("tracker music;current_genre\r\nadult contemporary;current_genre")]
+        public string tagsToMove {
+            get {
+                return ((string)(this["tagsToMove"]));
+            }
+            set {
+                this["tagsToMove"] = value;
+            }
+        }
     }
 }

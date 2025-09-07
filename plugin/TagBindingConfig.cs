@@ -63,7 +63,7 @@ namespace plugin
                     TagBindingsSetting = Settings.Default.recordingTagBindings.Split(';').ToHashSet();
                     break;
             }
-            foreach (KeyValuePair<string, MetaDataType> tagBindingPair in MusicBeePlugin.Plugin.listTagBindings)
+            foreach (KeyValuePair<string, MetaDataType> tagBindingPair in MusicBeePlugin.Plugin.tagBindings)
             {
                 string tagName = mbApiInterface.Setting_GetFieldName(tagBindingPair.Value);
                 var tagKey = tagBindingPair.Key;
@@ -83,7 +83,7 @@ namespace plugin
         private void UpdateAllComponents()
         {
             ToggleSeparateBindUI(Settings.Default.separateTagBindings);
-            UpdateFindReplaceTable();
+            UpdateFindReplaceTable(); UpdateTagMoveTable();
             UpdateTagModeRadioButtons();
             UpdateNumericUpDowns();
             FillTagComboBoxes();
@@ -143,6 +143,40 @@ namespace plugin
             }
         }
 
+
+        private void UpdateTagMoveTable()
+        {
+            List<TagListItem> validTags = new List<TagListItem>();
+            
+            validTags.Add(new TagListItem { tagKey = "current_tag", tagDisplayName = "(current entity's tag field)" });
+            validTags.Add(new TagListItem { tagKey = "current_genre", tagDisplayName = "(current entity's genre field)" });
+            validTags.Add(new TagListItem { tagKey = "delete", tagDisplayName = "(none, delete tag entirely)" });
+
+            foreach (KeyValuePair<string, MetaDataType> tagBindingPair in tagBindings)
+            {
+                string tagName = mbApiInterface.Setting_GetFieldName(tagBindingPair.Value);
+                string tagKey = tagBindingPair.Key;
+                validTags.Add(new TagListItem { tagDisplayName = tagName, tagKey = tagKey });
+                Debug.WriteLine($"[TagBindingConfig.UpdateTagComboBoxes] Added {tagKey} to validTags.");
+            }
+
+            tagMoveTable.Rows.Clear();
+            DataGridViewComboBoxColumn fieldColumn = tagMoveTable.Columns[1] as DataGridViewComboBoxColumn;
+            // have i mentioned HOW MUCH I FUCKING HATE WINFORMS WHAT THE ACTUAL FUCK IS THIS SHIT
+            fieldColumn.DataSource = validTags; fieldColumn.ValueMember = "tagKey"; fieldColumn.DisplayMember = "tagDisplayName";
+            foreach (string line in Settings.Default.tagsToMove.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+            {
+                
+                string[] row = line.Split(new[] { ';' }, 2);
+                if (row.Length == 2)
+                {
+                    TagListItem selectedItem = validTags.FirstOrDefault(i => i.tagKey == row[1]);
+                    int newRowIndex = tagMoveTable.Rows.Add(row[0], selectedItem.tagKey);
+                }
+            }
+            tagMoveTable.Enabled = Settings.Default.tagMoveEnabled;
+        }
+
         /// <summary>
         /// A list is manually created containing the combo boxes handling the tag splitting functionality as well as the relevant setting.<br/>
         /// This method basically returns that list.
@@ -169,7 +203,7 @@ namespace plugin
             List<TagListItem> validTags = new List<TagListItem>();
             List<Tuple<ComboBox, SettingsProperty>> comboBoxesAndSettings = GetTagField_ComboBoxesAndSettings();
 
-            foreach (KeyValuePair<string, MetaDataType> tagBindingPair in MusicBeePlugin.Plugin.listTagBindings)
+            foreach (KeyValuePair<string, MetaDataType> tagBindingPair in tagBindings)
             {
                 string tagName = mbApiInterface.Setting_GetFieldName(tagBindingPair.Value);
                 string tagKey = tagBindingPair.Key;
@@ -247,6 +281,7 @@ namespace plugin
             genreDownloadCheckBox.Checked = Settings.Default.separateGenres;
             sepByEntityCheckBox.Checked = Settings.Default.separateFieldsByEntityType;
             userTagsCheckBox.Checked = Settings.Default.downloadOnlyUserTags;
+            tagMoveCheckBox.Checked = Settings.Default.tagMoveEnabled;
         }
 
         private void separateCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -349,6 +384,20 @@ namespace plugin
             Properties.Settings.Default.maxTags = (int)maxNumberTags.Value;
             Properties.Settings.Default.maxGenres = (int)maxNumberGenres.Value;
 
+            Properties.Settings.Default.tagMoveEnabled = tagMoveCheckBox.Checked;
+
+            string newTagMoveString = "";
+            foreach (DataGridViewRow row in tagMoveTable.Rows)
+            {
+                string targetTag = row.Cells[0].Value?.ToString().ToLower();
+                string targetField = row.Cells[1].Value?.ToString().ToLower();
+                if (targetTag != null && targetField != null)
+                {
+                    newTagMoveString += $"{targetTag};{targetField}{Environment.NewLine}";
+                }
+            }
+            Settings.Default.tagsToMove = newTagMoveString;
+
             string newFindReplaceString = "";
             foreach (DataGridViewRow row in findReplaceTable.Rows)
             {
@@ -397,6 +446,12 @@ namespace plugin
             public string release_group { get; set; }
         }
 
+        private class TagMoveSettings
+        {
+            public bool enabled { get; set; }
+            public string tags_field_string { get; set; }
+
+        }
         private class TagThresholds
         {
             public int minimum_tag_threshold { get; set; }
@@ -420,6 +475,7 @@ namespace plugin
 
             public TagThresholds tag_thresholds { get; set; }
             public int letter_case_mode { get; set; }
+            public TagMoveSettings advanced_tag_movement { get; set; }
         }
 
         private void exportLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -467,7 +523,12 @@ namespace plugin
                             maximum_tags = Settings.Default.maxTags,
                             maximum_genres = Settings.Default.maxGenres
                         },
-                        letter_case_mode = Settings.Default.letterCaseMode
+                        letter_case_mode = Settings.Default.letterCaseMode,
+                        advanced_tag_movement = new TagMoveSettings
+                        {
+                            enabled = Settings.Default.tagMoveEnabled,
+                            tags_field_string = Settings.Default.tagsToMove
+                        }
 
                     };
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(exportedSettings, Newtonsoft.Json.Formatting.Indented);
@@ -527,6 +588,8 @@ namespace plugin
                             Settings.Default.maxTags = importedSettings.tag_thresholds.maximum_tags;
                             Settings.Default.maxGenres = importedSettings.tag_thresholds.maximum_genres;
                             Settings.Default.letterCaseMode = importedSettings.letter_case_mode;
+                            Settings.Default.tagMoveEnabled = importedSettings.advanced_tag_movement.enabled;
+                            Settings.Default.tagsToMove = importedSettings.advanced_tag_movement.tags_field_string;
 
                             Settings.Default.Save();
                             UpdateAllComponents();
@@ -590,5 +653,11 @@ namespace plugin
             }
             
         }
+
+        private void tagMoveCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            tagMoveTable.Enabled = tagMoveCheckBox.Checked;
+        }
+
     }
 }

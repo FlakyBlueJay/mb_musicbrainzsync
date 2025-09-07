@@ -88,6 +88,11 @@
             this.releaseGroupGenreComboBox = new System.Windows.Forms.ComboBox();
             this.releaseGroupTagLabel = new System.Windows.Forms.Label();
             this.releaseGroupTagComboBox = new System.Windows.Forms.ComboBox();
+            this.individualTagMoveTab = new System.Windows.Forms.TabPage();
+            this.tagMoveLayout = new System.Windows.Forms.TableLayoutPanel();
+            this.tagMoveNote = new System.Windows.Forms.Label();
+            this.tagMoveCheckBox = new System.Windows.Forms.CheckBox();
+            this.tagMoveTable = new System.Windows.Forms.DataGridView();
             this.findReplacePage = new System.Windows.Forms.TabPage();
             this.findReplaceTable = new System.Windows.Forms.DataGridView();
             this.findColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -105,11 +110,6 @@
             this.resetDescription = new System.Windows.Forms.Label();
             this.resetLink = new System.Windows.Forms.LinkLabel();
             this.mainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.individualTagMoveTab = new System.Windows.Forms.TabPage();
-            this.tagMoveLayout = new System.Windows.Forms.TableLayoutPanel();
-            this.tagMoveNote = new System.Windows.Forms.Label();
-            this.tagMoveCheckBox = new System.Windows.Forms.CheckBox();
-            this.tagMoveTable = new System.Windows.Forms.DataGridView();
             this.tagName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.fieldToMoveTo = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.tagGroupBox.SuspendLayout();
@@ -134,14 +134,14 @@
             this.fieldFlowLayout.SuspendLayout();
             this.otherTypePanel.SuspendLayout();
             this.flowLayoutPanel3.SuspendLayout();
+            this.individualTagMoveTab.SuspendLayout();
+            this.tagMoveLayout.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tagMoveTable)).BeginInit();
             this.findReplacePage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.findReplaceTable)).BeginInit();
             this.otherSettingsPage.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.mainLayoutPanel.SuspendLayout();
-            this.individualTagMoveTab.SuspendLayout();
-            this.tagMoveLayout.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.tagMoveTable)).BeginInit();
             this.SuspendLayout();
             // 
             // separateCheckBox
@@ -707,6 +707,7 @@
             // recordingGenreComboBox
             // 
             this.recordingGenreComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.recordingGenreComboBox.Enabled = false;
             this.recordingGenreComboBox.Location = new System.Drawing.Point(4, 127);
             this.recordingGenreComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.recordingGenreComboBox.Name = "recordingGenreComboBox";
@@ -774,6 +775,7 @@
             // releaseGenreComboBox
             // 
             this.releaseGenreComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.releaseGenreComboBox.Enabled = false;
             this.releaseGenreComboBox.Location = new System.Drawing.Point(4, 29);
             this.releaseGenreComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.releaseGenreComboBox.Name = "releaseGenreComboBox";
@@ -813,6 +815,7 @@
             // releaseGroupGenreComboBox
             // 
             this.releaseGroupGenreComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.releaseGroupGenreComboBox.Enabled = false;
             this.releaseGroupGenreComboBox.Location = new System.Drawing.Point(4, 159);
             this.releaseGroupGenreComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.releaseGroupGenreComboBox.Name = "releaseGroupGenreComboBox";
@@ -838,6 +841,79 @@
             this.releaseGroupTagComboBox.Name = "releaseGroupTagComboBox";
             this.releaseGroupTagComboBox.Size = new System.Drawing.Size(281, 32);
             this.releaseGroupTagComboBox.TabIndex = 19;
+            // 
+            // individualTagMoveTab
+            // 
+            this.individualTagMoveTab.Controls.Add(this.tagMoveLayout);
+            this.individualTagMoveTab.Location = new System.Drawing.Point(4, 33);
+            this.individualTagMoveTab.Name = "individualTagMoveTab";
+            this.individualTagMoveTab.Padding = new System.Windows.Forms.Padding(3);
+            this.individualTagMoveTab.Size = new System.Drawing.Size(609, 757);
+            this.individualTagMoveTab.TabIndex = 2;
+            this.individualTagMoveTab.Text = "Individual Tag Moving";
+            this.individualTagMoveTab.UseVisualStyleBackColor = true;
+            // 
+            // tagMoveLayout
+            // 
+            this.tagMoveLayout.AutoSize = true;
+            this.tagMoveLayout.ColumnCount = 1;
+            this.tagMoveLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tagMoveLayout.Controls.Add(this.tagMoveNote, 0, 1);
+            this.tagMoveLayout.Controls.Add(this.tagMoveCheckBox, 0, 0);
+            this.tagMoveLayout.Controls.Add(this.tagMoveTable, 0, 2);
+            this.tagMoveLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tagMoveLayout.Location = new System.Drawing.Point(3, 3);
+            this.tagMoveLayout.Margin = new System.Windows.Forms.Padding(6);
+            this.tagMoveLayout.Name = "tagMoveLayout";
+            this.tagMoveLayout.RowCount = 5;
+            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tagMoveLayout.Size = new System.Drawing.Size(603, 751);
+            this.tagMoveLayout.TabIndex = 2;
+            // 
+            // tagMoveNote
+            // 
+            this.tagMoveNote.AutoSize = true;
+            this.tagMoveNote.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.tagMoveNote.Location = new System.Drawing.Point(6, 41);
+            this.tagMoveNote.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.tagMoveNote.Name = "tagMoveNote";
+            this.tagMoveNote.Padding = new System.Windows.Forms.Padding(0, 0, 0, 11);
+            this.tagMoveNote.Size = new System.Drawing.Size(589, 86);
+            this.tagMoveNote.TabIndex = 1;
+            this.tagMoveNote.Text = "Useful if MusicBrainz doesn\'t consider any tags you use as genres. Note that this" +
+    " overrides anything in the Field Assignment tab, and that if you find/replace ta" +
+    "gs you must use the replaced tag here.";
+            // 
+            // tagMoveCheckBox
+            // 
+            this.tagMoveCheckBox.AutoSize = true;
+            this.tagMoveCheckBox.Location = new System.Drawing.Point(6, 6);
+            this.tagMoveCheckBox.Margin = new System.Windows.Forms.Padding(6);
+            this.tagMoveCheckBox.Name = "tagMoveCheckBox";
+            this.tagMoveCheckBox.Size = new System.Drawing.Size(452, 29);
+            this.tagMoveCheckBox.TabIndex = 0;
+            this.tagMoveCheckBox.Text = "Send tags to a specific field as configured below";
+            this.tagMoveCheckBox.UseVisualStyleBackColor = true;
+            this.tagMoveCheckBox.CheckedChanged += new System.EventHandler(this.tagMoveCheckBox_CheckedChanged);
+            // 
+            // tagMoveTable
+            // 
+            this.tagMoveTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.tagMoveTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.tagName,
+            this.fieldToMoveTo});
+            this.tagMoveTable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tagMoveTable.Enabled = false;
+            this.tagMoveTable.Location = new System.Drawing.Point(3, 130);
+            this.tagMoveTable.Name = "tagMoveTable";
+            this.tagMoveTable.RowHeadersWidth = 72;
+            this.tagMoveTable.RowTemplate.Height = 31;
+            this.tagMoveTable.Size = new System.Drawing.Size(597, 618);
+            this.tagMoveTable.TabIndex = 2;
             // 
             // findReplacePage
             // 
@@ -1049,90 +1125,20 @@
             this.mainLayoutPanel.Size = new System.Drawing.Size(643, 965);
             this.mainLayoutPanel.TabIndex = 6;
             // 
-            // individualTagMoveTab
-            // 
-            this.individualTagMoveTab.Controls.Add(this.tagMoveLayout);
-            this.individualTagMoveTab.Location = new System.Drawing.Point(4, 33);
-            this.individualTagMoveTab.Name = "individualTagMoveTab";
-            this.individualTagMoveTab.Padding = new System.Windows.Forms.Padding(3);
-            this.individualTagMoveTab.Size = new System.Drawing.Size(609, 757);
-            this.individualTagMoveTab.TabIndex = 2;
-            this.individualTagMoveTab.Text = "Individual Tag Moving";
-            this.individualTagMoveTab.UseVisualStyleBackColor = true;
-            // 
-            // tagMoveLayout
-            // 
-            this.tagMoveLayout.AutoSize = true;
-            this.tagMoveLayout.ColumnCount = 1;
-            this.tagMoveLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tagMoveLayout.Controls.Add(this.tagMoveNote, 0, 1);
-            this.tagMoveLayout.Controls.Add(this.tagMoveCheckBox, 0, 0);
-            this.tagMoveLayout.Controls.Add(this.tagMoveTable, 0, 2);
-            this.tagMoveLayout.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tagMoveLayout.Location = new System.Drawing.Point(3, 3);
-            this.tagMoveLayout.Margin = new System.Windows.Forms.Padding(6);
-            this.tagMoveLayout.Name = "tagMoveLayout";
-            this.tagMoveLayout.RowCount = 5;
-            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tagMoveLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tagMoveLayout.Size = new System.Drawing.Size(603, 751);
-            this.tagMoveLayout.TabIndex = 2;
-            // 
-            // tagMoveNote
-            // 
-            this.tagMoveNote.AutoSize = true;
-            this.tagMoveNote.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.tagMoveNote.Location = new System.Drawing.Point(6, 41);
-            this.tagMoveNote.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.tagMoveNote.Name = "tagMoveNote";
-            this.tagMoveNote.Padding = new System.Windows.Forms.Padding(0, 0, 0, 11);
-            this.tagMoveNote.Size = new System.Drawing.Size(589, 86);
-            this.tagMoveNote.TabIndex = 1;
-            this.tagMoveNote.Text = "Useful if MusicBrainz doesn\'t consider any tags you use as genres. Note that this" +
-    " overrides anything in the Field Assignment tab, and that if you find/replace ta" +
-    "gs you must use the replaced tag here.";
-            // 
-            // tagMoveCheckBox
-            // 
-            this.tagMoveCheckBox.AutoSize = true;
-            this.tagMoveCheckBox.Location = new System.Drawing.Point(6, 6);
-            this.tagMoveCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.tagMoveCheckBox.Name = "tagMoveCheckBox";
-            this.tagMoveCheckBox.Size = new System.Drawing.Size(452, 29);
-            this.tagMoveCheckBox.TabIndex = 0;
-            this.tagMoveCheckBox.Text = "Send tags to a specific field as configured below";
-            this.tagMoveCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // tagMoveTable
-            // 
-            this.tagMoveTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.tagMoveTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.tagName,
-            this.fieldToMoveTo});
-            this.tagMoveTable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tagMoveTable.Location = new System.Drawing.Point(3, 130);
-            this.tagMoveTable.Name = "tagMoveTable";
-            this.tagMoveTable.RowHeadersWidth = 72;
-            this.tagMoveTable.RowTemplate.Height = 31;
-            this.tagMoveTable.Size = new System.Drawing.Size(597, 618);
-            this.tagMoveTable.TabIndex = 2;
-            // 
             // tagName
             // 
+            this.tagName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
             this.tagName.HeaderText = "Tag";
             this.tagName.MinimumWidth = 9;
             this.tagName.Name = "tagName";
-            this.tagName.Width = 175;
+            this.tagName.Width = 88;
             // 
             // fieldToMoveTo
             // 
+            this.fieldToMoveTo.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.fieldToMoveTo.HeaderText = "Field to move the tag to";
             this.fieldToMoveTo.MinimumWidth = 9;
             this.fieldToMoveTo.Name = "fieldToMoveTo";
-            this.fieldToMoveTo.Width = 175;
             // 
             // TagBindingConfig
             // 
@@ -1179,6 +1185,11 @@
             this.otherTypePanel.ResumeLayout(false);
             this.flowLayoutPanel3.ResumeLayout(false);
             this.flowLayoutPanel3.PerformLayout();
+            this.individualTagMoveTab.ResumeLayout(false);
+            this.individualTagMoveTab.PerformLayout();
+            this.tagMoveLayout.ResumeLayout(false);
+            this.tagMoveLayout.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tagMoveTable)).EndInit();
             this.findReplacePage.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.findReplaceTable)).EndInit();
             this.otherSettingsPage.ResumeLayout(false);
@@ -1187,11 +1198,6 @@
             this.flowLayoutPanel1.PerformLayout();
             this.mainLayoutPanel.ResumeLayout(false);
             this.mainLayoutPanel.PerformLayout();
-            this.individualTagMoveTab.ResumeLayout(false);
-            this.individualTagMoveTab.PerformLayout();
-            this.tagMoveLayout.ResumeLayout(false);
-            this.tagMoveLayout.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.tagMoveTable)).EndInit();
             this.ResumeLayout(false);
 
         }

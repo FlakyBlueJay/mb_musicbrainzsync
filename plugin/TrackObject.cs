@@ -127,7 +127,7 @@ namespace plugin
                 foreach (string tag in tagsToSearch)
                 {
                     // get tag from finding its key in the dictionary then add to get track tags.
-                    MetaDataType tagType = listTagBindings[tag];
+                    MetaDataType tagType = tagBindings[tag];
                     // clean up tags
                     List<string> tagValue = mbApiInterface.Library_GetFileTag(FilePath, tagType).Split(';').ToList();
                     foreach (string tagString in tagValue)

@@ -93,7 +93,6 @@ namespace MusicBeePlugin
 {
     using plugin;
     using plugin.Properties;
-    using System.Collections;
     using System.Diagnostics;
     using System.Drawing;
     using System.Windows.Forms;
@@ -121,7 +120,7 @@ namespace MusicBeePlugin
 
         // This is the list of tag bindings that are used in the plugin.
 
-        public static Dictionary<string, MetaDataType> listTagBindings = new Dictionary<string, MetaDataType>
+        public static Dictionary<string, MetaDataType> tagBindings = new Dictionary<string, MetaDataType>
         {
             {"genre",    MetaDataType.Genre },
             {"mood",     MetaDataType.Mood },
@@ -832,7 +831,7 @@ namespace MusicBeePlugin
                                     
                                     foreach (var tagAndValues in pair.Value) // gonna need to find a new name for this variable
                                     {
-                                        MetaDataType currentTag = listTagBindings[tagAndValues.Key];
+                                        MetaDataType currentTag = tagBindings[tagAndValues.Key];
                                         // possible bottleneck?
                                         mbApiInterface.Library_SetFileTag(track.FilePath, currentTag, string.Join("; ", tagAndValues.Value));
                                         
