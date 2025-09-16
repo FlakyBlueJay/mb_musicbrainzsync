@@ -9,7 +9,7 @@ namespace plugin
 {
     internal static class TrackProcessor
     {
-        public static void ProcessForRatingData(List<MusicBeeTrack> tracks, string entityType, List<string> onlineMbids, Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs)
+        public static void ProcessForRatingDataRetrieval(List<MusicBeeTrack> tracks, string entityType, List<string> onlineMbids, Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs)
         {
             foreach (MusicBeeTrack track in tracks)
             {
@@ -64,7 +64,7 @@ namespace plugin
             }
         }
 
-        public static void ProcessForTagData(List<MusicBeeTrack> tracks, string entityType, List<string> onlineMbids, Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs)
+        public static void ProcessForTagDataRetrieval(List<MusicBeeTrack> tracks, string entityType, List<string> onlineMbids, Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs)
         {
             foreach (MusicBeeTrack track in tracks)
             {

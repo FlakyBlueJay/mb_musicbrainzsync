@@ -549,7 +549,7 @@ namespace MusicBeePlugin
                 try
                 {
                     Dictionary<string, string> tracksAndTags = new Dictionary<string, string>();
-                    List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
+                    List<MusicBeeTrack> tracks = await Task.Run(() => files.Select(file => new MusicBeeTrack(file)).ToList());
                     foreach (MusicBeeTrack track in tracks)
                     {
                         List<string> tags = track.GetAllTagsFromFile(entity_type);
@@ -630,7 +630,7 @@ namespace MusicBeePlugin
 
                     await Task.Run(() =>
                     {
-                        TrackProcessor.ProcessForRatingData(tracks, entity_type, onlineMbids, mbidTrackPairs);
+                        TrackProcessor.ProcessForRatingDataRetrieval(tracks, entity_type, onlineMbids, mbidTrackPairs);
                     });
 
                     if (mbidTrackPairs.Count == 0)
@@ -716,7 +716,7 @@ namespace MusicBeePlugin
 
                     await Task.Run(() =>
                     {
-                        TrackProcessor.ProcessForTagData(tracks, entityType, onlineMbids, mbidTrackPairs);
+                        TrackProcessor.ProcessForTagDataRetrieval(tracks, entityType, onlineMbids, mbidTrackPairs);
                     });
 
                     if (mbidTrackPairs.Count == 0)
