@@ -280,6 +280,28 @@ namespace MusicBeePlugin
 
         }
 
+        // receive event notifications from MusicBee
+        // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
+        public void ReceiveNotification(string sourceFileUrl, NotificationType type)
+        {
+            // perform some action depending on the notification type
+            switch (type)
+            {
+                case NotificationType.PluginStartup:
+                    // perform startup initialisation
+                    Debug.WriteLine($"[mbz_MusicBrainzSync] Plugin initialised - version: {stringVer} ");
+                    if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
+                    {
+                        AddMenuItems();
+                        // output username to status bar
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user}");
+                    }
+
+                    break;
+            }
+        }
+
+
         // # configure panel UI functions
         private TableLayoutPanel GenerateTableLayoutPanel(int columns, int rows)
         {
@@ -424,27 +446,6 @@ namespace MusicBeePlugin
             mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", SendReleaseGroupTags);
 
             Debug.WriteLine("[Plugin.AddMenuItems] Done");
-        }
-
-       // receive event notifications from MusicBee
-       // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
-       public void ReceiveNotification(string sourceFileUrl, NotificationType type)
-        {
-            // perform some action depending on the notification type
-            switch (type)
-            {
-                case NotificationType.PluginStartup:
-                    // perform startup initialisation
-                    Debug.WriteLine($"[mbz_MusicBrainzSync] Plugin initialised - version: {stringVer} ");
-                    if (!string.IsNullOrEmpty(plugin.Properties.Settings.Default.refreshToken))
-                    {
-                        AddMenuItems();
-                        // output username to status bar
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"mb_MusicBrainzSync: Logged in as {mbz.user}");
-                    }
-
-                    break;
-            }
         }
 
         // # Data submission functions
