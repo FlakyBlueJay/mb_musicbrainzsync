@@ -343,27 +343,7 @@ namespace MusicBeePlugin
             // Test this functionality in WINE, too. This should just load the default web browser but, idk.
 
             string mbzAuthUrl = mbz.GetAuthenticationURL();
-
-            try
-            {
-                Process.Start(mbzAuthUrl);
-            }
-            catch (System.ComponentModel.Win32Exception)
-            {
-                // if there is no default web browser or the URL is invalid.
-                Clipboard.SetText(mbzAuthUrl);
-                MessageBox.Show("Could not open the default web browser. The authentication URL has been copied to your clipboard.\n\n" +
-                    "Please copy and paste the URL into your browser.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                // any other errors we haven't caught.
-                Debug.WriteLine($"[Plugin.mbzAuthLabel_LinkClicked] Failed to open URL due to exception: {ex.Message}");
-                Clipboard.SetText(mbzAuthUrl);
-                MessageBox.Show("An unexpected error occurred. The authentication URL has been copied to your clipboard.\n\n" +
-                    "Please copy and paste the URL into your browser.\n\n" +
-                    $"Exception message: {ex.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            OpenURL(mbzAuthUrl);
 
         }
 
@@ -407,22 +387,26 @@ namespace MusicBeePlugin
             // ## main menu items
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings", "", null);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags", "", null);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Open in Browser", "", null);
 
             // ### rating sub-menu items
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings to Recordings", "", SendTrackRatings);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Album Ratings to Release Group", "", SendReleaseGroupRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Retrieve Album Ratings from Release Group", "", GetAlbumRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Retrieve Track Ratings from Recordings", "", GetTrackRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Sync Track Ratings to Recordings", "", SendTrackRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Get Album Ratings from Release Group", "", GetAlbumRatings);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Ratings/Get Track Ratings from Recordings", "", GetTrackRatings);
 
             // ### tag sub-menu items
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recordings", "", SendTrackTags);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", SendReleaseTags);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release Group", "", SendReleaseGroupTags);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Release", "", SendReleaseTags);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Sync Tags to Recordings", "", SendTrackTags);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Get Tags from Release Group", "", GetReleaseGroupTags);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Get Tags from Release", "", GetReleaseTags);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Tags/Get Tags from Recordings", "", GetTrackTags);
 
-            // ### open sub-menu items TODO
+            // ### web sub-menu items
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Open in Browser/Open Release Group in Browser", "", OpenReleaseGroupURL);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Open in Browser/Open Release in Browser", "", OpenReleaseURL);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz Sync: Open in Browser/Open Recording in Browser", "", OpenRecordingURL);
 
             // ## debug sub-menu items
 #if DEBUG
@@ -436,14 +420,23 @@ namespace MusicBeePlugin
 
             // # hotkey entries
             // ## rating hotkeys
-            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", SendTrackRatings);
             mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Album Ratings to Release Group", SendReleaseGroupRatings);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Retrieve Track Ratings", null);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Track Ratings", SendTrackRatings);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Retrieve Album Ratings", GetAlbumRatings);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Retrieve Track Ratings", GetTrackRatings);
 
             // ## tag hotkeys
             mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Recording", SendTrackTags);
             mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release", SendReleaseTags);
             mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Sync Tags to Release Group", SendReleaseGroupTags);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Get Tags to Recording", GetTrackTags);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Get Tags to Release", GetReleaseTags);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Get Tags to Release Group", GetReleaseGroupTags);
+
+            // ## web hotkeys
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Open Recording in Browser", OpenRecordingURL);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Open Release in Browser", OpenReleaseURL);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz Sync: Open Release Group in Browser", OpenReleaseGroupURL);
 
             Debug.WriteLine("[Plugin.AddMenuItems] Done");
         }
@@ -785,6 +778,127 @@ namespace MusicBeePlugin
             }
         }
 
+        private void OpenRecordingURL(object sender, EventArgs args)
+        {
+            _ = OpenRecordingURLAsync(sender, args);
+        }
+
+        private void OpenReleaseURL(object sender, EventArgs args)
+        {
+            _ = OpenReleaseURLAsync(sender, args);
+        }
+
+        private void OpenReleaseGroupURL(object sender, EventArgs args)
+        {
+            _ = OpenReleaseGroupURLAsync(sender, args);
+        }
+
+        private async Task OpenRecordingURLAsync(object sender, EventArgs args)
+        {
+            MusicBeeTrack track = await GetFirstTrackInSelection();
+            try
+            {
+                OpenURL(GenerateMusicBrainzURL(track, "recording"));
+            }
+            catch (ArgumentException)
+            {
+                DisplayURLError();
+            }
+            
+        }
+
+        private async Task OpenReleaseURLAsync(object sender, EventArgs args)
+        {
+            MusicBeeTrack track = await GetFirstTrackInSelection();
+            try
+            {
+                OpenURL(GenerateMusicBrainzURL(track, "release"));
+            }
+            catch (ArgumentException)
+            {
+                DisplayURLError();
+            }
+        }
+
+        private async Task OpenReleaseGroupURLAsync(object sender, EventArgs args)
+        {
+            MusicBeeTrack track = await GetFirstTrackInSelection();
+            try
+            {
+                OpenURL(GenerateMusicBrainzURL(track, "release-group"));
+            }
+            catch (ArgumentException)
+            {
+                DisplayURLError();
+            }
+        }
+
+        private string GenerateMusicBrainzURL(MusicBeeTrack track, string entityType)
+        {
+            string MBID = string.Empty;
+            string MusicBrainzServer = mbz.MusicBrainzServer;
+            switch (entityType)
+            {
+                case "release-group":
+                    MBID = track.MusicBrainzReleaseGroupId;
+                    break;
+                case "release":
+                    MBID = track.MusicBrainzReleaseId;
+                    break;
+                case "recording":
+                    MBID = track.MusicBrainzRecordingId;
+                    break;
+            }
+            if (!string.IsNullOrEmpty(MBID))
+            {
+                string URL = "https://" + MusicBrainzServer + "/" + entityType + "/" + MBID;
+                return URL;
+            }
+            else
+            {
+                throw new ArgumentException();
+            }
+        }
+
+        private void OpenURL(string url)
+        {
+            try
+            {
+                Process.Start(url);
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                // if there is no default web browser or the URL is invalid.
+                Clipboard.SetText(url);
+                MessageBox.Show("Could not open the default web browser. The URL has been copied to your clipboard.\n\n" +
+                    "Please copy and paste the URL into your browser.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                // any other errors we haven't caught.
+                Debug.WriteLine($"[Plugin.mbzAuthLabel_LinkClicked] Failed to open URL due to exception: {ex.Message}");
+                Clipboard.SetText(url);
+                MessageBox.Show("An unexpected error occurred. The authentication URL has been copied to your clipboard.\n\n" +
+                    "Please copy and paste the URL into your browser.\n\n" +
+                    $"Exception message: {ex.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void DisplayURLError()
+        {
+            // simple, but allows for easier editing this way.
+            MessageBox.Show("There was no MusicBrainz ID for the track and entity type you were trying to open.\n\n" +
+                    "Make sure to check if the tag for such ID exists, using MusicBee's Tag Inspector or a supported tag editor like MusicBrainz Picard.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        // I'm not going to spam-open windows... :|
+        private async Task<MusicBeeTrack> GetFirstTrackInSelection()
+        {
+            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
+            List<MusicBeeTrack> tracks = await Task.Run(() => files.Select(file => new MusicBeeTrack(file)).ToList());
+            MusicBeeTrack track = tracks[0];
+            return track;
+        }
 
 #if DEBUG
         async private void ResetTrackRatings(object sender, EventArgs args)
@@ -818,16 +932,7 @@ namespace MusicBeePlugin
             if (entityType == "release") URL += "+recordings"; 
             Process.Start("https://" + URL);
         }
-
-        // I'm not going to spam-open windows... :|
-        private MusicBeeTrack GetFirstTrackInSelection()
-        {
-            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
-            List<MusicBeeTrack> tracks = files.Select(file => new MusicBeeTrack(file)).ToList();
-            Debug.WriteLine(tracks.Count);
-            MusicBeeTrack track = tracks[0];
-            return track;
-        }
+        
 
         private void OpenJSONRecording(object sender, EventArgs args)
         {
