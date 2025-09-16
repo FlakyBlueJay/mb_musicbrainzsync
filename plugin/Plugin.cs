@@ -93,6 +93,7 @@ namespace MusicBeePlugin
 {
     using plugin;
     using plugin.Properties;
+    using System.Configuration;
     using System.Diagnostics;
     using System.Drawing;
     using System.Windows.Forms;
@@ -691,56 +692,97 @@ namespace MusicBeePlugin
 
         async private void SendTrackRatings(object sender, EventArgs args)
         {
-            await SendRatingData("recording");
+            if (CheckWarning("set"))
+                await SendRatingData("recording");
         }
 
         async private void SendReleaseGroupRatings(object sender, EventArgs args)
         {
-           await SendRatingData("release-group");
+            if (CheckWarning("set"))
+                await SendRatingData("release-group");
         }
 
         async private void SendTrackTags(object sender, EventArgs args)
         {
-            await SendTagData("recording");
+            if (CheckWarning("set"))
+                await SendTagData("recording");
         }
 
         async private void SendReleaseTags(object sender, EventArgs args)
         {
-            await SendTagData("release");
+            if (CheckWarning("set"))
+                await SendTagData("release");
         }
 
         async private void SendReleaseGroupTags(object sender, EventArgs args)
         {
-            await SendTagData("release-group");
+            if (CheckWarning("set"))
+                await SendTagData("release-group");
         }
 
         // # Data retrieval functions
 
         async private void GetAlbumRatings(object sender, EventArgs args)
-        { 
-            await GetRatingData("release-group");
+        {
+            if (CheckWarning("get"))
+                await GetRatingData("release-group");
         }
 
         async private void GetTrackRatings(object sender, EventArgs args)
         {
             // this will handle both release-associated tracks and standalone recordings.
-            await GetRatingData("track");
+            if (CheckWarning("get"))
+                await GetRatingData("track");
         }
 
         async private void GetReleaseGroupTags(object sender, EventArgs args)
         {
-            await GetTagData("release-group");
+            if (CheckWarning("get"))
+                await GetTagData("release-group");
         }
 
         async private void GetReleaseTags(object sender, EventArgs args)
         {
-            await GetTagData("release");
+            if (CheckWarning("get"))
+                await GetTagData("release");
         }
 
         async private void GetTrackTags(object sender, EventArgs args)
         {
-            await GetTagData("recording");
+            if (CheckWarning("get"))
+                await GetTagData("recording");
         }
+
+        private bool CheckWarning(string actionType)
+        {
+
+            SettingsProperty currentSetting = (actionType == "set") ? Settings.Default.Properties["setWarningAcknowledged"] : Settings.Default.Properties["getWarningAcknowledged"];
+            bool currentSettingValue = (bool)Settings.Default.PropertyValues[currentSetting.Name].PropertyValue;
+            if (currentSettingValue == true)
+            {
+                return true;
+            }
+            else
+            {
+                string warningText = (actionType == "set") ?
+                    "Warning: You are about to send data to MusicBrainz. This action could result in data on MusicBrainz being overwritten." : 
+                    "Warning: You are about to overwrite data on your files with data from MusicBrainz.";
+                DialogResult warning = MessageBox.Show(warningText + "\n\n" +
+                    "Unless you have backups, this action is irreversible. Do you wish to proceed? This dialog will only appear once.", "MusicBrainz Sync", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (warning == DialogResult.Yes)
+                {
+                    Settings.Default.PropertyValues[currentSetting.Name].PropertyValue = true;
+                    Settings.Default.Save();
+                    return true;
+                }
+                else
+                {
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Task aborted due to user.");
+                    return false;
+                }
+            }
+        }
+
 
 #if DEBUG
         async private void ResetTrackRatings(object sender, EventArgs args)

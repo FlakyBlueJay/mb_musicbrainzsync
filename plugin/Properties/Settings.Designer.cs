@@ -310,5 +310,29 @@ namespace plugin.Properties {
                 this["tagsToMove"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool getWarningAcknowledged {
+            get {
+                return ((bool)(this["getWarningAcknowledged"]));
+            }
+            set {
+                this["getWarningAcknowledged"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool setWarningAcknowledged {
+            get {
+                return ((bool)(this["setWarningAcknowledged"]));
+            }
+            set {
+                this["setWarningAcknowledged"] = value;
+            }
+        }
     }
 }

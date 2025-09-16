@@ -77,5 +77,11 @@ alt-pop;alternative pop</Value>
       <Value Profile="(Default)">tracker music;current_genre
 adult contemporary;current_genre</Value>
     </Setting>
+    <Setting Name="getWarningAcknowledged" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="setWarningAcknowledged" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
