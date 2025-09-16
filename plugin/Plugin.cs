@@ -670,13 +670,14 @@ namespace MusicBeePlugin
                                             mbApiInterface.Library_SetFileTag(track.FilePath, currentTag, string.Join("; ", tagAndValues.Value));
                                         }
                                         mbApiInterface.Library_CommitTagsToFile(track.FilePath);
-                                        Debug.WriteLine($"[Plugin.GetTagData] Successfully committed edited tags to {track.Artist} - {track.Title}");
-                                        mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entityType.Replace('-', ' ')} tags from MusicBrainz.");
+                                        // Debug.WriteLine($"[Plugin.GetTagData] Successfully committed edited tags to {track.Artist} - {track.Title}");
+                                        
                                     }
                                 }
                             }
+                            
                         });
-                        
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entityType.Replace('-', ' ')} tags from MusicBrainz.");
                     }
                 
                 }

@@ -101,8 +101,8 @@ namespace plugin
 
                     if (!string.IsNullOrEmpty(currentMbid))
                     {
-                        Debug.WriteLine($"[Plugin.GetTagData] Title: {track.Title}, {entityType} MBID: {currentMbid}");
-                        Debug.WriteLine("[Plugin.GetTagData]" + string.Join("; ", onlineMbids));
+                        // Debug.WriteLine($"[Plugin.GetTagData] Title: {track.Title}, {entityType} MBID: {currentMbid}");
+                        // Debug.WriteLine("[Plugin.GetTagData]" + string.Join("; ", onlineMbids));
                         if (mbidTrackPairs.ContainsKey(currentMbid))
                         {
                             mbidTrackPairs[currentMbid].Add(track);
@@ -193,7 +193,7 @@ namespace plugin
 
                 if (!string.IsNullOrEmpty(currentMbid))
                 {
-                    Debug.WriteLine($"[Plugin.SendRatingData] Title: {track.Title}, {entityType} MBID: {currentMbid}, Rating: {onlineRating}");
+                    // Debug.WriteLine($"[Plugin.SendRatingData] Title: {track.Title}, {entityType} MBID: {currentMbid}, Rating: {onlineRating}");
                     if (tracksAndRatings.ContainsKey(currentMbid))
                     {
                         if (tracksAndRatings[currentMbid] != onlineRating)

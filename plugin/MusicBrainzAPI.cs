@@ -16,6 +16,7 @@ namespace plugin
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
+    using System.Threading;
     using static MusicBeePlugin.Plugin;
 
     public class MusicBrainzAPI
@@ -32,7 +33,7 @@ namespace plugin
         // Complain to MusicBrainz about this, not me.
         public string MusicBrainzServer = "musicbrainz.org"; // Change this if you want to use a different server.
         public HttpClient MBzHttpClient;
-        System.Threading.Tasks.Task<HttpResponseMessage> mbApiResponse;
+        HttpResponseMessage mbApiResponse;
         public string mbzAccessToken; public DateTime mbzAccessTokenExpiry;
         public string user = null;
 
@@ -124,7 +125,7 @@ namespace plugin
                     errorMessage = "MusicBrainz returned a bad gateway error (code 502). This is likely a server-side issue. Try again at a later time.";
                     break;
                 case System.Net.HttpStatusCode.BadRequest:
-                    string error = mbApiResponse.Result.Content.ReadAsStringAsync().Result;
+                    string error = mbApiResponse.Content.ReadAsStringAsync().Result;
                     Debug.WriteLine("[MusicBrainzAPI] Fail Response: " + error);
                     MusicBrainzAPIError mbErrorData = JsonConvert.DeserializeObject<MusicBrainzAPIError>(error);
                     switch (mbErrorData.error)
@@ -182,7 +183,7 @@ namespace plugin
                 }
                 else
                 {
-                    DisplayHTTPErrorMessage(mbApiResponse.Result.StatusCode);
+                    DisplayHTTPErrorMessage(mbApiResponse.StatusCode);
                     return null;
                 }
             }
@@ -191,16 +192,16 @@ namespace plugin
                 try
                 {
                     Debug.WriteLine($"[MusicBrainzAPI.GetFromMusicBrainz] {MBzHttpClient.BaseAddress}{endpoint}");
-                    mbApiResponse = MBzHttpClient.GetAsync(endpoint);
-                    if (mbApiResponse.Result.IsSuccessStatusCode)
+                    mbApiResponse = await MBzHttpClient.GetAsync(endpoint);
+                    if (mbApiResponse.IsSuccessStatusCode)
                     {
-                        string result = await mbApiResponse.Result.Content.ReadAsStringAsync();
+                        string result = await mbApiResponse.Content.ReadAsStringAsync();
 #if DEBUG
                         Debug.WriteLine("[MusicBrainzAPI.GetFromMusicBrainz] Response from MusicBrainz: " + result);
 #endif
                         return result;
                     }
-                    else if (mbApiResponse.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    else if (mbApiResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     {
 
                         bool reauth = await AuthenticateUser();
@@ -211,13 +212,13 @@ namespace plugin
                         }
                         else
                         {
-                            DisplayHTTPErrorMessage(mbApiResponse.Result.StatusCode);
+                            DisplayHTTPErrorMessage(mbApiResponse.StatusCode);
                             return null;
                         }
                     }
                     else
                     {
-                        DisplayHTTPErrorMessage(mbApiResponse.Result.StatusCode);
+                        DisplayHTTPErrorMessage(mbApiResponse.StatusCode);
                         return null;
                     }
                 }
@@ -246,7 +247,7 @@ namespace plugin
                 }
                 return null;
             }
-            else if (DateTime.Now >= mbzAccessTokenExpiry && (endpoint != "/oauth2/token"))
+            else if (DateTime.Now > mbzAccessTokenExpiry && (endpoint != "/oauth2/token"))
             {
                 // if the access token is expired, try to refresh it.
                 bool reauth = await AuthenticateUser();
@@ -257,7 +258,7 @@ namespace plugin
                 }
                 else
                 {
-                    DisplayHTTPErrorMessage(mbApiResponse.Result.StatusCode);
+                    DisplayHTTPErrorMessage(mbApiResponse.StatusCode);
                     return null;
                 }
             }
@@ -266,15 +267,16 @@ namespace plugin
                 try
                 {
                     StringContent postContent = new StringContent(data, Encoding.UTF8, data_type);
-                    mbApiResponse = MBzHttpClient.PostAsync(endpoint, postContent);
-                    if (mbApiResponse.Result.IsSuccessStatusCode)
+                    mbApiResponse = await MBzHttpClient.PostAsync(endpoint, postContent);
+
+                    if (mbApiResponse.IsSuccessStatusCode)
                     {
-                        string result = await mbApiResponse.Result.Content.ReadAsStringAsync();
+                        string result = await mbApiResponse.Content.ReadAsStringAsync();
                         Debug.WriteLine("[MusicBrainzAPI.PostToMusicBrainz] JSON Response: " + result);
                         // todo: does this output to XML as well? POST requires XML for certain.
                         return result;
                     }
-                    else if (mbApiResponse.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    else if (mbApiResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     {
                         // if we get a 401 error, try to reauthenticate.
                         bool userAuthenticated = await AuthenticateUser();
@@ -293,7 +295,7 @@ namespace plugin
                     }
                     else
                     {
-                        DisplayHTTPErrorMessage(mbApiResponse.Result.StatusCode);
+                        DisplayHTTPErrorMessage(mbApiResponse.StatusCode);
                         return null;
                     }
                 }
@@ -558,12 +560,11 @@ namespace plugin
         public async Task<Dictionary<string, Dictionary<string, List<string>>>> GetTags(List<string> mbids, bool releaseRecordings = false)
         {
             Dictionary<string, Dictionary<string, List<string>>> mbidTags = new Dictionary<string, Dictionary<string, List<string>>>();
-            foreach (string mbidUrl in mbids)
+            IEnumerable<Task> tasks = mbids.Select(async mbidUrl =>
             {
                 string[] mbidData = mbidUrl.Split('/');
                 string entityType = mbidData[0]; string currentMbid = mbidData[1];
 
-                // TODO respect user-tag setting
                 string retrievedGenreType = (Settings.Default.downloadOnlyUserTags) ? "user-genres" : "genres";
                 string retrievedTagType = (Settings.Default.downloadOnlyUserTags) ? "user-tags" : "tags";
                 string json = "";
@@ -577,19 +578,22 @@ namespace plugin
                     if (!string.IsNullOrEmpty(json))
                     {
                         Release r = JsonConvert.DeserializeObject<Release>(json);
-                        foreach (ReleaseMedia rm in r.Media)
-                        {
-                            foreach (ReleaseMediaTrack rt in rm.Tracks)
+                        await Task.Run(() => {
+                            foreach (ReleaseMedia rm in r.Media)
                             {
-                                Recording rc = rt.Recording;
-                                string recordingID = rc.MBID;
-                                Debug.WriteLine($"[MusicBrainzAPI.GetTags] Processing tags for recording: {rc.Title}");
-                                onlineGenreData = (retrievedGenreType == "genres") ? rc.Genres : rc.UserGenres;
-                                onlineTagData = (retrievedTagType == "tags") ? rc.Tags : rc.UserTags;
-                                Dictionary<string, List<string>> onlineRecordingTags = await Task.Run(() => ProcessOnlineTags(onlineTagData, onlineGenreData));
-                                mbidTags.Add(recordingID, onlineRecordingTags);
+                                foreach (ReleaseMediaTrack rt in rm.Tracks)
+                                {
+                                    Recording rc = rt.Recording;
+                                    string recordingID = rc.MBID;
+                                    Debug.WriteLine($"[MusicBrainzAPI.GetTags] Processing tags for recording: {rc.Title}");
+                                    onlineGenreData = (retrievedGenreType == "genres") ? rc.Genres : rc.UserGenres;
+                                    onlineTagData = (retrievedTagType == "tags") ? rc.Tags : rc.UserTags;
+                                    Dictionary<string, List<string>> onlineRecordingTags = ProcessOnlineTags(onlineTagData, onlineGenreData);
+                                    mbidTags.Add(recordingID, onlineRecordingTags);
+                                }
                             }
-                        }
+                        });
+
                     }
                 }
                 else
@@ -620,7 +624,9 @@ namespace plugin
                     Dictionary<string, List<string>> onlineTags = await Task.Run(() => ProcessOnlineTags(onlineTagData, onlineGenreData, entityType));
                     mbidTags.Add(currentMbid, onlineTags);
                 }
-            }
+
+            });
+            await Task.WhenAll(tasks);
             return mbidTags;
         }
 
@@ -713,7 +719,7 @@ namespace plugin
             return tagsAndFields;
         }
 
-        private async Task<Dictionary<string, List<string>>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null, string entityType = "recording")
+        private Dictionary<string, List<string>> ProcessOnlineTags(List<MusicBrainzTag> onlineTagData, List<MusicBrainzTag> onlineGenreData = null, string entityType = "recording")
         {
             Dictionary<string, List<string>> combinedTagData = new Dictionary<string, List<string>>();
 
