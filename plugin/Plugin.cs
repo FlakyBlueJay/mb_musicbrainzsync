@@ -455,7 +455,7 @@ namespace MusicBeePlugin
         /// </summary>
         private async Task SendRatingData(string entity_type, bool reset = false)
         {
-            mbApiInterface.MB_SetBackgroundTaskMessage("Submitting ratings to MusicBrainz...");
+            mbApiInterface.MB_SetBackgroundTaskMessage($"Submitting {entity_type.Replace('-', ' ')} ratings to MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
             {
@@ -497,6 +497,7 @@ namespace MusicBeePlugin
         /// </summary>
         private async Task SendTagData(string entity_type)
         {
+            mbApiInterface.MB_SetBackgroundTaskMessage($"Sending {entity_type.Replace('-', ' ')} tags to MusicBrainz.");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
             {
