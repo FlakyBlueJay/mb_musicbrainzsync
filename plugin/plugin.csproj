@@ -11,9 +11,9 @@
   <!-- CUSTOM PROPERTIES (referenced in tasks below) -->
 
   <PropertyGroup>
-    <ProgramPluginsDir>C:\Users\Flaky\Documents\Projects\_MusicBee\Plugins</ProgramPluginsDir>    <!-- This is the directory where the plugin will be copied to -->
+    <ProgramPluginsDir>C:\Users\Flaky\Projects\_MusicBee\Plugins</ProgramPluginsDir>    <!-- This is the directory where the plugin will be copied to -->
     <ProgramExeName>MusicBee.exe</ProgramExeName>    <!-- This is the name of the program executable -->
-    <ProgramExePath>C:\Users\Flaky\Documents\Projects\_MusicBee\MusicBee.exe</ProgramExePath>    <!-- This is the path to the program executable -->
+    <ProgramExePath>C:\Users\Flaky\Projects\_MusicBee\MusicBee.exe</ProgramExePath>    <!-- This is the path to the program executable -->
     <ArtifactsDir>$(MSBuildProjectDirectory)\build</ArtifactsDir>    <!-- This is the directory where the build artifacts will be placed -->
     <CopyToProgram>true</CopyToProgram>    <!-- This is whether to copy the plugin to the program directory -->
   </PropertyGroup>
