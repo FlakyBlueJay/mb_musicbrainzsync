@@ -102,6 +102,8 @@ namespace MusicBeePlugin
         /// </summary>
         private async Task GetRatingData(string entity_type)
         {
+            // The MusicBrainz API allows 300 requests per second. The best thing to do is to split by an arbitrary amount and wait a second between each batch.
+            // Process the list of MBIDs. if the amount is over a certain threshold (which'll be 50), split it up.
             mbApiInterface.MB_SetBackgroundTaskMessage($"Requesting {entity_type.Replace('-', ' ')} ratings from MusicBrainz...");
             mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
             if (files == null)
@@ -117,63 +119,60 @@ namespace MusicBeePlugin
                     // Dictionary of MBIDs and MusicBee tracks, so the ratings can be added to the correct tracks after retrieval.
                     Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs = new Dictionary<string, List<MusicBeeTrack>>();
                     // list of MBIDs to query MusicBrainz with - prevents duplicate queries and any potential rate limiting/DDoS.
-                    List<string> onlineMbids = new List<string>();
+                    Dictionary<int, List<string>> onlineMbidBatches = new Dictionary<int, List<string>>();
 
                     await Task.Run(() =>
                     {
-                        TrackProcessor.ProcessForRatingDataRetrieval(tracks, entity_type, onlineMbids, mbidTrackPairs);
+                        onlineMbidBatches = TrackProcessor.ProcessForDataRetrieval(MusicBrainzDataType.UserRatings, mbApiInterface, tracks, entity_type, mbidTrackPairs);
                     });
 
-                    if (mbidTrackPairs.Count == 0)
+                    if (onlineMbidBatches == null) return;
+
+                    Dictionary<string, int?> albumsAndRatings = new Dictionary<string, int?>();
+                    foreach (var batch in onlineMbidBatches)
                     {
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
-                        MessageBox.Show("No ratings have been received since none of the files being processed have any MusicBrainz IDs to use. You need to match them to entries on MusicBrainz using Picard.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        var batchRatings = await mbz.GetUserRatings(batch.Value);
+                        foreach (var pair in batchRatings)
+                        {
+                            albumsAndRatings.Add(pair.Key, pair.Value);
+                        }
+                        await Task.Delay(1100); // wait just over a second to avoid rate limiting.
                     }
-                    else if (onlineMbids.Count > 50)
+
+                    if (albumsAndRatings == null) return;
+#if DEBUG
+                    foreach (var pair in albumsAndRatings)
                     {
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
-                        MessageBox.Show("You are attempting to download data for too many entries, which will result in you hitting MusicBrainz's rate limits. Cut down on the amount of things you're requesting MusicBrainz for.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                        Debug.WriteLine($"[Plugin.GetRatingData] MBID: {pair.Key}, Rating: {pair.Value}");
+                    }
+#endif
+                    int editedRatingCounter = 0;
+                    await Task.Run(() =>
+                    {
+                        foreach (var pair in albumsAndRatings)
+                        {
+                            // don't want to do anything if the user hasn't rated it, so check if the key exists in mbidTrackPairs.
+                            if (mbidTrackPairs.ContainsKey(pair.Key))
+                            {
+                                foreach (MusicBeeTrack track in mbidTrackPairs[pair.Key])
+                                {
+                                    MetaDataType chosenMetadata = (entity_type == "release-group") ? MetaDataType.RatingAlbum : MetaDataType.Rating;
+                                    mbApiInterface.Library_SetFileTag(track.FilePath, chosenMetadata, pair.Value.ToString());
+                                    mbApiInterface.Library_CommitTagsToFile(track.FilePath);
+                                    editedRatingCounter++;
+                                }
+                            }
+
+                        }
+                    });
+
+                    if (editedRatingCounter != 0)
+                    {
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entity_type.Replace('-', ' ')} ratings from MusicBrainz.");
                     }
                     else
                     {
-                        Dictionary<string, int?> albumsAndRatings = await mbz.GetUserRatings(onlineMbids);
-
-                        if (albumsAndRatings == null) return;
-#if DEBUG
-                        foreach (var pair in albumsAndRatings)
-                        {
-                            Debug.WriteLine($"[Plugin.GetRatingData] MBID: {pair.Key}, Rating: {pair.Value}");
-                        }
-#endif
-                        int editedRatingCounter = 0;
-                        await Task.Run(() =>
-                        {
-                            foreach (var pair in albumsAndRatings)
-                            {
-                                // don't want to do anything if the user hasn't rated it, so check if the key exists in mbidTrackPairs.
-                                if (mbidTrackPairs.ContainsKey(pair.Key))
-                                {
-                                    foreach (MusicBeeTrack track in mbidTrackPairs[pair.Key])
-                                    {
-                                        MetaDataType chosenMetadata = (entity_type == "release-group") ? MetaDataType.RatingAlbum : MetaDataType.Rating;
-                                        mbApiInterface.Library_SetFileTag(track.FilePath, chosenMetadata, pair.Value.ToString());
-                                        mbApiInterface.Library_CommitTagsToFile(track.FilePath);
-                                        editedRatingCounter++;
-                                    }
-                                }
-
-                            }
-                        });
-
-                        if (editedRatingCounter != 0)
-                        {
-                            mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entity_type.Replace('-', ' ')} ratings from MusicBrainz.");
-                        }
-                        else
-                        {
-                            mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
-                        }
-
+                        mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entity_type.Replace('-', ' ')}s.");
                     }
 
                 }
@@ -204,50 +203,47 @@ namespace MusicBeePlugin
                     // We may be duplicating these functions between GetTagData and GetRatingData, so it might be worth refactoring later.
                     Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs = new Dictionary<string, List<MusicBeeTrack>>();
                     // list of MBIDs to query MusicBrainz with - prevents duplicate queries and any potential rate limiting/DDoS.
-                    List<string> onlineMbids = new List<string>();
+                    Dictionary<int, List<string>> onlineMbidBatches = new Dictionary<int, List<string>>();
+                    Dictionary<string, Dictionary<string, List<string>>> mbidsAndTags = new Dictionary<string, Dictionary<string, List<string>>>();
 
                     await Task.Run(() =>
                     {
-                        TrackProcessor.ProcessForTagDataRetrieval(tracks, entityType, onlineMbids, mbidTrackPairs);
+                        onlineMbidBatches = TrackProcessor.ProcessForDataRetrieval(MusicBrainzDataType.UserTags, mbApiInterface, tracks, entityType, mbidTrackPairs);
                     });
 
-                    if (mbidTrackPairs.Count == 0)
-                    {
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entityType.Replace('-', ' ')}s.");
-                        MessageBox.Show("No ratings have been received since none of the files being processed have any MusicBrainz IDs to use. You need to match them to entries on MusicBrainz using Picard.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else if (onlineMbids.Count > 50)
-                    {
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entityType.Replace('-', ' ')}s.");
-                        MessageBox.Show("You are attempting to download data for too many entries, which will result in you hitting MusicBrainz's rate limits. Cut down on the amount of things you're requesting MusicBrainz for.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                    }
-                    else
-                    {
-                        Dictionary<string, Dictionary<string, List<string>>> mbidsAndTags = await mbz.GetTags(onlineMbids);
-                        await Task.Run(() =>
-                        {
-                            foreach (var pair in mbidsAndTags)
-                            {
-                                if (mbidTrackPairs.ContainsKey(pair.Key))
-                                {
-                                    foreach (MusicBeeTrack track in mbidTrackPairs[pair.Key])
-                                    {
-                                        foreach (var tagAndValues in pair.Value) // gonna need to find a new name for this variable
-                                        {
-                                            MetaDataType currentTag = tagBindings[tagAndValues.Key];
-                                            mbApiInterface.Library_SetFileTag(track.FilePath, currentTag, string.Join("; ", tagAndValues.Value));
-                                        }
-                                        mbApiInterface.Library_CommitTagsToFile(track.FilePath);
-                                        // Debug.WriteLine($"[Plugin.GetTagData] Successfully committed edited tags to {track.Artist} - {track.Title}");
+                    if (onlineMbidBatches == null) return;
 
+                    foreach (var batch in onlineMbidBatches)
+                    {
+                        var batchTags = await mbz.GetTags(batch.Value);
+                        foreach (var pair in batchTags)
+                        {
+                            mbidsAndTags.Add(pair.Key, pair.Value);
+                        }
+                        await Task.Delay(1100); // wait just over a second to avoid rate limiting.
+                    }
+                    await Task.Run(() =>
+                    {
+                        foreach (var pair in mbidsAndTags)
+                        {
+                            if (mbidTrackPairs.ContainsKey(pair.Key))
+                            {
+                                foreach (MusicBeeTrack track in mbidTrackPairs[pair.Key])
+                                {
+                                    foreach (var tagAndValues in pair.Value) // gonna need to find a new name for this variable
+                                    {
+                                        MetaDataType currentTag = tagBindings[tagAndValues.Key];
+                                        mbApiInterface.Library_SetFileTag(track.FilePath, currentTag, string.Join("; ", tagAndValues.Value));
                                     }
+                                    mbApiInterface.Library_CommitTagsToFile(track.FilePath);
+                                    // Debug.WriteLine($"[Plugin.GetTagData] Successfully committed edited tags to {track.Artist} - {track.Title}");
+
                                 }
                             }
+                        }
 
-                        });
-                        mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entityType.Replace('-', ' ')} tags from MusicBrainz.");
-                    }
-
+                    });
+                    mbApiInterface.MB_SetBackgroundTaskMessage($"Successfully retrieved {entityType.Replace('-', ' ')} tags from MusicBrainz.");
                 }
                 catch (MusicBeeTrack.UnsupportedFormatException e)
                 {
