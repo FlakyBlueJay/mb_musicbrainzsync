@@ -6,28 +6,41 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static MusicBeePlugin.Plugin;
 
 namespace plugin
 {
+    public enum MusicBrainzDataType
+    {
+        UserRatings,
+        UserTags
+    }
+
     internal static class TrackProcessor
     {
-        public static void ProcessForRatingDataRetrieval(List<MusicBeeTrack> tracks, string entityType, List<string> onlineMbids, Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs)
+        public static Dictionary<int, List<string>> ProcessForDataRetrieval(MusicBrainzDataType type, MusicBeeApiInterface mbApiInterface, List<MusicBeeTrack> tracks, string entityType, Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs)
         {
+            List<string> onlineMbids = new List<string>();
             foreach (MusicBeeTrack track in tracks)
             {
-                if (!string.IsNullOrEmpty(track.MusicBrainzRecordingId) || !string.IsNullOrEmpty(track.MusicBrainzReleaseGroupId)) // check if the track actually has a MBID.
+                string currentMbid;
+                string currentOnlineMbid;
+                // todo merge this switch with the one in ProcessForTagDataRetrieval since they're almost identical
+                // use if to switch between tags and ratings instead of an entirely new method.
+
+                if (type == MusicBrainzDataType.UserRatings)
                 {
-                    string currentMbid;
-                    string currentOnlineMbid;
                     switch (entityType)
                     {
                         case "release-group":
+                            if (string.IsNullOrEmpty(track.MusicBrainzReleaseGroupId)) continue;
                             // release group / album ratings
                             currentMbid = track.MusicBrainzReleaseGroupId;
                             // I could make something fancy here but lmao just prefix the ID with the entity type will do. If it ain't broke don't fix it.
                             currentOnlineMbid = "release-group/" + track.MusicBrainzReleaseGroupId;
                             break;
                         default:
+                            if (string.IsNullOrEmpty(track.MusicBrainzRecordingId)) continue;
                             // the recording ID is the key regardless, but for online queries, we want to use the release ID if it exists.
                             // This makes querying for recordings tied to a specific release more reliable, preventing any potential DDoS/rate limiting.
                             currentMbid = track.MusicBrainzRecordingId;
@@ -41,52 +54,25 @@ namespace plugin
                             }
                             break;
                     }
-
-                    if (!string.IsNullOrEmpty(currentMbid))
-                    {
-                        Debug.WriteLine($"[Plugin.GetRatingData] Title: {track.Title}, {entityType} MBID: {currentMbid}");
-                        Debug.WriteLine("[Plugin.GetRatingData]" + string.Join("; ", onlineMbids));
-                        // currentMbids should have one track object associated with them when it comes to getting recordings,
-                        // but should have all tracks on a release bundled together for RG ratings.
-                        // The idea is to implement this as generically as possible.
-                        if (mbidTrackPairs.ContainsKey(currentMbid))
-                        {
-                            mbidTrackPairs[currentMbid].Add(track);
-                        }
-                        else
-                        {
-                            mbidTrackPairs.Add(currentMbid, new List<MusicBeeTrack> { track });
-                        }
-                        if (onlineMbids.Contains(currentOnlineMbid) == false)
-                        {
-                            onlineMbids.Add(currentOnlineMbid);
-                        }
-                    }
                 }
-            }
-        }
-
-        public static void ProcessForTagDataRetrieval(List<MusicBeeTrack> tracks, string entityType, List<string> onlineMbids, Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs)
-        {
-            foreach (MusicBeeTrack track in tracks)
-            {
-                if (!string.IsNullOrEmpty(track.MusicBrainzRecordingId)) // check if the track actually has a MBID. Since this is evaluating by track, recording MBID is a good one to start from.
+                else
                 {
-                    string currentMbid = "";
-                    string currentOnlineMbid = "";
                     switch (entityType)
                     {
                         case "release-group":
+                            if (string.IsNullOrEmpty(track.MusicBrainzReleaseGroupId)) continue;
                             currentMbid = track.MusicBrainzReleaseGroupId;
                             // I could make something fancy here but lmao just prefix the ID with the entity type will do. If it ain't broke don't fix it.
                             currentOnlineMbid = "release-group/" + track.MusicBrainzReleaseGroupId;
                             break;
                         case "release":
+                            if (string.IsNullOrEmpty(track.MusicBrainzReleaseId)) continue;
                             currentMbid = track.MusicBrainzReleaseId;
                             currentOnlineMbid = "release/" + track.MusicBrainzReleaseId;
                             break;
                         default:
                             // for recordings where a release ID is being grabbed instead, a fake entity is being used to differentiate between that and a regular recording ID.
+                            if (string.IsNullOrEmpty(track.MusicBrainzRecordingId)) continue;
                             currentMbid = track.MusicBrainzRecordingId;
                             if (!String.IsNullOrEmpty(track.MusicBrainzReleaseId))
                             {
@@ -98,29 +84,51 @@ namespace plugin
                             }
                             break;
                     }
+                }
 
-                    if (!string.IsNullOrEmpty(currentMbid))
+                if (!string.IsNullOrEmpty(currentMbid))
+                {
+                    Debug.WriteLine($"[Plugin.GetRatingData] Title: {track.Title}, {entityType} MBID: {currentMbid}");
+                    Debug.WriteLine("[Plugin.GetRatingData]" + string.Join("; ", onlineMbids));
+                    // currentMbids should have one track object associated with them when it comes to getting recordings,
+                    // but should have all tracks on a release bundled together for RG ratings.
+                    // The idea is to implement this as generically as possible.
+                    if (mbidTrackPairs.ContainsKey(currentMbid))
                     {
-                        // Debug.WriteLine($"[Plugin.GetTagData] Title: {track.Title}, {entityType} MBID: {currentMbid}");
-                        // Debug.WriteLine("[Plugin.GetTagData]" + string.Join("; ", onlineMbids));
-                        if (mbidTrackPairs.ContainsKey(currentMbid))
-                        {
-                            mbidTrackPairs[currentMbid].Add(track);
-                        }
-                        else
-                        {
-                            mbidTrackPairs.Add(currentMbid, new List<MusicBeeTrack> { track });
-                        }
-                        if (onlineMbids.Contains(currentOnlineMbid) == false)
-                        {
-                            onlineMbids.Add(currentOnlineMbid);
-                        }
+                        mbidTrackPairs[currentMbid].Add(track);
+                    }
+                    else
+                    {
+                        mbidTrackPairs.Add(currentMbid, new List<MusicBeeTrack> { track });
                     }
 
-
+                    if (!onlineMbids.Contains(currentOnlineMbid))
+                    {
+                        onlineMbids.Add(currentOnlineMbid);
+                    }
                 }
+
+            }
+
+            if (mbidTrackPairs.Count == 0)
+            {
+                mbApiInterface.MB_SetBackgroundTaskMessage($"No ratings were saved on MusicBrainz for the selected {entityType.Replace('-', ' ')}s.");
+                MessageBox.Show("No ratings have been received since none of the files being processed have any MusicBrainz IDs to use. You need to match them to entries on MusicBrainz using Picard.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return null;
+            }
+            else
+            {
+                // I heard that MusicBrainz had a limit of 50 requests per second, wiki says 300.
+                // I'll use 49 to be on the safe side.
+                Dictionary<int, List<string>> onlineMbidBatches = onlineMbids
+                    .Select((mbid, index) => new { mbid, index })
+                    .GroupBy(x => x.index / 49)
+                    .ToDictionary(g => g.Key, g => g.Select(x => x.mbid).ToList());
+
+                return onlineMbidBatches;
             }
         }
+
 
         public static void ProcessForTagUpload(List<MusicBeeTrack> tracks, string entityType, Dictionary<string, string> tracksAndTags)
         {
@@ -209,6 +217,5 @@ namespace plugin
                 }
             }
         }
-
     }
 }
