@@ -434,6 +434,47 @@ namespace plugin
         }
 
         /// <summary>
+        /// Sends ratings (grouped by entity type) to MusicBrainz to add/change on the user's behalf.
+        /// </summary>
+        /// <param name="mbidRatings">a Dictionary of Dictionary(string, float) objects denoting a MusicBrainz ID and a rating, grouped by entity type.</param>
+        /// <returns></returns>
+        public async Task SetUserRatings(Dictionary<string, Dictionary<string, float>> mbidRatings)
+        {
+            if (user == null)
+            {
+                MessageBox.Show(
+                    "You need to authenticate with MusicBrainz first. Please do so in the plugin settings.",
+                    "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            StringWriter stringWriter = new StringWriter();
+            XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
+
+            xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
+            foreach (KeyValuePair<string, Dictionary<string, float>> entityTypePair in mbidRatings)
+            {
+                string entityType = entityTypePair.Key;
+                Dictionary<string, float> mbidRatingPairs = entityTypePair.Value;
+                xmlWriter.WriteStartElement($"{entityType}-list");
+                foreach (KeyValuePair<string, float> trackRatingPair in mbidRatingPairs)
+                {
+                    string mbid = trackRatingPair.Key;
+                    string rating = trackRatingPair.Value.ToString();
+                    xmlWriter.WriteStartElement(entityType); xmlWriter.WriteAttributeString("id", mbid);
+                    xmlWriter.WriteElementString("user-rating", rating);
+                    xmlWriter.WriteEndElement(); // ends individual recording XML
+                }
+                xmlWriter.WriteEndElement(); // ends entity list XML
+            }
+            xmlWriter.WriteEndElement(); // ends metadata XML
+            xmlWriter.Flush();
+            string xmlData = stringWriter.ToString();
+            Debug.WriteLine("[MusicBrainzAPI.SetRatings] XML Data: " + xmlData);
+            await PostToMusicBrainz("/ws/2/rating?client=mb_MusicBrainzSync", xmlData, "application/xml");
+        }
+
+        /// <summary>
         /// Retrieves the rating data from the currently authenticated user.
         /// </summary>
         public async Task<Dictionary<string, int?>> GetUserRatings(List<string> mbids)
@@ -512,7 +553,7 @@ namespace plugin
         // # Tag functions
 
         /// <summary>
-        /// Generates XML from user-inputted tags and MBIDs and sends that XML to MusicBrainz to add/change on the user's behalf.<br/><br/>
+        /// Generates XML from user-inputted tags and MBIDs and sends that XML to MusicBrainz to add/change on the user's behalf.
         /// </summary>
         /// <param name="trackMbid_TagPairing">A Dictionary with the key being a MusicBrainz ID and the value being the tag(s).</param>
         /// <param name="entityType">The type of MusicBrainz entity being dealt with.</param>
@@ -557,6 +598,59 @@ namespace plugin
             Debug.WriteLine("[MusicBrainzAPI.SetTags] XML Data: " + xmlData);
             await PostToMusicBrainz("/ws/2/tag?client=mb_MusicBrainzSync", xmlData, "application/xml");
             
+        }
+
+        /// <summary>
+        /// Generates XML from user-inputted tags and MBIDs (grouped by entity type) and sends that XML to MusicBrainz to add/change on the user's behalf.
+        /// </summary>
+        /// <param name="trackMbid_TagPairing">A Dictionary of Dictionary(string, string) objects denoting an MBID and list of tags (separated by semi-colons), grouped by entity type.</param>
+        /// <returns></returns>
+        public async Task SetTags(Dictionary<string, Dictionary<string, string>> trackMbid_TagPairing)
+        {
+            if (user == null)
+            {
+                MessageBox.Show(
+                    "You need to authenticate with MusicBrainz first. Please do so in the plugin settings.",
+                    "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            StringWriter stringWriter = new StringWriter();
+            XmlWriter xmlWriter = new XmlTextWriter(stringWriter);
+
+            xmlWriter.WriteStartElement("metadata"); xmlWriter.WriteAttributeString("xmlns", "http://musicbrainz.org/ns/mmd-2.0#");
+            foreach (KeyValuePair<string, Dictionary<string, string>> entityTypePair in trackMbid_TagPairing)
+            {
+                string entityType = entityTypePair.Key;
+                Dictionary<string, string> mbidTagPairs = entityTypePair.Value;
+                xmlWriter.WriteStartElement($"{entityType}-list");
+                foreach (KeyValuePair<string, string> trackTagPair in mbidTagPairs)
+                {
+                    string recordingMbid = trackTagPair.Key;
+                    string tag = trackTagPair.Value;
+                    xmlWriter.WriteStartElement(entityType); xmlWriter.WriteAttributeString("id", recordingMbid);
+                    xmlWriter.WriteStartElement("user-tag-list");
+
+                    foreach (string tagString in tag.Split(';'))
+                    {
+                        xmlWriter.WriteStartElement("user-tag");
+                        if (!Settings.Default.tagSubmitIsDestructive)
+                        {
+                            xmlWriter.WriteAttributeString("vote", "upvote");
+                        }
+                        xmlWriter.WriteElementString("name", FindReplaceTag(tagString));
+                        xmlWriter.WriteEndElement();
+                    }
+                    xmlWriter.WriteEndElement(); // ends user-tag-list XML
+                    xmlWriter.WriteEndElement(); // ends individual recording XML
+                }
+                xmlWriter.WriteEndElement(); // ends entity list XML
+            }
+
+            xmlWriter.WriteEndElement(); // ends metadata XML
+            xmlWriter.Flush();
+            string xmlData = stringWriter.ToString();
+            Debug.WriteLine("[MusicBrainzAPI.SetTags] XML Data: " + xmlData);
+            await PostToMusicBrainz("/ws/2/tag?client=mb_MusicBrainzSync", xmlData, "application/xml");
         }
 
         public async Task<Dictionary<string, Dictionary<string, List<string>>>> GetTags(List<string> mbids, bool releaseRecordings = false)

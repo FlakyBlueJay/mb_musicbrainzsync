@@ -14,6 +14,75 @@ namespace MusicBeePlugin
 
         // # Data submission functions
 
+        private async Task SendCombinedData()
+        {
+            mbApiInterface.MB_SetBackgroundTaskMessage("Submitting all data to MusicBrainz...");
+            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
+            if (files == null)
+            {
+                return;
+            }
+            else
+            {
+                try
+                {
+                    Dictionary<string, Dictionary<string, string>> allTagData = new Dictionary<string, Dictionary<string, string>>();
+                    List<MusicBeeTrack> tracks = await Task.Run(() => files.Select(file => new MusicBeeTrack(file)).ToList());
+
+                    if (tracks.Count == 0)
+                    {
+                        mbApiInterface.MB_SetBackgroundTaskMessage("No valid tracks found for submission.");
+                        return;
+                    };
+
+                    List<string> tagEntityTypes = new List<string>() { "recording", "release", "release-group" };
+                    foreach (string entityType in tagEntityTypes)
+                    {
+                        Dictionary<string, string> tracksAndTags = new Dictionary<string, string>();
+                        await Task.Run(() => TrackProcessor.ProcessForTagUpload(tracks, entityType, tracksAndTags));
+                        allTagData[entityType] = tracksAndTags;
+                    }
+
+
+                    Dictionary<string, Dictionary<string, float>> tracksAndRatings = new Dictionary<string, Dictionary<string, float>>();
+                    tracksAndRatings.Add("recording", new Dictionary<string, float>());
+                    tracksAndRatings.Add("release-group", new Dictionary<string, float>());
+                    await Task.Run(() => { 
+                        TrackProcessor.ProcessForRatingUpload(tracks, "recording", tracksAndRatings["recording"]);
+                        TrackProcessor.ProcessForRatingUpload(tracks, "release-group", tracksAndRatings["release-group"]);
+                    });
+
+                    if (allTagData.Count > 0)
+                    {
+                        await mbz.SetTags(allTagData);
+                        await Task.Delay(500); // wait half a second to avoid rate limiting
+                    }
+                    if (tracksAndRatings.Count > 0)
+                    {
+                        await mbz.SetUserRatings(tracksAndRatings);
+                    }
+
+                    if (allTagData.Count == 0 && tracksAndRatings.Count == 0)
+                    {
+                        mbApiInterface.MB_SetBackgroundTaskMessage("No valid data found for submission.");
+                        return;
+                    }
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Successfully submitted all data to MusicBrainz.");
+
+                }
+                catch (MusicBeeTrack.UnsupportedFormatException e)
+                {
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Rating submission failed due to unsupported format.");
+                    MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (InvalidOperationException e)
+                {
+                    MessageBox.Show($"Error: {e.Message}", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    mbApiInterface.MB_SetBackgroundTaskMessage("Rating submission failed due to an error during processing.");
+                }
+            }
+        }
+
         /// <summary>
         /// Processes the track or album's rating data to be sent to MusicBrainz.
         /// </summary>

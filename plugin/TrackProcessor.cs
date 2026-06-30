@@ -18,7 +18,13 @@ namespace plugin
 
     internal static class TrackProcessor
     {
-        public static Dictionary<int, List<string>> ProcessForDataRetrieval(MusicBrainzDataType type, MusicBeeApiInterface mbApiInterface, List<MusicBeeTrack> tracks, string entityType, Dictionary<string, List<MusicBeeTrack>> mbidTrackPairs)
+        public static Dictionary<int, List<string>> ProcessForDataRetrieval(
+            MusicBrainzDataType type,
+            MusicBeeApiInterface mbApiInterface,
+            List<MusicBeeTrack> tracks,
+            string entityType,
+            Dictionary<string,
+            List<MusicBeeTrack>> mbidTrackPairs)
         {
             List<string> onlineMbids = new List<string>();
             foreach (MusicBeeTrack track in tracks)

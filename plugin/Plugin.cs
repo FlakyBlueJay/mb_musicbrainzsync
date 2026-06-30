@@ -390,6 +390,8 @@ namespace MusicBeePlugin
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Open in Browser", "", null);
 
             // ## sync sub-menu items
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync All Ratings and Tags", "", SendAllData);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/----------", "", null);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync Album Ratings to Release Group", "", SendReleaseGroupRatings);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync Track Ratings to Recordings", "", SendTrackRatings);
             mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/----------", "", null);
@@ -441,6 +443,15 @@ namespace MusicBeePlugin
             mbApiInterface.MB_RegisterCommand("MusicBrainz: Open Release Group in Browser", OpenReleaseGroupURL);
 
             Debug.WriteLine("[Plugin.AddMenuItems] Done");
+        }
+
+        // TODO finish
+        async private void SendAllData(object sender, EventArgs args)
+        {
+            if (CheckWarning("set"))
+            {
+                await SendCombinedData();
+            } 
         }
 
         async private void SendTrackRatings(object sender, EventArgs args)
