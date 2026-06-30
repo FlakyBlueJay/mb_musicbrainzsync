@@ -238,7 +238,6 @@
             this.releaseListBox.Name = "releaseListBox";
             this.releaseListBox.Size = new System.Drawing.Size(575, 599);
             this.releaseListBox.TabIndex = 0;
-            this.releaseListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.releaseListBox_ItemCheck);
             // 
             // releaseGroupTab
             // 
@@ -260,7 +259,6 @@
             this.releaseGroupListBox.Name = "releaseGroupListBox";
             this.releaseGroupListBox.Size = new System.Drawing.Size(587, 611);
             this.releaseGroupListBox.TabIndex = 0;
-            this.releaseGroupListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.releaseGroupListBox_ItemCheck);
             // 
             // saveNote
             // 

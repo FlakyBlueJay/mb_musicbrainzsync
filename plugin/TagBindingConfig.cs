@@ -73,8 +73,6 @@ namespace plugin
             }
         }
 
-        
-
         private void TagBindingConfig_Load(object sender, EventArgs e)
         {
             UpdateAllComponents();
@@ -316,17 +314,8 @@ namespace plugin
 
         private void trackListBox_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            HandleListBoxCheck(sender, e);
-        }
-
-        private void releaseListBox_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            HandleListBoxCheck(sender, e);
-        }
-
-        private void releaseGroupListBox_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            HandleListBoxCheck(sender, e);
+            // only force a requirement if global tag bindings is being used
+            if (!separateCheckBox.Checked) HandleListBoxCheck(sender, e);
         }
 
         // settings save functions
