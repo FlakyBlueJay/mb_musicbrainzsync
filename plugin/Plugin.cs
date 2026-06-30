@@ -451,6 +451,8 @@ namespace MusicBeePlugin
 
         async private void SendReleaseGroupRatings(object sender, EventArgs args)
         {
+            // just so you know, MusicBrainz doesn't allow for releases to have a rating.
+            // it's a bit weird given that RYM does it through releases, not a release group.
             if (CheckWarning("set"))
                 await SendRatingData("release-group");
         }

@@ -582,7 +582,7 @@ namespace plugin
 
                             Settings.Default.Save();
                             UpdateAllComponents();
-                            MessageBox.Show("Settings have been successfully imported. Please review the settings and click OK to apply them.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show("Settings have been successfully imported. Please review the settings and click OK or Apply to apply them.", "MusicBrainz Sync", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         // 2. process the data.
                         // 3. if all is well, save the data to settings and update the UI.
@@ -647,6 +647,5 @@ namespace plugin
         {
             tagMoveTable.Enabled = tagMoveCheckBox.Checked;
         }
-
     }
 }
