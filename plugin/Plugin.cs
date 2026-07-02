@@ -98,7 +98,6 @@ namespace MusicBeePlugin
     using System.Drawing;
     using System.Windows.Forms;
     using YourNamespace;
-    using static plugin.MusicBeeTrack;
 
     public partial class Plugin
     {
@@ -111,7 +110,7 @@ namespace MusicBeePlugin
         public string stringVer = "";
 
         // new MusicBrainz API instance
-        public MusicBrainzHandler mbz = new MusicBrainzHandler();
+        public MusicBrainzService mbz = new MusicBrainzService();
 
         // expose shared controls as public variables, so it can be easily accessed by other functions.
         public TextBox mbzUserInputBox;
@@ -380,148 +379,54 @@ namespace MusicBeePlugin
         /// </summary>
         private void AddMenuItems()
         {
-            
+
             // # context menu items
             // context.Main is the right-click menu for tracks and albums
 
-            // ## main menu items
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync", "", null);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Retrieve", "", null);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Open in Browser", "", null);
-
-            // ## sync sub-menu items
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync All Ratings and Tags", "", SendAllData);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/----------", "", null);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync Album Ratings to Release Group", "", SendReleaseGroupRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync Track Ratings to Recordings", "", SendTrackRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/----------", "", null);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync Tags to Release Group", "", SendReleaseGroupTags);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync Tags to Release", "", SendReleaseTags);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Sync/Sync Tags to Recordings", "", SendTrackTags);
-
-            // ## retrieve sub-menu items
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Retrieve/Get Album Ratings from Release Group", "", GetAlbumRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Retrieve/Get Track Ratings from Recordings", "", GetTrackRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Retrieve/----------", "", null);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Retrieve/Get Tags from Release Group", "", GetReleaseGroupTags);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Retrieve/Get Tags from Release", "", GetReleaseTags);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Retrieve/Get Tags from Recordings", "", GetTrackTags);
-
-            // ### web sub-menu items
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Open in Browser/Open Release Group in Browser", "", OpenReleaseGroupURL);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Open in Browser/Open Release in Browser", "", OpenReleaseURL);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Open in Browser/Open Recording in Browser", "", OpenRecordingURL);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz", "", null);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz/Sync Tags and Ratings", "", SendAllData);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz/Retrieve Tags and Ratings", "", GetAllData);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz/Open Release Group in Browser", "", OpenReleaseGroupURL);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz/Open Release in Browser", "", OpenReleaseURL);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz/Open Recording in Browser", "", OpenRecordingURL);
 
             // ## debug sub-menu items
 #if DEBUG
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Debug", "", null);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Debug/Reset Online Track Ratings", "", ResetTrackRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Debug/Reset Online Album Ratings", "", ResetReleaseGroupRatings);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Debug/Open JSON in Browser: Recording", "", OpenJSONRecording);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Debug/Open JSON in Browser: Release", "", OpenJSONRelease);
-            mbApiInterface.MB_AddMenuItem($"context.Main/MusicBrainz: Debug/Open JSON in Browser: Release Group", "", OpenJSONReleaseGroup);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MB SYNC DEBUG", "", null);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MB SYNC DEBUG/Open JSON in Browser: Recording", "", OpenJSONRecording);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MB SYNC DEBUG/Open JSON in Browser: Release", "", OpenJSONRelease);
+            mbApiInterface.MB_AddMenuItem($"context.Main/MB SYNC DEBUG/Open JSON in Browser: Release Group", "", OpenJSONReleaseGroup);
 #endif
 
             // # hotkey entries
-            // ## rating hotkeys
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Sync Album Ratings to Release Group", SendReleaseGroupRatings);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Sync Track Ratings", SendTrackRatings);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Retrieve Album Ratings", GetAlbumRatings);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Retrieve Track Ratings", GetTrackRatings);
-
-            // ## tag hotkeys
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Sync Tags to Recording", SendTrackTags);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Sync Tags to Release", SendReleaseTags);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Sync Tags to Release Group", SendReleaseGroupTags);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Get Tags to Recording", GetTrackTags);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Get Tags to Release", GetReleaseTags);
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Get Tags to Release Group", GetReleaseGroupTags);
-
-            // ## web hotkeys
-            mbApiInterface.MB_RegisterCommand("MusicBrainz: Open Recording in Browser", OpenRecordingURL);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz: Sync Tags and Ratings", SendAllData);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz: Retrieve Tags and Ratings", GetAllData);
             mbApiInterface.MB_RegisterCommand("MusicBrainz: Open Release in Browser", OpenReleaseURL);
             mbApiInterface.MB_RegisterCommand("MusicBrainz: Open Release Group in Browser", OpenReleaseGroupURL);
+            mbApiInterface.MB_RegisterCommand("MusicBrainz: Open Recording in Browser", OpenRecordingURL);
 
             Debug.WriteLine("[Plugin.AddMenuItems] Done");
         }
 
-        // TODO finish
         async private void SendAllData(object sender, EventArgs args)
         {
             if (CheckWarning("set"))
             {
-                await SendCombinedData();
+                await SendData();
             } 
         }
 
-        async private void SendTrackRatings(object sender, EventArgs args)
-        {
-            if (CheckWarning("set"))
-                await SendRatingData("recording");
-        }
-
-        async private void SendReleaseGroupRatings(object sender, EventArgs args)
-        {
-            // just so you know, MusicBrainz doesn't allow for releases to have a rating.
-            // it's a bit weird given that RYM does it through releases, not a release group.
-            if (CheckWarning("set"))
-                await SendRatingData("release-group");
-        }
-
-        async private void SendTrackTags(object sender, EventArgs args)
-        {
-            if (CheckWarning("set"))
-                await SendTagData("recording");
-        }
-
-        async private void SendReleaseTags(object sender, EventArgs args)
-        {
-            if (CheckWarning("set"))
-                await SendTagData("release");
-        }
-
-        async private void SendReleaseGroupTags(object sender, EventArgs args)
-        {
-            if (CheckWarning("set"))
-                await SendTagData("release-group");
-        }
-
-        // # Data retrieval functions
-
-        async private void GetAlbumRatings(object sender, EventArgs args)
+        async private void GetAllData(object sender, EventArgs args)
         {
             if (CheckWarning("get"))
-                await GetRatingData("release-group");
-        }
-
-        async private void GetTrackRatings(object sender, EventArgs args)
-        {
-            // this will handle both release-associated tracks and standalone recordings.
-            if (CheckWarning("get"))
-                await GetRatingData("track");
-        }
-
-        async private void GetReleaseGroupTags(object sender, EventArgs args)
-        {
-            if (CheckWarning("get"))
-                await GetTagData("release-group");
-        }
-
-        async private void GetReleaseTags(object sender, EventArgs args)
-        {
-            if (CheckWarning("get"))
-                await GetTagData("release");
-        }
-
-        async private void GetTrackTags(object sender, EventArgs args)
-        {
-            if (CheckWarning("get"))
-                await GetTagData("recording");
+            {
+                await GetAndSaveData();
+            }
         }
 
         private bool CheckWarning(string actionType)
         {
-
+            // TODO allow the user to be notified again and clarify WHAT is being sent to MusicBrainz - set this to Yes/No/Cancel.
             SettingsProperty currentSetting = (actionType == "set") ? Settings.Default.Properties["setWarningAcknowledged"] : Settings.Default.Properties["getWarningAcknowledged"];
             bool currentSettingValue = (bool)Settings.Default.PropertyValues[currentSetting.Name].PropertyValue;
             if (currentSettingValue == true)
@@ -672,17 +577,6 @@ namespace MusicBeePlugin
         }
 
 #if DEBUG
-        async private void ResetTrackRatings(object sender, EventArgs args)
-        {
-            await SendRatingData("recording", true);
-        }
-
-        async private void ResetReleaseGroupRatings(object sender, EventArgs args)
-        {
-            await SendRatingData("release-group", true);
-        }
-
-
         private void OpenJSONDataInBrowser(MusicBeeTrack track, string entityType)
         {
             string MBID = string.Empty;
