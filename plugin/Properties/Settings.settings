@@ -20,7 +20,8 @@
     <Setting Name="findReplace" Type="System.String" Scope="User">
       <Value Profile="(Default)">synthpop;synth-pop
 uplifting trance;melodic trance
-alt-pop;alternative pop</Value>
+alt-pop;alternative pop
+liquid drum and bass;liquid funk</Value>
     </Setting>
     <Setting Name="tagSubmitIsDestructive" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

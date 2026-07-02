@@ -85,7 +85,8 @@ namespace plugin.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("synthpop;synth-pop\r\nuplifting trance;melodic trance\r\nalt-pop;alternative pop")]
+        [global::System.Configuration.DefaultSettingValueAttribute("synthpop;synth-pop\r\nuplifting trance;melodic trance\r\nalt-pop;alternative pop\r\nliq" +
+            "uid drum and bass;liquid funk")]
         public string findReplace {
             get {
                 return ((string)(this["findReplace"]));
