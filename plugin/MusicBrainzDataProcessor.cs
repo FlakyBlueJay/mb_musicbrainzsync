@@ -248,13 +248,18 @@ namespace plugin
 
                     foreach (string tagString in tag.Split(';'))
                     {
-                        xmlWriter.WriteStartElement("user-tag");
-                        if (!Settings.Default.tagSubmitIsDestructive)
+                        Debug.WriteLine("tagString: "+tagString);
+                        string tagReplaced = MusicBrainzDataProcessor.FindReplaceTag(tagString);
+                        if (tagReplaced != "{remove}")
                         {
-                            xmlWriter.WriteAttributeString("vote", "upvote");
+                            xmlWriter.WriteStartElement("user-tag");
+                            if (!Settings.Default.tagSubmitIsDestructive)
+                            {
+                                xmlWriter.WriteAttributeString("vote", "upvote");
+                            }
+                            xmlWriter.WriteElementString("name", tagReplaced);
+                            xmlWriter.WriteEndElement();
                         }
-                        xmlWriter.WriteElementString("name", MusicBrainzDataProcessor.FindReplaceTag(tagString));
-                        xmlWriter.WriteEndElement();
                     }
                     xmlWriter.WriteEndElement(); // ends user-tag-list XML
                     xmlWriter.WriteEndElement(); // ends individual recording XML
