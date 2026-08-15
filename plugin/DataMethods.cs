@@ -55,7 +55,7 @@ namespace MusicBeePlugin
                     if (allTagData.Count > 0)
                     {
                         await mbz.SetTags(allTagData);
-                        await Task.Delay(500); // wait half a second to avoid rate limiting
+                        await Task.Delay(600); // wait half a second to avoid rate limiting
                     }
                     if (tracksAndRatings.Count > 0)
                     {

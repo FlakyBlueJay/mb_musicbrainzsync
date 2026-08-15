@@ -470,7 +470,7 @@ namespace plugin
                     default:
                         throw new InvalidDataException("[MusicBrainzAPI.GetAllData] Invalid entity type: " + entity_type);
                 }
-                await Task.Delay(500);
+                await Task.Delay(600);
             }
         }
 
