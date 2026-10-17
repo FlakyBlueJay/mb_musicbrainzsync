@@ -148,8 +148,7 @@ namespace plugin
                     }
                     break;
                 case System.Net.HttpStatusCode.ServiceUnavailable:
-                    errorMessage = "MusicBrainz returned a service unavailable error (code 503). This generally means the plugin has hit the rate limit. Calm down with adding stuff to MusicBrainz.\n\n" +
-                        "If this occurred during normal use, report this to https://github.com/FlakyBlueJay/mb_musicbrainzsync explaining how to reproduce it.";
+                    errorMessage = "MusicBrainz returned a service unavailable error (code 503). This generally means the plugin has hit the rate limit. Try again later.";
                     break;
                 default:
                     errorMessage = $"MusicBrainz returned a {statusCode} error. This hasn't been properly caught by the plugin.\n\n" +
